@@ -1,0 +1,5 @@
+.cursorignore
+.cursorrules
+QQT API/
+*.md
+*.mdc

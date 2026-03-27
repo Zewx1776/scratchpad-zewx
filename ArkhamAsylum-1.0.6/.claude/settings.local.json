@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l core/*.lua main.lua gui.lua)",
+      "Bash(wc -l /c/Users/Zewx/Desktop/diablo_qqt/scripts/ArkhamAsylum-1.0.6/**/*.lua)"
+    ]
+  }
+}
