@@ -15,6 +15,7 @@ local remembered_chests = {}
 local remembered_chest_target = nil -- the key of the chest we're currently navigating to
 
 local plugin_label = "helltide_revamped"
+local was_dead = false
 local ni = 1
 local last_target_ni = nil -- track which waypoint we last sent to Batmobile to avoid redundant set_target calls
 local WAYPOINT_LOOKAHEAD = 5 -- skip ahead 5 waypoints (~20m) so Batmobile gets a real long-distance target
@@ -454,8 +455,19 @@ local helltide_task = {
     Execute = function(self)
         debug_chest_scan() -- DEBUG: remove when done testing
         self.name = "Explore Helltide (" .. self.current_state .. ")"
-        if get_local_player() and get_local_player():is_dead() then
+        local lp = get_local_player()
+        local is_dead = lp and lp:is_dead()
+        if is_dead then
+            was_dead = true
             revive_at_checkpoint()
+            return
+        elseif was_dead then
+            was_dead = false
+            console.print("[HelltideRevamped] Revived — resetting Batmobile explorer")
+            if BatmobilePlugin then
+                BatmobilePlugin.reset(plugin_label)
+                BatmobilePlugin.resume(plugin_label)
+            end
         end
 
         if LooteerPlugin then

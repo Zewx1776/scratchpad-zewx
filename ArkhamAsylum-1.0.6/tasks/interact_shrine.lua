@@ -13,6 +13,16 @@ local task = {
     name = 'interact_shrine', -- change to your choice of task name
     status = status_enum['IDLE'],
 }
+
+local INTERACT_TIMEOUT = 5.0 -- seconds before a stuck shrine is blacklisted
+local stuck_since = nil
+local skipped_shrines = {} -- key: "x,y" string of shrine position
+
+local function shrine_key(actor)
+    local pos = actor:get_position()
+    return math.floor(pos:x() + 0.5) .. ',' .. math.floor(pos:y() + 0.5)
+end
+
 local get_closest_shrine = function ()
     local local_player = get_local_player()
     if not local_player then return end
@@ -23,10 +33,12 @@ local get_closest_shrine = function ()
         if (name:match('Shrine_DRLG') and actor:is_interactable()) or
             name:match('BetrayersEyeSwitch')
         then
-            local dist = utils.distance(local_player, actor)
-            if dist < settings.check_distance and (closest_dist == nil or dist < closest_dist) then
-                closest_dist = dist
-                closest_shrine = actor
+            if not skipped_shrines[shrine_key(actor)] then
+                local dist = utils.distance(local_player, actor)
+                if dist < settings.check_distance and (closest_dist == nil or dist < closest_dist) then
+                    closest_dist = dist
+                    closest_shrine = actor
+                end
             end
         end
     end
@@ -48,6 +60,7 @@ task.Execute = function ()
     local shrine = get_closest_shrine()
     if shrine ~= nil then
         if utils.distance(local_player, shrine) > 2 then
+            stuck_since = nil
             local disable_spell = false
             if utils.distance(local_player, shrine) <= 4 then
                 disable_spell = true
@@ -60,7 +73,18 @@ task.Execute = function ()
             task.status = status_enum['WALKING']
             orbwalker.set_clear_toggle(false)
             interact_object(shrine)
+            -- timeout: if shrine refuses to interact after INTERACT_TIMEOUT seconds, blacklist it
+            if stuck_since == nil then
+                stuck_since = get_time_since_inject()
+            elseif get_time_since_inject() - stuck_since > INTERACT_TIMEOUT then
+                local key = shrine_key(shrine)
+                console.print('[interact_shrine] shrine stuck for ' .. INTERACT_TIMEOUT .. 's, blacklisting ' .. key)
+                skipped_shrines[key] = true
+                stuck_since = nil
+            end
         end
+    else
+        stuck_since = nil
     end
 end
 

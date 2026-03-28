@@ -54,6 +54,11 @@ local get_closest_enemies = function ()
     for _, enemy in pairs(enemies) do
         if ignore_list[enemy:get_skin_name()] then goto continue end
         if is_enemy_unreachable(enemy:get_position()) then goto continue end
+        -- Skip enemies on a different floor level (different Z) — they're only reachable
+        -- via a traversal, which the pathfinder can't model. Targeting them causes pathfind
+        -- failures that corrupt the unreachable cache.
+        local enemy_pos = enemy:get_position()
+        if math.abs(player_pos:z() - enemy_pos:z()) > 5 then goto continue end
         local health = enemy:get_current_health()
         local dist = utils.distance(player_pos, enemy)
         if enemy:is_boss() and
@@ -116,8 +121,9 @@ task.Execute = function ()
             -- Making progress
             nav_tracking.dist = cur_dist
             nav_tracking.time = get_time_since_inject()
-        elseif get_time_since_inject() - nav_tracking.time > 5 then
-            -- No progress for 5 seconds, mark unreachable
+        elseif get_time_since_inject() - nav_tracking.time > 12 then
+            -- No progress for 12 seconds, mark unreachable
+            -- (longer timeout to allow traversal routing: walk to trav ~3s + delay ~2s + walk to enemy ~3s)
             mark_enemy_unreachable(target_pos)
             nav_tracking.pos = nil
             BatmobilePlugin.clear_target(plugin_label)

@@ -27,6 +27,8 @@ local navigator = {
     failed_target = nil,
     failed_target_time = -1,
     failed_target_cooldown = 15,
+    failed_target_radius = 15,
+    trav_final_target = nil,
     blacklisted_trav = {},
     move_time = -1,
     move_timeout = 0.05,
@@ -358,6 +360,25 @@ navigator.update = function ()
     local local_player = get_local_player()
     if not local_player then return end
     if has_traversal_buff(local_player) then return end
+    -- Detect death/respawn: sudden large position jump (>50 units) that is not a traversal.
+    -- After respawn the checkpoint position must NOT be appended to the backtrack path —
+    -- doing so creates a spurious backtrack entry that doubles up the exploration route.
+    -- Setting backtracking=true prevents set_current_pos from adding the checkpoint,
+    -- so the next select_target call directly pops the real last-explored point.
+    if explorer.cur_pos ~= nil and
+        (navigator.trav_delay == nil or get_time_since_inject() > navigator.trav_delay)
+    then
+        local jump_dist = utils.distance(local_player:get_position(), explorer.cur_pos)
+        if jump_dist > 50 then
+            console.print('[nav] respawn detected (jumped ' .. string.format('%.1f', jump_dist) .. ' units), resuming from last backtrack point')
+            explorer.backtracking = true
+            navigator.target = nil
+            navigator.is_custom_target = false
+            navigator.path = {}
+            navigator.trav_final_target = nil
+            navigator.failed_target = nil
+        end
+    end
     explorer.update(local_player)
 end
 navigator.reset = function ()
@@ -379,6 +400,8 @@ navigator.reset = function ()
     navigator.exploration_resets = 0
     navigator.failed_target = nil
     navigator.failed_target_time = -1
+    navigator.failed_target_radius = 15
+    navigator.trav_final_target = nil
     navigator.blacklisted_trav = {}
     navigator.blacklisted_spell_node = {}
 end
@@ -389,10 +412,21 @@ navigator.set_target = function (target, disable_spell)
     local new_target = utils.normalize_node(target)
     -- Reject targets near a recently-failed position
     if navigator.failed_target and
-        utils.distance(new_target, navigator.failed_target) < 15 and
+        utils.distance(new_target, navigator.failed_target) < navigator.failed_target_radius and
         get_time_since_inject() - navigator.failed_target_time < navigator.failed_target_cooldown
     then
         return false
+    end
+    -- If we are mid-traversal to reach a custom target, don't disrupt the route
+    -- (kill_monster keeps calling set_target every frame; return true so it doesn't
+    -- mark the enemy unreachable, but keep routing to the traversal node)
+    if navigator.trav_final_target ~= nil and navigator.last_trav ~= nil then
+        if utils.distance(new_target, navigator.trav_final_target) < 50 then
+            return true  -- silently accepted — traversal route in progress
+        else
+            -- Different enemy: abort traversal route, accept new target
+            navigator.trav_final_target = nil
+        end
     end
     if navigator.target == nil or
         utils.distance(navigator.target, new_target) > 0 or
@@ -403,6 +437,7 @@ navigator.set_target = function (target, disable_spell)
         navigator.is_custom_target = true
         navigator.path = {}
         navigator.disable_spell = disable_spell
+        navigator.pathfind_fail_count = 0  -- each new target starts fresh
     end
     explorer.backtracking = false
     return true
@@ -430,21 +465,53 @@ navigator.move = function ()
             local name = trav:get_skin_name()
             if name:match('Jump') then
                 -- jump doesnt have traversal buff for some reason
-                navigator.target = nil
-                navigator.is_custom_target = false
                 navigator.path = {}
                 navigator.disable_spell = nil
+                local crossed_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
+                navigator.blacklisted_trav[crossed_str] = crossed_str
+                console.print('[nav] blacklisting jumped traversal ' .. trav:get_skin_name())
                 navigator.last_trav = nil
                 navigator.trav_delay = get_time_since_inject() + 4
+                navigator.failed_target = nil
+                navigator.failed_target_radius = 15
+                if navigator.trav_final_target ~= nil then
+                    console.print('[nav] jump crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
+                    navigator.target = navigator.trav_final_target
+                    navigator.is_custom_target = true
+                    navigator.pathfind_fail_count = 0
+                    navigator.trav_final_target = nil
+                else
+                    if not navigator.paused then
+                        navigator.target = nil
+                        navigator.is_custom_target = false
+                    end
+                end
             end
         end
         if has_traversal_buff(local_player) then
             navigator.trav_delay = get_time_since_inject() + 4
-            navigator.target = nil
-            navigator.is_custom_target = false
             navigator.path = {}
             navigator.disable_spell = nil
+            if navigator.last_trav ~= nil then
+                local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
+                navigator.blacklisted_trav[crossed_str] = crossed_str
+                console.print('[nav] blacklisting crossed traversal ' .. navigator.last_trav:get_skin_name())
+            end
             navigator.last_trav = nil
+            navigator.failed_target = nil
+            navigator.failed_target_radius = 15
+            if navigator.trav_final_target ~= nil then
+                console.print('[nav] traversal crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
+                navigator.target = navigator.trav_final_target
+                navigator.is_custom_target = true
+                navigator.pathfind_fail_count = 0
+                navigator.trav_final_target = nil
+            else
+                if not navigator.paused then
+                    navigator.target = nil
+                    navigator.is_custom_target = false
+                end
+            end
         end
     end
 
@@ -581,15 +648,50 @@ navigator.move = function ()
             -- Custom targets (kill_monster): 3 failures (quick give-up, mark unreachable)
             -- Explorer targets: 6 failures (more patient — adjacent nodes fail individually)
             local fail_threshold = navigator.is_custom_target and 3 or 6
+            -- After a traversal crossing, walkability data for the new area may not be
+            -- loaded yet — be more patient before giving up on the custom target
+            if navigator.trav_delay ~= nil and get_time_since_inject() < navigator.trav_delay then
+                fail_threshold = 15
+            end
             if navigator.pathfind_fail_count >= fail_threshold then
                 navigator.pathfind_fail_count = 0
                 -- If paused (external caller like kill_monster set target), just mark
                 -- as unreachable and clear — do NOT blacklist explorer.visited since
                 -- the explorer didn't pick this target and blacklisting corrupts its state
                 if navigator.paused then
-                    console.print('[nav] clearing unreachable custom target ' .. utils.vec_to_string(navigator.target) .. ', cooldown=' .. navigator.failed_target_cooldown .. 's')
+                    -- Check if a traversal is nearby — target is likely behind it.
+                    -- Try routing via the traversal first before giving up.
+                    local nearby_travs = get_nearby_travs(local_player)
+                    local closest_trav = nil
+                    local closest_trav_dist = math.huge
+                    for _, trav in ipairs(nearby_travs) do
+                        local d = utils.distance(player_pos, trav:get_position())
+                        local trav_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
+                        if d <= 30 and d < closest_trav_dist and navigator.blacklisted_trav[trav_str] == nil then
+                            closest_trav = trav
+                            closest_trav_dist = d
+                        end
+                    end
+                    if closest_trav ~= nil then
+                        -- Find a walkable approach node beside the traversal
+                        local approach_node = get_closeby_node(closest_trav:get_position(), 2)
+                        if approach_node ~= nil then
+                            console.print('[nav] routing via traversal ' .. closest_trav:get_skin_name() .. ' to reach ' .. utils.vec_to_string(navigator.target))
+                            navigator.trav_final_target = navigator.target
+                            navigator.last_trav = closest_trav
+                            navigator.target = approach_node
+                            navigator.is_custom_target = false
+                            navigator.path = {}
+                            navigator.pathfind_fail_count = 0
+                            return  -- don't set failed_target — we will retry after crossing
+                        end
+                    end
+                    -- No traversal route available — mark area as unreachable
+                    local block_radius = closest_trav ~= nil and 50 or 15
+                    console.print('[nav] clearing unreachable custom target ' .. utils.vec_to_string(navigator.target) .. ', cooldown=' .. navigator.failed_target_cooldown .. 's radius=' .. block_radius .. (closest_trav ~= nil and ' (no traversal route)' or ''))
                     navigator.failed_target = navigator.target
                     navigator.failed_target_time = get_time_since_inject()
+                    navigator.failed_target_radius = block_radius
                     navigator.target = nil
                     navigator.is_custom_target = false
                     navigator.path = {}
