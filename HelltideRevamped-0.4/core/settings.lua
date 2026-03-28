@@ -10,6 +10,7 @@ local settings = {
     shrine = true,
     goblin = true,
     event = true,
+    kill_monsters = true,
 }
 
 function settings:update_settings()
@@ -23,6 +24,7 @@ function settings:update_settings()
     settings.goblin = gui.elements.goblin_toggle:get()
     settings.event = gui.elements.event_toggle:get()
     settings.chaos_rift = gui.elements.chaos_rift_toggle:get()
+    settings.kill_monsters = gui.elements.kill_monsters_toggle:get()
 end
 
 return settings

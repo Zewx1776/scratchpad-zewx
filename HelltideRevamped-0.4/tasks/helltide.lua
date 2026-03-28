@@ -115,9 +115,9 @@ local function navigate_to(target)
                 -- Actually made real progress (not just drift), reset timer
                 navigate_to_stuck_time = now
                 navigate_to_start_pos = player_pos
-            elseif now - navigate_to_stuck_time > 3 then
-                -- Hasn't moved >2 units in 3 seconds — stuck
-                console.print(string.format("[NAV] Stuck 3s (moved only %.1f), switching to FREE_EXPLORE", dist_moved))
+            elseif now - navigate_to_stuck_time > 10 then
+                -- Hasn't moved >5 units in 10 seconds — stuck (allow time for traversal routing)
+                console.print(string.format("[NAV] Stuck 10s (moved only %.1f), switching to FREE_EXPLORE", dist_moved))
                 BatmobilePlugin.clear_target(plugin_label)
                 navigate_to_free_explore = true
                 navigate_to_stuck_time = nil
@@ -164,6 +164,7 @@ local helltide_state = {
     INTERACT_CHAOS_RIFT = "INTERACT_CHAOS_RIFT",
     STAY_NEAR_CHAOS_RIFT = "STAY_NEAR_CHAOS_RIFT",
     CHASE_GOBLIN = "CHASE_GOBLIN",
+    KILL_MONSTERS = "KILL_MONSTERS",
     MOVING_TO_REMEMBERED_CHEST = "MOVING_TO_REMEMBERED_CHEST",
     BACK_TO_TOWN = "BACK_TO_TOWN"
 }
@@ -336,6 +337,64 @@ local function find_affordable_remembered_chest()
     return best_key, best_entry
 end
 
+-- Kill monster tracking
+local km_unreachable = {}
+local KM_UNREACHABLE_TIMEOUT = 30
+local km_nav = { pos = nil, time = 0, dist = nil }
+
+local function km_is_unreachable(pos)
+    local now = get_time_since_inject()
+    local key = math.floor(pos:x()) .. ',' .. math.floor(pos:y())
+    if km_unreachable[key] and now - km_unreachable[key] > KM_UNREACHABLE_TIMEOUT then
+        km_unreachable[key] = nil
+    end
+    return km_unreachable[key] ~= nil
+end
+
+local function km_mark_unreachable(pos)
+    local key = math.floor(pos:x()) .. ',' .. math.floor(pos:y())
+    km_unreachable[key] = get_time_since_inject()
+    console.print(string.format("[KILL MONSTERS] Marked unreachable: (%.1f, %.1f)", pos:x(), pos:y()))
+end
+
+local function get_kill_target()
+    local player_pos = get_player_position()
+    local enemies = target_selector.get_near_target_list(player_pos, 50)
+    local closest_enemy, closest_enemy_dist
+    local closest_elite, closest_elite_dist
+    local closest_champ, closest_champ_dist
+    local closest_boss, closest_boss_dist
+
+    for _, enemy in pairs(enemies) do
+        local enemy_pos = enemy:get_position()
+        if math.abs(player_pos:z() - enemy_pos:z()) > 5 then goto continue end
+        if km_is_unreachable(enemy_pos) then goto continue end
+        local health = enemy:get_current_health()
+        if health <= 1 then goto continue end
+        local dist = utils.distance_to(enemy)
+        if enemy:is_boss() and (closest_boss_dist == nil or dist < closest_boss_dist) then
+            closest_boss = enemy
+            closest_boss_dist = dist
+        end
+        if dist <= 50 then
+            if closest_enemy_dist == nil or dist < closest_enemy_dist then
+                closest_enemy = enemy
+                closest_enemy_dist = dist
+            end
+            if enemy:is_elite() and (closest_elite_dist == nil or dist < closest_elite_dist) then
+                closest_elite = enemy
+                closest_elite_dist = dist
+            end
+            if enemy:is_champion() and (closest_champ_dist == nil or dist < closest_champ_dist) then
+                closest_champ = enemy
+                closest_champ_dist = dist
+            end
+        end
+        ::continue::
+    end
+    return closest_boss or closest_champ or closest_elite or closest_enemy
+end
+
 local function check_events(self)
     local target -- reusable local for caching find_closest_target results
 
@@ -376,7 +435,16 @@ local function check_events(self)
         end
     end
 
-    -- Priority 2: Nearby events / interactables while patrolling
+    -- Priority 2: Kill monsters when enabled
+    if settings.kill_monsters then
+        local km_target = get_kill_target()
+        if km_target then
+            self.current_state = helltide_state.KILL_MONSTERS
+            return
+        end
+    end
+
+    -- Priority 3: Nearby events / interactables while patrolling
     if settings.event and utils.do_events() then
         target = find_closest_target("S04_Helltide_Prop_SoulSyphon_01_Dyn")
         if target and target:is_interactable() and utils.distance_to(target) < 12 then
@@ -504,6 +572,8 @@ local helltide_task = {
             self:move_to_shrine()
         elseif self.current_state == helltide_state.CHASE_GOBLIN then
             self:chase_goblin()
+        elseif self.current_state == helltide_state.KILL_MONSTERS then
+            self:kill_monsters()
         elseif self.current_state == helltide_state.MOVING_TO_REMEMBERED_CHEST then
             self:move_to_remembered_chest()
         elseif self.current_state == helltide_state.MOVING_TO_CHAOS_RIFT then
@@ -1006,6 +1076,63 @@ local helltide_task = {
         end
     end,
 
+    kill_monsters = function(self)
+        orbwalker.set_clear_toggle(true)
+        local local_player = get_local_player()
+        if not local_player then
+            self.current_state = helltide_state.EXPLORE_HELLTIDE
+            return
+        end
+
+        local target = get_kill_target()
+        if not target then
+            km_nav.pos = nil
+            if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
+            console.print("[KILL MONSTERS] No targets, resuming patrol")
+            clear_movement()
+            self.current_state = helltide_state.EXPLORE_HELLTIDE
+            return
+        end
+
+        local target_pos = target:get_position()
+        local cur_dist = utils.distance_to(target)
+
+        -- Nav progress tracking
+        if km_nav.pos == nil or target_pos:dist_to(km_nav.pos) > 5 then
+            km_nav.pos = target_pos
+            km_nav.time = get_time_since_inject()
+            km_nav.dist = cur_dist
+        elseif cur_dist < km_nav.dist - 2 then
+            km_nav.dist = cur_dist
+            km_nav.time = get_time_since_inject()
+        elseif get_time_since_inject() - km_nav.time > 12 then
+            km_mark_unreachable(target_pos)
+            km_nav.pos = nil
+            if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
+            return
+        end
+
+        if cur_dist > 2 then
+            if BatmobilePlugin then
+                BatmobilePlugin.resume(plugin_label)
+                local accepted = BatmobilePlugin.set_target(plugin_label, target)
+                if accepted == false then
+                    km_mark_unreachable(target_pos)
+                    km_nav.pos = nil
+                    BatmobilePlugin.clear_target(plugin_label)
+                    return
+                end
+                BatmobilePlugin.update(plugin_label)
+                BatmobilePlugin.move(plugin_label)
+            else
+                pathfinder.request_move(target_pos)
+            end
+        else
+            km_nav.pos = nil
+            if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
+        end
+    end,
+
     move_to_chaos_rift = function(self)
         local chaos_rift = find_closest_target("S10_ChaosRiftChoiceGizmo")
         if chaos_rift then
@@ -1088,6 +1215,8 @@ local helltide_task = {
         found_herb = nil
         remembered_chests = {}
         remembered_chest_target = nil
+        km_unreachable = {}
+        km_nav = { pos = nil, time = 0, dist = nil }
         clear_movement()
         if BatmobilePlugin then
             BatmobilePlugin.reset(plugin_label)
