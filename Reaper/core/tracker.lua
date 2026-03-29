@@ -15,6 +15,7 @@ local tracker = {
     belial_chest_interacted = false,  -- set when the physical Belial chest is interacted with
     just_revived            = false,  -- set by revive task, cleared by navigate_to_boss
     sigil_chest_done        = false,  -- set when Doom chest is opened for sigil runs
+    sigil_entry_t           = -999,   -- timestamp when sigil was activated; -999 = not active
 
     -- session stats
     total_kills        = 0,
@@ -28,6 +29,7 @@ function tracker.reset_run()
     tracker.belial_chest_interacted = false
     tracker.just_revived            = false
     tracker.sigil_chest_done        = false
+    tracker.sigil_entry_t           = -999
     tracker.start_time              = 0
     tracker.finished_time           = 0
     tracker.chest_opened_time       = nil

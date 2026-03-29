@@ -17,7 +17,8 @@ local d4a      = require "core.d4a_command"
 
 local CERRIGAR_WP   = 0x76D58
 local CERRIGAR_ZONE = "Scos_Cerrigar"
-local NO_ENEMY_TIMEOUT = 45.0  -- seconds with no enemies before declaring run complete
+local NO_ENEMY_TIMEOUT = 5.0   -- seconds with no enemies before declaring run complete
+                                -- (kill_monsters already clears enemies before we get here)
 
 local STATE = {
     IDLE         = "IDLE",
@@ -76,8 +77,16 @@ function task.shouldExecute()
     -- Keep running mid-sequence
     if s.state ~= STATE.IDLE then return true end
 
-    -- Only start watching once altar is activated and we're in the zone
-    return tracker.altar_activated and in_sigil_zone()
+    -- Normal activation: altar was activated and we're in the zone
+    if tracker.altar_activated and in_sigil_zone() then return true end
+
+    -- Timer-based fallback: activate 60s after dungeon entry even if altar was never found
+    if tracker.sigil_entry_t > 0 and in_sigil_zone()
+            and (now() - tracker.sigil_entry_t) >= 60.0 then
+        return true
+    end
+
+    return false
 end
 
 function task.Execute()
@@ -87,7 +96,12 @@ function task.Execute()
     if s.state == STATE.IDLE then
         s.last_enemy_t = t
         set_state(STATE.WATCHING)
-        console.print("[Reaper] Sigil run in progress — watching for clear.")
+        if tracker.altar_activated then
+            console.print("[Reaper] Sigil run in progress — watching for clear.")
+        else
+            console.print(string.format("[Reaper] Sigil timer elapsed (%.0fs) — watching for boss clear.",
+                t - tracker.sigil_entry_t))
+        end
         return
     end
 
@@ -117,48 +131,43 @@ function task.Execute()
         end
 
         if idle_time >= NO_ENEMY_TIMEOUT then
-            -- Make sure the Doom chest is opened before leaving
+            -- Make sure the Doom chest is opened before leaving (30s hard timeout)
             if not doom_chest_opened() then
+                local chest_wait = t - s.last_enemy_t - NO_ENEMY_TIMEOUT
                 if (t - s.last_log_t) >= 5.0 then
-                    console.print("[Reaper] Waiting for Doom chest to be opened...")
+                    console.print(string.format("[Reaper] Waiting for Doom chest to be opened... (%.0fs/30s)",
+                        chest_wait))
                     s.last_log_t = t
                 end
-                return
+                if chest_wait < 30.0 then return end
+                console.print("[Reaper] Doom chest wait timed out — proceeding anyway.")
             end
-            console.print("[Reaper] Sigil run complete — teleporting to Cerrigar.")
+            console.print("[Reaper] Sigil run complete — counting run and teleporting to town.")
+            rotation.consume_run()
+            tracker.reset_run()
             teleport_to_waypoint(CERRIGAR_WP)
             set_state(STATE.TELEPORTING)
         end
         return
     end
 
-    -- ---- TELEPORTING: brief wait for teleport animation ----
+    -- ---- TELEPORTING: run already counted — just give Alfred time to trigger ----
     if s.state == STATE.TELEPORTING then
-        if (t - s.t) >= 1.5 then
-            set_state(STATE.WAIT_TOWN)
+        if (t - s.t) >= 3.0 then
+            set_state(STATE.IDLE)
         end
         return
     end
+end
 
-    -- ---- WAIT_TOWN: wait to land in Cerrigar ----
-    if s.state == STATE.WAIT_TOWN then
-        if utils.player_in_zone(CERRIGAR_ZONE) then
-            if (t - s.t) >= 2.0 then
-                console.print("[Reaper] Back in Cerrigar — run counted.")
-                rotation.consume_run()
-                tracker.reset_run()
-                set_state(STATE.IDLE)
-            end
-            return
-        end
-        -- Timeout — retry teleport
-        if (t - s.t) >= 20.0 then
-            console.print("[Reaper] Town wait timeout — retrying teleport.")
-            teleport_to_waypoint(CERRIGAR_WP)
-            set_state(STATE.TELEPORTING)
-        end
-        return
+function task.description()
+    if s.state == STATE.WATCHING then
+        local idle = now() - s.last_enemy_t
+        return string.format("Watching: %.0fs / %.0fs — clear", idle, NO_ENEMY_TIMEOUT)
     end
+    if s.state == STATE.TELEPORTING then return "Teleporting to town..." end
+    if s.state == STATE.WAIT_TOWN   then return "Waiting to arrive in town..." end
+    return nil
 end
 
 return task

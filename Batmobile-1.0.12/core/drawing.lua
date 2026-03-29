@@ -1,8 +1,9 @@
-local explorer = require 'core.explorer'
+local explorer  = require 'core.explorer'
 local navigator = require 'core.navigator'
-local settings = require 'core.settings'
-local utils = require 'core.utils'
-local tracker = require 'core.tracker'
+local settings  = require 'core.settings'
+local utils     = require 'core.utils'
+local tracker   = require 'core.tracker'
+local long_path = require 'core.long_path'
 
 local get_max_length = function(messages)
     local max = 0
@@ -80,6 +81,28 @@ drawing.draw_nodes = function (local_player)
         else
             graphics.circle_3d(valid_node, 0.05, color_blue(255))
         end
+    end
+
+    -- Long path: draw full planned route in white, target as large circle
+    if long_path.active_path ~= nil then
+        local lp_prev = nil
+        for i, node in ipairs(long_path.active_path) do
+            -- Downsample for performance: draw every 4th node, always draw first/last
+            if i == 1 or i == #long_path.active_path or i % 4 == 0 then
+                local v = vec3:new(node:x(), node:y(), valid_z)
+                graphics.circle_3d(v, 0.15, color_white(180))
+                if lp_prev ~= nil then
+                    graphics.line(v, lp_prev, color_white(180), 1)
+                end
+                lp_prev = v
+            end
+        end
+    end
+    -- Draw pinned target as a large bright circle with a line from player
+    if long_path.pinned_target ~= nil then
+        local tv = utility.set_height_of_valid_position(long_path.pinned_target)
+        graphics.circle_3d(tv, 3, color_white(255))
+        graphics.line(player_pos, tv, color_white(200), 1)
     end
 
     if tracker.debug_pos ~= nil then

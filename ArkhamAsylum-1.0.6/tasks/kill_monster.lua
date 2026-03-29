@@ -33,6 +33,9 @@ local status_enum = {
     IDLE = 'idle',
     WALKING = 'walking to enemy',
 }
+-- Tracks the target position we last called navigate_long_path for.
+-- Prevents re-running expensive A* every tick when the target hasn't moved.
+local long_path_target = nil
 local task = {
     name = 'kill_monster', -- change to your choice of task name
     status = status_enum['IDLE'],
@@ -130,19 +133,41 @@ task.Execute = function ()
             task.status = status_enum['IDLE']
             return
         end
-        local accepted = BatmobilePlugin.set_target(plugin_label, target)
-        if accepted == false then
-            -- Navigator rejected target (area marked unreachable by pathfinder)
-            mark_enemy_unreachable(target_pos)
-            nav_tracking.pos = nil
-            BatmobilePlugin.clear_target(plugin_label)
-            task.status = status_enum['IDLE']
-            return
+        if settings.use_long_path then
+            -- Only call navigate_long_path when the target changes significantly
+            if long_path_target == nil or utils.distance(target_pos, long_path_target) > 5 then
+                console.print(string.format("[kill_monster] long path to target (dist=%.1f)", cur_dist))
+                local started = BatmobilePlugin.navigate_long_path(plugin_label, target_pos)
+                if started then
+                    long_path_target = target_pos
+                else
+                    -- A* couldn't find a path — treat as unreachable
+                    mark_enemy_unreachable(target_pos)
+                    long_path_target = nil
+                    nav_tracking.pos = nil
+                    BatmobilePlugin.stop_long_path(plugin_label)
+                    task.status = status_enum['IDLE']
+                    return
+                end
+            end
+            BatmobilePlugin.move(plugin_label)
+        else
+            long_path_target = nil
+            local accepted = BatmobilePlugin.set_target(plugin_label, target)
+            if accepted == false then
+                -- Navigator rejected target (area marked unreachable by pathfinder)
+                mark_enemy_unreachable(target_pos)
+                nav_tracking.pos = nil
+                BatmobilePlugin.clear_target(plugin_label)
+                task.status = status_enum['IDLE']
+                return
+            end
+            BatmobilePlugin.move(plugin_label)
         end
-        BatmobilePlugin.move(plugin_label)
         task.status = status_enum['WALKING']
     else
         nav_tracking.pos = nil
+        long_path_target = nil
         BatmobilePlugin.clear_target(plugin_label)
         task.status = status_enum['IDLE']
     end

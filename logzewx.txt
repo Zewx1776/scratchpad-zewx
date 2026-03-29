@@ -1,200 +1,200 @@
-3784.46 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3784.49 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3784.53 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3785.92 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3786.78 :  Universal Rotation: Cast Smite FalconPunch Re.. [Entry 1, Priority 1] 
-3788.30 :  [BATMOBILE PERF] === 5.1s window === 
-3788.30 :    total_update             73 calls  avg   9.014ms  max  24.000ms  total   658.0ms 
-3788.30 :    total_move               53 calls  avg   2.358ms  max  68.000ms  total   125.0ms 
-3788.30 :    find_path                18 calls  avg   4.500ms  max  54.000ms  total    81.0ms 
-3788.30 :    get_nearby_travs         53 calls  avg   0.358ms  max   1.000ms  total    19.0ms 
-3788.30 :    select_target             1 calls  avg  13.000ms  max  13.000ms  total    13.0ms 
-3788.46 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.49 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.56 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.59 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.63 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.67 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.70 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.74 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.77 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.83 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.89 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.93 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3788.97 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3789.08 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3789.59 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3789.66 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3789.71 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3789.75 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3789.79 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3789.86 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3792.95 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3793.02 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3793.23 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3793.30 :  [BATMOBILE PERF] === 5.0s window === 
-3793.30 :    total_update             72 calls  avg  11.222ms  max  76.000ms  total   808.0ms 
-3793.30 :    total_move               46 calls  avg   5.587ms  max  64.000ms  total   257.0ms 
-3793.30 :    find_path                11 calls  avg  18.909ms  max  49.000ms  total   208.0ms 
-3793.30 :    get_nearby_travs         46 calls  avg   0.565ms  max   1.000ms  total    26.0ms 
-3793.30 :    select_target             1 calls  avg  14.000ms  max  14.000ms  total    14.0ms 
-3793.30 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3793.36 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3794.47 :  Universal Rotation: Cast Smite FalconPunch Re.. [Entry 1, Priority 1] 
-3795.89 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3796.00 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3796.75 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.80 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.84 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.87 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.92 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.95 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3796.98 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3797.03 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3797.06 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3798.34 :  [BATMOBILE PERF] === 5.0s window === 
-3798.34 :    total_update             74 calls  avg   6.257ms  max  23.000ms  total   463.0ms 
-3798.34 :    total_move               41 calls  avg   2.561ms  max  17.000ms  total   105.0ms 
-3798.34 :    find_path                12 calls  avg   6.417ms  max  16.000ms  total    77.0ms 
-3798.34 :    get_nearby_travs         41 calls  avg   0.415ms  max   1.000ms  total    17.0ms 
-3800.90 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3801.04 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3801.14 :  Universal Rotation: Cast Disciple of Justice [Entry 5, Priority 1] 
-3802.39 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3802.43 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3802.47 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3802.50 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3802.54 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3802.58 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3803.35 :  [BATMOBILE PERF] === 5.0s window === 
-3803.35 :    total_update             73 calls  avg  13.712ms  max  32.000ms  total  1001.0ms 
-3803.35 :    total_move               69 calls  avg   4.362ms  max 131.000ms  total   301.0ms 
-3803.35 :    find_path                14 calls  avg  17.143ms  max 121.000ms  total   240.0ms 
-3803.35 :    get_nearby_travs         69 calls  avg   0.362ms  max   1.000ms  total    25.0ms 
-3803.35 :    select_target             1 calls  avg   9.000ms  max   9.000ms  total     9.0ms 
-3803.67 :  Universal Rotation: Cast Smite FalconPunch Re.. [Entry 1, Priority 1] 
-3806.13 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3806.26 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3808.92 :  [BATMOBILE PERF] === 5.6s window === 
-3808.92 :    total_update             81 calls  avg   8.568ms  max  28.000ms  total   694.0ms 
-3808.92 :    total_move               55 calls  avg   3.491ms  max  47.000ms  total   192.0ms 
-3808.92 :    find_path                25 calls  avg   6.240ms  max  46.000ms  total   156.0ms 
-3808.92 :    get_nearby_travs         55 calls  avg   0.327ms  max   1.000ms  total    18.0ms 
-3810.18 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3810.72 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3810.75 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3810.79 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3811.91 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3812.01 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3812.44 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3812.50 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3813.97 :  [BATMOBILE PERF] === 5.1s window === 
-3813.97 :    total_update             70 calls  avg  10.871ms  max  35.000ms  total   761.0ms 
-3813.97 :    total_move               67 calls  avg   6.478ms  max 109.000ms  total   434.0ms 
-3813.97 :    find_path                24 calls  avg  14.417ms  max  91.000ms  total   346.0ms 
-3813.97 :    get_nearby_travs         67 calls  avg   0.537ms  max   2.000ms  total    36.0ms 
-3813.97 :    select_target             2 calls  avg  13.000ms  max  16.000ms  total    26.0ms 
-3814.80 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3814.87 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3814.92 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3814.95 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3814.99 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3819.01 :  [BATMOBILE PERF] === 5.0s window === 
-3819.01 :    total_update             72 calls  avg  15.417ms  max  31.000ms  total  1110.0ms 
-3819.01 :    total_move               72 calls  avg   4.194ms  max 114.000ms  total   302.0ms 
-3819.01 :    find_path                11 calls  avg  21.091ms  max 103.000ms  total   232.0ms 
-3819.01 :    get_nearby_travs         72 calls  avg   0.333ms  max   1.000ms  total    24.0ms 
-3819.01 :    select_target             2 calls  avg  11.000ms  max  12.000ms  total    22.0ms 
-3824.04 :  [BATMOBILE PERF] === 5.0s window === 
-3824.04 :    total_update             76 calls  avg  17.263ms  max  47.000ms  total  1312.0ms 
-3824.04 :    total_move               76 calls  avg   2.724ms  max  63.000ms  total   207.0ms 
-3824.04 :    find_path                 3 calls  avg  39.000ms  max  50.000ms  total   117.0ms 
-3824.04 :    select_target             3 calls  avg  15.667ms  max  25.000ms  total    47.0ms 
-3824.04 :    get_nearby_travs         76 calls  avg   0.355ms  max   1.000ms  total    27.0ms 
-3829.04 :  [BATMOBILE PERF] === 5.0s window === 
-3829.04 :    total_update             75 calls  avg  16.573ms  max  34.000ms  total  1243.0ms 
-3829.04 :    total_move               75 calls  avg   2.400ms  max  74.000ms  total   180.0ms 
-3829.04 :    find_path                 3 calls  avg  34.667ms  max  62.000ms  total   104.0ms 
-3829.04 :    select_target             3 calls  avg  10.667ms  max  11.000ms  total    32.0ms 
-3829.04 :    get_nearby_travs         75 calls  avg   0.267ms  max   1.000ms  total    20.0ms 
-3834.09 :  [BATMOBILE PERF] === 5.0s window === 
-3834.09 :    total_update             73 calls  avg  16.260ms  max  32.000ms  total  1187.0ms 
-3834.09 :    total_move               73 calls  avg   5.041ms  max  94.000ms  total   368.0ms 
-3834.09 :    select_target             4 calls  avg  74.250ms  max  85.000ms  total   297.0ms 
-3834.09 :    find_path                 4 calls  avg   8.500ms  max  13.000ms  total    34.0ms 
-3834.09 :    get_nearby_travs         73 calls  avg   0.288ms  max   2.000ms  total    21.0ms 
-3839.11 :  [BATMOBILE PERF] === 5.0s window === 
-3839.11 :    total_move               56 calls  avg  28.321ms  max 369.000ms  total  1586.0ms 
-3839.11 :    find_path                10 calls  avg 138.100ms  max 364.000ms  total  1381.0ms 
-3839.11 :    total_update             56 calls  avg  11.464ms  max  28.000ms  total   642.0ms 
-3839.11 :    select_target             3 calls  avg  53.000ms  max  69.000ms  total   159.0ms 
-3839.11 :    get_nearby_travs         56 calls  avg   0.196ms  max   1.000ms  total    11.0ms 
-3844.12 :  [BATMOBILE PERF] === 5.0s window === 
-3844.12 :    total_update             71 calls  avg  17.437ms  max  28.000ms  total  1238.0ms 
-3844.12 :    total_move               71 calls  avg   5.507ms  max 106.000ms  total   391.0ms 
-3844.12 :    select_target             3 calls  avg  79.000ms  max  83.000ms  total   237.0ms 
-3844.12 :    find_path                 8 calls  avg  14.875ms  max  27.000ms  total   119.0ms 
-3844.12 :    get_nearby_travs         71 calls  avg   0.254ms  max   1.000ms  total    18.0ms 
-3849.17 :  [BATMOBILE PERF] === 5.0s window === 
-3849.17 :    total_update             72 calls  avg  14.083ms  max  25.000ms  total  1014.0ms 
-3849.17 :    total_move               72 calls  avg   5.917ms  max 105.000ms  total   426.0ms 
-3849.17 :    select_target             4 calls  avg  68.750ms  max  73.000ms  total   275.0ms 
-3849.17 :    find_path                 5 calls  avg  22.800ms  max  37.000ms  total   114.0ms 
-3849.17 :    get_nearby_travs         72 calls  avg   0.250ms  max   1.000ms  total    18.0ms 
-3854.21 :  [BATMOBILE PERF] === 5.1s window === 
-3854.21 :    total_update             73 calls  avg  14.329ms  max  35.000ms  total  1046.0ms 
-3854.21 :    total_move               73 calls  avg   6.192ms  max 121.000ms  total   452.0ms 
-3854.21 :    find_path                 5 calls  avg  49.000ms  max 100.000ms  total   245.0ms 
-3854.21 :    select_target             3 calls  avg  54.333ms  max  80.000ms  total   163.0ms 
-3854.21 :    get_nearby_travs         73 calls  avg   0.315ms  max   2.000ms  total    23.0ms 
-3859.23 :  [BATMOBILE PERF] === 5.0s window === 
-3859.23 :    total_update             72 calls  avg  12.819ms  max  26.000ms  total   923.0ms 
-3859.23 :    total_move               72 calls  avg   5.375ms  max 104.000ms  total   387.0ms 
-3859.23 :    select_target             4 calls  avg  68.500ms  max  83.000ms  total   274.0ms 
-3859.23 :    find_path                 6 calls  avg  12.667ms  max  21.000ms  total    76.0ms 
-3859.23 :    get_nearby_travs         72 calls  avg   0.236ms  max   1.000ms  total    17.0ms 
-3865.15 :  [BATMOBILE PERF] === 6.6s window === 
-3865.15 :    total_update             55 calls  avg  15.164ms  max  57.000ms  total   834.0ms 
-3865.15 :    total_move               55 calls  avg   7.673ms  max 108.000ms  total   422.0ms 
-3865.15 :    select_target             4 calls  avg  56.750ms  max  80.000ms  total   227.0ms 
-3865.15 :    find_path                 7 calls  avg  23.000ms  max  43.000ms  total   161.0ms 
-3865.15 :    get_nearby_travs         55 calls  avg   0.127ms  max   1.000ms  total     7.0ms 
-3868.11 :  Universal Rotation: Cast Disciple of Justice [Entry 5, Priority 1] 
-3868.16 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.19 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.23 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.27 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.30 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.33 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.36 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.40 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.43 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.46 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.49 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.52 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3868.57 :  Universal Rotation: Cast LanceDive OLD [Entry 6, Priority 1] 
-3869.37 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3869.48 :  Universal Rotation: Cast HolyShock Aura [Entry 2, Priority 1] 
-3869.58 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3869.62 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3869.65 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3869.68 :  Universal Rotation: Cast Offensive Aura [Entry 3, Priority 3] 
-3869.72 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3869.83 :  Universal Rotation: Cast Defensive Aura [Entry 4, Priority 12] 
-3870.23 :  [BATMOBILE PERF] === 5.0s window === 
-3870.23 :    total_update             78 calls  avg  12.795ms  max  29.000ms  total   998.0ms 
-3870.23 :    total_move               78 calls  avg   0.872ms  max  26.000ms  total    68.0ms 
-3870.23 :    find_path                 1 calls  avg  26.000ms  max  26.000ms  total    26.0ms 
-3870.23 :    get_nearby_travs         78 calls  avg   0.103ms  max   1.000ms  total     8.0ms 
-3870.56 :  Universal Rotation: Cast Smite FalconPunch Re.. [Entry 1, Priority 1] 
-3920.11 :  [BATMOBILE PERF] === 49.9s window === 
-3920.11 :    total_update             61 calls  avg   5.869ms  max  31.000ms  total   358.0ms 
-3920.11 :    total_move               24 calls  avg   1.875ms  max  33.000ms  total    45.0ms 
-3920.11 :    find_path                 3 calls  avg  11.000ms  max  32.000ms  total    33.0ms 
-3920.11 :    get_nearby_travs         24 calls  avg   0.250ms  max   1.000ms  total     6.0ms 
-3929.49 :  [BATMOBILE PERF] === 9.5s window === 
-3929.49 :    total_move               20 calls  avg   4.900ms  max  77.000ms  total    98.0ms 
-3929.49 :    find_path                 3 calls  avg  20.667ms  max  56.000ms  total    62.0ms 
-3929.49 :    total_update              1 calls  avg  30.000ms  max  30.000ms  total    30.0ms 
-3929.49 :    select_target             1 calls  avg  20.000ms  max  20.000ms  total    20.0ms 
-3929.49 :    get_nearby_travs         20 calls  avg   0.200ms  max   1.000ms  total     4.0ms 
+6857.67 :  [nav] pathfinding to=-22.5,-54.5 dist=16.8 custom=false 
+6857.67 :  [nav] pathfind OK, path=#25 
+6857.78 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6857.78 :  [nav] pathfind OK, path=#3 
+6858.49 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6858.49 :  [select_target] picked 13,-19.5 dist=33.5 frontiers=218 bt=#1 bting=false 
+6858.49 :  [nav] new target=13,-19.5 
+6858.49 :  [nav] pathfinding to=13,-19.5 dist=33.2 custom=false 
+6858.49 :  [nav] pathfind OK, path=#49 
+6858.60 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6858.60 :  [select_target] picked 13,-20 dist=32.6 frontiers=217 bt=#1 bting=false 
+6858.60 :  [nav] new target=13,-20 
+6858.60 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
+6858.60 :  [nav] pathfind OK, path=#48 
+6858.70 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6858.70 :  [select_target] picked 13,-20.5 dist=31.7 frontiers=216 bt=#1 bting=false 
+6858.70 :  [nav] new target=13,-20.5 
+6858.70 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
+6858.70 :  [nav] pathfind OK, path=#47 
+6858.82 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6858.82 :  [nav] pathfind OK, path=#3 
+6859.59 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6859.59 :  [select_target] picked 13,-19.5 dist=32.2 frontiers=218 bt=#1 bting=false 
+6859.59 :  [nav] new target=13,-19.5 
+6859.59 :  [nav] pathfinding to=13,-19.5 dist=32.5 custom=false 
+6859.59 :  [nav] pathfind OK, path=#48 
+6859.70 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6859.70 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
+6859.70 :  [nav] new target=13,-20 
+6859.70 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
+6859.70 :  [nav] pathfind OK, path=#48 
+6859.80 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6859.80 :  [select_target] picked 13,-20.5 dist=31.3 frontiers=216 bt=#1 bting=false 
+6859.80 :  [nav] new target=13,-20.5 
+6859.80 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
+6859.80 :  [nav] pathfind OK, path=#47 
+6859.90 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6859.90 :  [nav] pathfind OK, path=#3 
+6860.58 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6860.58 :  [select_target] picked 13,-19.5 dist=31.5 frontiers=218 bt=#1 bting=false 
+6860.58 :  [nav] new target=13,-19.5 
+6860.58 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
+6860.58 :  [nav] pathfind OK, path=#47 
+6860.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6860.69 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
+6860.69 :  [nav] new target=13,-20 
+6860.69 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
+6860.69 :  [nav] pathfind OK, path=#48 
+6860.80 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6860.80 :  [select_target] picked 13,-20.5 dist=31.1 frontiers=216 bt=#1 bting=false 
+6860.80 :  [nav] new target=13,-20.5 
+6860.80 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
+6860.80 :  [nav] pathfind OK, path=#47 
+6860.92 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
+6860.92 :  [nav] pathfind OK, path=#4 
+6861.60 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6861.60 :  [select_target] picked 13,-19.5 dist=32.2 frontiers=218 bt=#1 bting=false 
+6861.60 :  [nav] new target=13,-19.5 
+6861.60 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
+6861.60 :  [nav] pathfind OK, path=#47 
+6861.71 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6861.71 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
+6861.71 :  [nav] new target=13,-20 
+6861.71 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
+6861.71 :  [nav] pathfind OK, path=#48 
+6861.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6861.81 :  [select_target] picked 13,-20.5 dist=31.2 frontiers=216 bt=#1 bting=false 
+6861.81 :  [nav] new target=13,-20.5 
+6861.81 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
+6861.81 :  [nav] pathfind OK, path=#47 
+6861.94 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
+6861.94 :  [nav] pathfind OK, path=#4 
+6862.53 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6862.53 :  [select_target] picked 13,-19.5 dist=31.6 frontiers=218 bt=#1 bting=false 
+6862.53 :  [nav] new target=13,-19.5 
+6862.53 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
+6862.53 :  [nav] pathfind OK, path=#47 
+6862.53 :  [BATMOBILE PERF] === 5.0s window === 
+6862.53 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=2 
+6862.53 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+6862.53 :    total_update               44( 8.7/s)  avg  23.386ms  max  99.000ms  total  1029.0ms 
+6862.53 :    total_move                 44( 8.7/s)  avg   6.023ms  max  66.000ms  total   265.0ms 
+6862.53 :    find_path                  19( 3.8/s)  avg  12.158ms  max  63.000ms  total   231.0ms 
+6862.53 :    get_nearby_travs           44( 8.7/s)  avg   0.455ms  max   4.000ms  total    20.0ms 
+6862.53 :    select_target              14( 2.8/s)  avg   0.786ms  max   2.000ms  total    11.0ms 
+6862.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6862.69 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
+6862.69 :  [nav] new target=13,-20 
+6862.69 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
+6862.69 :  [nav] pathfind OK, path=#48 
+6862.79 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6862.79 :  [select_target] picked 13,-20.5 dist=31.1 frontiers=216 bt=#1 bting=false 
+6862.79 :  [nav] new target=13,-20.5 
+6862.79 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
+6862.79 :  [nav] pathfind OK, path=#47 
+6862.90 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
+6862.90 :  [nav] pathfind OK, path=#4 
+6863.57 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6863.57 :  [select_target] picked 13,-21 dist=30.9 frontiers=215 bt=#1 bting=false 
+6863.57 :  [nav] new target=13,-21 
+6863.57 :  [nav] pathfinding to=13,-21 dist=31.2 custom=false 
+6863.57 :  [nav] pathfind OK, path=#47 
+6863.71 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6863.71 :  [select_target] picked 13,-21.5 dist=31.4 frontiers=214 bt=#1 bting=false 
+6863.71 :  [nav] new target=13,-21.5 
+6863.71 :  [nav] pathfinding to=13,-21.5 dist=31.7 custom=false 
+6863.71 :  [nav] pathfind OK, path=#48 
+6863.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6863.81 :  [select_target] picked 13,-22 dist=30.6 frontiers=213 bt=#1 bting=false 
+6863.81 :  [nav] new target=13,-22 
+6863.81 :  [nav] pathfinding to=13,-22 dist=30.8 custom=false 
+6863.81 :  [nav] pathfind OK, path=#47 
+6863.93 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
+6863.93 :  [nav] pathfind OK, path=#4 
+6864.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6864.69 :  [select_target] picked 13,-22.5 dist=30.9 frontiers=212 bt=#1 bting=false 
+6864.69 :  [nav] new target=13,-22.5 
+6864.69 :  [nav] pathfinding to=13,-22.5 dist=30.6 custom=false 
+6864.69 :  [nav] pathfind OK, path=#47 
+6864.86 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6864.86 :  [select_target] picked 13,-23 dist=30.8 frontiers=211 bt=#1 bting=false 
+6864.86 :  [nav] new target=13,-23 
+6864.86 :  [nav] pathfinding to=13,-23 dist=31.1 custom=false 
+6864.86 :  [nav] pathfind OK, path=#48 
+6865.00 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6865.00 :  [nav] pathfind OK, path=#3 
+6865.85 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6865.85 :  [select_target] picked 13,-23.5 dist=30.5 frontiers=210 bt=#1 bting=false 
+6865.85 :  [nav] new target=13,-23.5 
+6865.85 :  [nav] pathfinding to=13,-23.5 dist=30.2 custom=false 
+6865.85 :  [nav] pathfind OK, path=#47 
+6865.98 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6865.98 :  [select_target] picked 12.5,-19.5 dist=32.1 frontiers=209 bt=#1 bting=false 
+6865.98 :  [nav] new target=12.5,-19.5 
+6865.98 :  [nav] pathfinding to=12.5,-19.5 dist=32.3 custom=false 
+6865.98 :  [nav] pathfind OK, path=#47 
+6866.08 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6866.08 :  [select_target] picked 12.5,-20 dist=30.9 frontiers=208 bt=#1 bting=false 
+6866.08 :  [nav] new target=12.5,-20 
+6866.08 :  [nav] pathfinding to=12.5,-20 dist=31.1 custom=false 
+6866.08 :  [nav] pathfind OK, path=#46 
+6866.18 :  [nav] pathfinding to=-10,-42.5 dist=1.9 custom=true 
+6866.18 :  [nav] pathfind OK, path=#4 
+6866.83 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6866.83 :  [select_target] picked 12.5,-20.5 dist=31.4 frontiers=207 bt=#1 bting=false 
+6866.83 :  [nav] new target=12.5,-20.5 
+6866.83 :  [nav] pathfinding to=12.5,-20.5 dist=31.6 custom=false 
+6866.83 :  [nav] pathfind OK, path=#47 
+6866.95 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6866.95 :  [nav] pathfind OK, path=#3 
+6867.51 :  [Reaper] EXPLORING: long path retry 1 (traversal crossed?)... 
+6867.51 :  [LONG PATH] navigate_to: finding uncapped path (dist=2.1) ... 
+6867.51 :  [LONG PATH] navigate_to: found  nodes=4  iters=4  time=0.0ms 
+6867.51 :  [LONG PATH] Navigation started | nodes=4 | target=(-10.0, -42.5) 
+6867.51 :  [Reaper] Long path found – switching to LONG_PATHING. 
+6867.66 :  [LONG PATH] Reached target! 
+6867.74 :  [Reaper] Seed reached but altar not visible – switching to EXPLORING. 
+6867.84 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6867.84 :  [select_target] picked -22,-54.5 dist=17.2 frontiers=318 bt=#1 bting=false 
+6867.84 :  [nav] new target=-22,-54.5 
+6867.84 :  [nav] pathfinding to=-22,-54.5 dist=17.0 custom=false 
+6867.84 :  [nav] pathfind OK, path=#25 
+6867.84 :  [BATMOBILE PERF] === 5.2s window === 
+6867.84 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=0 
+6867.84 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+6867.84 :    total_update               44( 8.5/s)  avg  17.250ms  max  51.000ms  total   759.0ms 
+6867.84 :    total_move                 44( 8.5/s)  avg  11.886ms  max  94.000ms  total   523.0ms 
+6867.84 :    find_path                  17( 3.3/s)  avg  28.529ms  max  90.000ms  total   485.0ms 
+6867.84 :    get_nearby_travs           46( 8.8/s)  avg   0.413ms  max   1.000ms  total    19.0ms 
+6867.84 :    select_target              12( 2.3/s)  avg   1.167ms  max   2.000ms  total    14.0ms 
+6867.95 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6867.95 :  [select_target] picked -22.5,-54.5 dist=17.0 frontiers=318 bt=#1 bting=false 
+6867.95 :  [nav] new target=-22.5,-54.5 
+6867.95 :  [nav] pathfinding to=-22.5,-54.5 dist=16.8 custom=false 
+6867.95 :  [nav] pathfind OK, path=#25 
+6868.06 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6868.06 :  [nav] pathfind OK, path=#3 
+6868.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6868.81 :  [select_target] picked 11.5,-21 dist=30.7 frontiers=193 bt=#1 bting=false 
+6868.81 :  [nav] new target=11.5,-21 
+6868.81 :  [nav] pathfinding to=11.5,-21 dist=30.4 custom=false 
+6868.81 :  [nav] pathfind OK, path=#45 
+6868.93 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6868.93 :  [select_target] picked 11.5,-21.5 dist=29.6 frontiers=192 bt=#1 bting=false 
+6868.93 :  [nav] new target=11.5,-21.5 
+6868.93 :  [nav] pathfinding to=11.5,-21.5 dist=29.5 custom=false 
+6868.93 :  [nav] pathfind OK, path=#44 
+6869.06 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
+6869.06 :  [nav] pathfind OK, path=#3 
+6870.33 :  [nav] pathfinding to=-10,-42.5 dist=6.7 custom=true 
+6870.33 :  [nav] pathfind OK, path=#12 
+6870.88 :  [nav] pathfinding to=-10,-42.5 dist=11.7 custom=true 
+6870.88 :  [nav] pathfind OK, path=#22 
+6872.61 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
+6872.61 :  [select_target] picked 13,-19.5 dist=33.7 frontiers=218 bt=#2 bting=false 
+6872.61 :  [nav] new target=13,-19.5 
+6872.61 :  [nav] pathfinding to=13,-19.5 dist=33.5 custom=false 
+6872.61 :  [nav] pathfind OK, path=#49 
+6872.70 :  [nav] pathfinding to=-10,-42.5 dist=1.2 custom=true 
+6872.70 :  [nav] pathfind OK, path=#3 

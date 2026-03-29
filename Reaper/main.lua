@@ -166,7 +166,15 @@ on_render(function()
     end
     if current_task then
         graphics.text_2d("Task: " .. current_task.name, vec2:new(x, y), 12, color_yellow(255))
-        y = y + 16
+        y = y + 15
+        if current_task.description then
+            local desc = current_task.description()
+            if desc then
+                graphics.text_2d("  " .. desc, vec2:new(x, y), 11, color_white(180))
+                y = y + 14
+            end
+        end
+        y = y + 2
     end
     graphics.text_2d("Total kills: " .. tracker.total_kills, vec2:new(x, y), 12, color_green(255))
     y = y + 20

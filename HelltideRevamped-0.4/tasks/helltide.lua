@@ -2,6 +2,7 @@ local utils = require "core.utils"
 local tracker = require "core.tracker"
 local settings = require "core.settings"
 local enums = require "data.enums"
+local perf = require "core.perf"
 
 local found_chest = nil
 local found_chest_position = nil -- cached position so we can navigate even when actor unloads
@@ -68,6 +69,7 @@ local navigate_to_debug_time = 0
 local navigate_to_start_pos = nil -- position when stuck timer started
 
 local function navigate_to(target)
+    perf.start("navigate_to")
     if BatmobilePlugin then
         BatmobilePlugin.resume(plugin_label)
         local now = get_time_since_inject()
@@ -97,6 +99,7 @@ local function navigate_to(target)
                 navigate_to_stuck_time = nil
                 navigate_to_start_pos = nil
             end
+            perf.stop("navigate_to")
             return
         end
 
@@ -131,6 +134,7 @@ local function navigate_to(target)
         end
         pathfinder.request_move(pos)
     end
+    perf.stop("navigate_to")
 end
 
 -- Reset navigate_to state (call when switching away from navigate_to usage)
@@ -197,8 +201,29 @@ local function debug_chest_scan()
     end
 end
 
+-- Cached actor list: get_all_actors() is expensive, share one snapshot across all
+-- find_closest_target() and scan_and_remember_chests() calls within the same frame.
+local cached_actors = nil
+local cached_actors_time = 0
+local ACTOR_CACHE_TTL = 0.5
+
+local function get_cached_actors()
+    local now = get_time_since_inject()
+    if cached_actors == nil or now - cached_actors_time >= ACTOR_CACHE_TTL then
+        perf.inc("actor_cache_miss")
+        perf.start("get_all_actors")
+        cached_actors = actors_manager:get_all_actors()
+        perf.stop("get_all_actors")
+        cached_actors_time = now
+    else
+        perf.inc("actor_cache_hit")
+    end
+    return cached_actors
+end
+
 local function find_closest_target(name)
-    local actors = actors_manager:get_all_actors()
+    perf.inc("find_closest_target")
+    local actors = get_cached_actors()
     local closest_target = nil
     local closest_distance = math.huge
 
@@ -305,10 +330,19 @@ local function remember_chest(name, cost, actor)
 end
 
 -- Scan nearby actors for unaffordable chests and remember them
+local last_chest_scan_time = 0
+local CHEST_SCAN_TTL = 2.0
 local function scan_and_remember_chests()
     if not settings.helltide_chest then return end
+    local now = get_time_since_inject()
+    if now - last_chest_scan_time < CHEST_SCAN_TTL then
+        perf.inc("chest_scan_skip")
+        return
+    end
+    last_chest_scan_time = now
+    perf.start("scan_remember_chests")
     local current_cinders = get_helltide_coin_cinders()
-    local actors = actors_manager:get_all_actors()
+    local actors = get_cached_actors()
 
     for _, actor in pairs(actors) do
         local skin = actor:get_skin_name()
@@ -318,6 +352,7 @@ local function scan_and_remember_chests()
             end
         end
     end
+    perf.stop("scan_remember_chests")
 end
 
 -- Check if we can now afford any remembered chest — returns the key + entry of the cheapest affordable one
@@ -340,7 +375,7 @@ end
 -- Kill monster tracking
 local km_unreachable = {}
 local KM_UNREACHABLE_TIMEOUT = 30
-local km_nav = { pos = nil, time = 0, dist = nil }
+local km_nav_map = {}  -- per-position progress tracking: key -> {time, dist}
 
 local function km_is_unreachable(pos)
     local now = get_time_since_inject()
@@ -351,13 +386,27 @@ local function km_is_unreachable(pos)
     return km_unreachable[key] ~= nil
 end
 
+local km_target_cache = nil
+local km_cache_valid = false  -- separate flag: cache populated (result may be nil)
+local km_target_cache_time = 0
+local KM_TARGET_CACHE_TTL = 1.0  -- increased from 0.3; nil result was never cached before
+
 local function km_mark_unreachable(pos)
     local key = math.floor(pos:x()) .. ',' .. math.floor(pos:y())
     km_unreachable[key] = get_time_since_inject()
+    km_cache_valid = false  -- invalidate so next call re-scans without the now-unreachable enemy
     console.print(string.format("[KILL MONSTERS] Marked unreachable: (%.1f, %.1f)", pos:x(), pos:y()))
 end
 
 local function get_kill_target()
+    local now = get_time_since_inject()
+    if km_cache_valid and now - km_target_cache_time < KM_TARGET_CACHE_TTL then
+        perf.inc("km_cache_hit")
+        return km_target_cache
+    end
+    km_cache_valid = false
+    perf.inc("km_cache_miss")
+    perf.start("get_kill_target")
     local player_pos = get_player_position()
     local enemies = target_selector.get_near_target_list(player_pos, 50)
     local closest_enemy, closest_enemy_dist
@@ -392,7 +441,12 @@ local function get_kill_target()
         end
         ::continue::
     end
-    return closest_boss or closest_champ or closest_elite or closest_enemy
+    local result = closest_boss or closest_champ or closest_elite or closest_enemy
+    perf.stop("get_kill_target")
+    km_target_cache = result
+    km_cache_valid = true  -- mark valid even when result is nil (no targets found)
+    km_target_cache_time = get_time_since_inject()
+    return result
 end
 
 local function check_events(self)
@@ -521,6 +575,8 @@ local helltide_task = {
     end,
 
     Execute = function(self)
+        perf.report()
+        perf.inc("state_" .. self.current_state)
         debug_chest_scan() -- DEBUG: remove when done testing
         self.name = "Explore Helltide (" .. self.current_state .. ")"
         local lp = get_local_player()
@@ -573,7 +629,9 @@ local helltide_task = {
         elseif self.current_state == helltide_state.CHASE_GOBLIN then
             self:chase_goblin()
         elseif self.current_state == helltide_state.KILL_MONSTERS then
+            perf.start("kill_monsters")
             self:kill_monsters()
+            perf.stop("kill_monsters")
         elseif self.current_state == helltide_state.MOVING_TO_REMEMBERED_CHEST then
             self:move_to_remembered_chest()
         elseif self.current_state == helltide_state.MOVING_TO_CHAOS_RIFT then
@@ -599,7 +657,9 @@ local helltide_task = {
             return
         end
 
+        perf.start("check_events")
         check_events(self)
+        perf.stop("check_events")
         if self.current_state ~= helltide_state.EXPLORE_HELLTIDE then
             last_target_ni = nil
             patrol_free_explore = false
@@ -678,8 +738,6 @@ local helltide_task = {
                 if utils.distance_to(tracker.waypoints[ni]) > WAYPOINT_MAX_DIST then
                     ni = nearest
                 end
-                console.print(string.format("[PATROL] Waypoint too far (%.0f), re-snapped ni %d -> %d (dist=%.1f)",
-                    dist_to_target, old_ni, ni, utils.distance_to(tracker.waypoints[ni])))
             end
         end
 
@@ -1086,7 +1144,6 @@ local helltide_task = {
 
         local target = get_kill_target()
         if not target then
-            km_nav.pos = nil
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             console.print("[KILL MONSTERS] No targets, resuming patrol")
             clear_movement()
@@ -1097,17 +1154,19 @@ local helltide_task = {
         local target_pos = target:get_position()
         local cur_dist = utils.distance_to(target)
 
-        -- Nav progress tracking
-        if km_nav.pos == nil or target_pos:dist_to(km_nav.pos) > 5 then
-            km_nav.pos = target_pos
-            km_nav.time = get_time_since_inject()
-            km_nav.dist = cur_dist
-        elseif cur_dist < km_nav.dist - 2 then
-            km_nav.dist = cur_dist
-            km_nav.time = get_time_since_inject()
-        elseif get_time_since_inject() - km_nav.time > 12 then
+        -- Per-position progress tracking: timer persists across target switches
+        -- so a monster that's intermittently targeted still accumulates time toward the unreachable timeout
+        local nav_key = math.floor(target_pos:x()) .. ',' .. math.floor(target_pos:y())
+        local now = get_time_since_inject()
+        local nav = km_nav_map[nav_key]
+        if not nav then
+            km_nav_map[nav_key] = { time = now, dist = cur_dist }
+        elseif cur_dist < nav.dist - 2 then
+            nav.dist = cur_dist
+            nav.time = now
+        elseif now - nav.time > 5 then
+            km_nav_map[nav_key] = nil
             km_mark_unreachable(target_pos)
-            km_nav.pos = nil
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             return
         end
@@ -1118,7 +1177,7 @@ local helltide_task = {
                 local accepted = BatmobilePlugin.set_target(plugin_label, target)
                 if accepted == false then
                     km_mark_unreachable(target_pos)
-                    km_nav.pos = nil
+                    km_nav_map[nav_key] = nil
                     BatmobilePlugin.clear_target(plugin_label)
                     return
                 end
@@ -1128,7 +1187,7 @@ local helltide_task = {
                 pathfinder.request_move(target_pos)
             end
         else
-            km_nav.pos = nil
+            km_nav_map[nav_key] = nil  -- reached target, clear tracking entry
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
         end
     end,
@@ -1216,7 +1275,10 @@ local helltide_task = {
         remembered_chests = {}
         remembered_chest_target = nil
         km_unreachable = {}
-        km_nav = { pos = nil, time = 0, dist = nil }
+        km_nav_map = {}
+        km_target_cache = nil
+        km_cache_valid = false
+        cached_actors = nil
         clear_movement()
         if BatmobilePlugin then
             BatmobilePlugin.reset(plugin_label)

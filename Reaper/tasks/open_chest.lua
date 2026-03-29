@@ -75,9 +75,9 @@ local function find_theme_chest()
     local pp = lp and lp:get_position()
     for _, a in pairs(actors) do
         local n = a:get_skin_name()
-        if type(n) == "string" and n:find("^S12_Prop_Theme_Chest_") then
-            -- case-insensitive dyn check
-            if n:lower():find("_dyn") then
+        if type(n) == "string" and n:lower():find("^s12_prop_theme_chest_") then
+            -- use interactable check (skin name suffix varies by season)
+            if _interactable(a) then
                 if pp then
                     local d = pp:dist_to(a:get_position())
                     if d < best_dist then best = a; best_dist = d end
@@ -251,7 +251,13 @@ function task.Execute()
 
     -- ---- THEME: find and open the DOOM/seasonal chest ----
     if phase == "THEME" then
-        if phase_elapsed() > THEME_WAIT_SECS then
+        -- For sigil runs the boss chest may not exist for this season's skin name.
+        -- Give it 2s on the first frame; if nothing is found, skip immediately.
+        local boss = rotation.current()
+        local is_sigil = boss and boss.run_type == "sigil"
+        local wait_secs = is_sigil and 2 or THEME_WAIT_SECS
+
+        if phase_elapsed() > wait_secs then
             console.print("[Chest] No theme chest found – continuing.")
             set_phase("WAIT_COMPLETE")
             return

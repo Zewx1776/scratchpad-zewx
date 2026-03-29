@@ -356,6 +356,12 @@ function map_nav.update()
 
     -- ---- WAIT_ZONE ----
     if s.state == STATE.WAIT_ZONE then
+        -- After 3s, if still in anchor zone, Accept didn't land — redo the map click
+        if elapsed() >= 3.0 and in_anchor_zone(s.anchor) then
+            console.print("[MapNav] Still in anchor zone after Accept – redoing map click.")
+            set_state(STATE.WALK_TO_WP)
+            return
+        end
         -- navigate_to_boss checks zone arrival; we just enforce timeout
         if elapsed() >= T_ZONE then
             console.print("[MapNav] Boss zone timeout – retrying.")

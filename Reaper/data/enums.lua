@@ -66,12 +66,30 @@ enums.positions = {
         ["Boss_WT4_Andariel"]       = vec3:new( 8.2821,  -8.7344, -6.223),
         ["Boss_WT4_MegaDemon"]      = vec3:new( 4.9245,   5.3086,  0.127),
         ["Boss_WT4_Varshan"]        = vec3:new(-3.2805,  -3.1949, -3.304),
+        ["Boss_WT5_Harbinger"]      = vec3:new(-8.77,    15.49,    0.18),
+        -- Butcher (The Broiler) has two layout variants — pick nearest at runtime
+        ["S12_Boss_Butcher"]        = {
+            vec3:new(-9.9,  -42.6, -2.5),
+            vec3:new(-41.3, -11.1, -2.5),
+        },
     },
 }
 
 function enums.positions.getBossRoomPosition(world_name)
-    local pos = enums.positions.boss_room[world_name]
-    return pos or vec3:new(0, 0, 0)
+    local entry = enums.positions.boss_room[world_name]
+    if not entry then return vec3:new(0, 0, 0) end
+    -- Single position
+    if entry.x then return entry end
+    -- Array of positions — return nearest to player (fallback: first)
+    local lp = get_local_player and get_local_player()
+    local pp = lp and lp:get_position()
+    if not pp then return entry[1] end
+    local best, best_dist = entry[1], math.huge
+    for _, v in ipairs(entry) do
+        local d = pp:dist_to(v)
+        if d < best_dist then best = v; best_dist = d end
+    end
+    return best
 end
 
 -- -------------------------------------------------------

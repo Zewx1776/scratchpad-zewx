@@ -44,13 +44,13 @@ local SIGIL_SNO = 2565553  -- Bloodied + Bloodsoaked share the same SNO ID
 -- Maps display name substrings → boss_id
 local SIGIL_DISPLAY_MAP = {
     ["Gaping Crevasse"]      = "duriel",
-    ["The Broiler"]          = "duriel",
-    ["Ancient's Seat"]       = "duriel",
+    ["The Broiler"]          = "butcher",
+    ["Ancient's Seat"]       = "zir",
     ["Malignant Burrow"]     = "varshan",
     ["Hall of the Penitent"] = "grigoire",
-    ["Fields of Judgement"]  = "grigoire",
+    ["Fields of Judgement"]  = "urivar",
     ["Glacial Fissure"]      = "beast",
-    ["Hanged Man's Hall"]    = "zir",
+    ["Hanged Man's Hall"]    = "andariel",
     ["Harbinger's Den"]      = "harbinger",
 }
 

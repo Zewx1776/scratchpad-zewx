@@ -61,6 +61,7 @@ gui.elements = {
     confirm_delay = slider_int:new(1, 300, 5, get_hash(plugin_label .. '_' .. 'confirm_delay')),
     use_magoogle_tool = create_checkbox(false, 'use_magoogle_tool'),
     follower_explore = create_checkbox(false, 'follower_explore'),
+    use_long_path = create_checkbox(false, 'use_long_path'),
 }
 gui.render = function ()
     if not gui.elements.main_tree:push('Arkham Asylum (pit) | Leoric | v' .. gui.plugin_version) then return end
@@ -95,6 +96,7 @@ gui.render = function ()
         gui.elements.exit_mode:render('Exit mode', gui.exit_mode, 'Select reset or teleport to exit pit')
         gui.elements.return_for_loot:render('Return for loot', 'return for loot after alfred run')
         gui.elements.interact_shrine:render('Enable shrine interaction (and belial eye)', 'Enable shrine interaction (and belial eye)')
+        gui.elements.use_long_path:render('Use long path for monster targeting', 'Use uncapped A* to find paths to monsters (better for long-range or complex terrain)')
         gui.elements.upgrade_toggle:render('Enable Glyph Upgrade', 'Toggle glyph upgrade on/off')
         if gui.elements.upgrade_toggle:get() then
             gui.elements.upgrade_mode:render('Upgrade mode', gui.upgrade_mode, 'Select how to upgrade glyphs')

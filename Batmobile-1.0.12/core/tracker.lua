@@ -16,10 +16,12 @@ local tracker = {
     -- benchmark system
     bench_enabled = true,
     bench_data = {},
+    bench_counters = {},   -- event counters (no timing)
     bench_starts = {},
     bench_last_report = -1,
     bench_report_interval = 5,
     bench_first_report = true,
+    bench_nav_state = nil, -- set each frame by navigator.move()
 }
 
 tracker.bench_start = function(name)
@@ -41,6 +43,11 @@ tracker.bench_stop = function(name)
     entry.total = entry.total + elapsed
     entry.count = entry.count + 1
     if elapsed > entry.max then entry.max = elapsed end
+end
+
+tracker.bench_count = function(name)
+    if not tracker.bench_enabled then return end
+    tracker.bench_counters[name] = (tracker.bench_counters[name] or 0) + 1
 end
 
 tracker.bench_report = function()
@@ -65,15 +72,39 @@ tracker.bench_report = function()
     table.sort(entries, function(a, b) return a.data.total > b.data.total end)
 
     console.print(string.format("[BATMOBILE PERF] === %.1fs window ===", window))
+
+    -- Navigator state snapshot (set every frame by navigator.move)
+    if tracker.bench_nav_state then
+        console.print("  [NAV STATE] " .. tracker.bench_nav_state)
+    end
+
+    -- Timed sections sorted by total time descending
+    console.print("  [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms)")
     for _, entry in ipairs(entries) do
         local d = entry.data
         local avg_ms = d.count > 0 and (d.total / d.count * 1000) or 0
-        console.print(string.format("  %-22s %4d calls  avg %7.3fms  max %7.3fms  total %7.1fms",
-            entry.name, d.count, avg_ms, d.max * 1000, d.total * 1000))
+        local rate = d.count / window
+        console.print(string.format("  %-24s %4d(%4.1f/s)  avg %7.3fms  max %7.3fms  total %7.1fms",
+            entry.name, d.count, rate, avg_ms, d.max * 1000, d.total * 1000))
+    end
+
+    -- Event counters
+    local cnt_entries = {}
+    for name, cnt in pairs(tracker.bench_counters) do
+        cnt_entries[#cnt_entries + 1] = { name = name, cnt = cnt }
+    end
+    if #cnt_entries > 0 then
+        table.sort(cnt_entries, function(a, b) return a.name < b.name end)
+        local parts = {}
+        for _, e in ipairs(cnt_entries) do
+            parts[#parts + 1] = string.format("%s=%d(%.1f/s)", e.name, e.cnt, e.cnt / window)
+        end
+        console.print("  [EVENTS]  " .. table.concat(parts, "   "))
     end
 
     -- reset for next window
     tracker.bench_data = {}
+    tracker.bench_counters = {}
 end
 
 return tracker

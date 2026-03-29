@@ -62,7 +62,12 @@ gui.elements = {
     debug_tree = tree_node:new(1),
     log_level = combo_box:new(0, get_hash(plugin_label .. '_' .. 'log_level')),
     freeroam_keybind_toggle = keybind:new(0x0A, true, get_hash(plugin_label .. '_freeroam_keybind_toggle' )),
+    long_path_tree = tree_node:new(1),
+    long_path_set_target = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_set_target')),
+    long_path_test       = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_test')),
 }
+gui.long_path_target_str  = nil    -- updated by main.lua after set_target()
+gui.long_path_navigating  = false  -- updated by main.lua each frame
 function gui.render()
     if not gui.elements.main_tree:push('Batmobile | Leoric | v' .. gui.plugin_version) then return end
     gui.elements.draw_keybind_toggle:render('Toggle Drawing', 'Toggle drawing')
@@ -100,9 +105,23 @@ function gui.render()
     end
     -- if gui.elements.advanced_tree:push('Advanced settings') then
     --     gui.elements.max_iteration:render('Max iteration', 'smaller = weaker but less lag, bigger = better pathfinding but laggier')
-        
+
     --     gui.elements.advanced_tree:pop()
     -- end
+    if gui.elements.long_path_tree:push('Long Path Debug') then
+        render_menu_header('1. Walk to destination, click Set Target.')
+        render_menu_header('2. Walk far away, click Test Long Path.')
+        render_menu_header('   Draws route + moves to target. Click again to stop.')
+        local target_display = gui.long_path_target_str or '(none pinned)'
+        render_menu_header('Pinned: ' .. target_display)
+        if gui.long_path_navigating then
+            render_menu_header('Status: NAVIGATING — click Test Long Path to stop')
+        end
+        gui.elements.long_path_set_target:render('Set Target', 'Pin current player position as path goal')
+        local test_label = gui.long_path_navigating and 'Stop Navigation' or 'Test Long Path'
+        gui.elements.long_path_test:render(test_label, 'Run uncapped A* from here to pinned target (click again to stop)')
+        gui.elements.long_path_tree:pop()
+    end
     gui.elements.main_tree:pop()
 end
 

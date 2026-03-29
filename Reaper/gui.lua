@@ -63,7 +63,7 @@ gui.elements = {
     dungeon_reset_enabled  = cb(false,      "dr_en"),
     dungeon_reset_interval = si(1, 200, 10, "dr_int"),
 
-    use_d4a          = cb(true,  "use_d4a"),
+    use_d4a          = cb(false, "use_d4a"),
     use_alfred       = cb(true,  "alfred"),
     show_alignment   = cb(false, "show_align"),
 
@@ -77,16 +77,18 @@ gui.elements = {
     belial_party_delay   = si(0, 5000, 0, "bel_delay"),
     belial_pool          = {},
 
-    -- Boss icon alignment sliders (pixel coords at 1920x1080)
+    -- Boss icon alignment sliders (pixel coords, supports up to 3440x1440)
     -- accept button
-    accept_x = si(0, 1920, ACCEPT_DEFAULT.x, "acc_x"),
-    accept_y = si(0, 1080, ACCEPT_DEFAULT.y, "acc_y"),
+    accept_x = si(0, 3440, ACCEPT_DEFAULT.x, "acc_x"),
+    accept_y = si(0, 1440, ACCEPT_DEFAULT.y, "acc_y"),
     -- per-boss x/y
     boss_icon_x = {},
     boss_icon_y = {},
     -- Zir has a second click
-    zir2_x = si(0, 1920, NEVESK_DEFAULTS.zir2.x, "zir2_x"),
-    zir2_y = si(0, 1080, NEVESK_DEFAULTS.zir2.y, "zir2_y"),
+    zir2_x = si(0, 3440, NEVESK_DEFAULTS.zir2.x, "zir2_x"),
+    zir2_y = si(0, 1440, NEVESK_DEFAULTS.zir2.y, "zir2_y"),
+    -- Sigil mouse click mode toggle
+    use_sigil_clicks = cb(true, "use_sigil_clicks"),
 }
 
 -- Create sliders for every boss that has map icon coords
@@ -99,8 +101,8 @@ for id, d in pairs(ZARB_DEFAULTS) do
 end
 
 for id, d in pairs(ALL_ICON_DEFAULTS) do
-    gui.elements.boss_icon_x[id] = si(0, 1920, d.x, "icon_x_" .. id)
-    gui.elements.boss_icon_y[id] = si(0, 1080, d.y, "icon_y_" .. id)
+    gui.elements.boss_icon_x[id] = si(0, 3440, d.x, "icon_x_" .. id)
+    gui.elements.boss_icon_y[id] = si(0, 1440, d.y, "icon_y_" .. id)
 end
 
 for _, bd in ipairs(enums.belial_chest_bosses) do
@@ -116,7 +118,7 @@ for id, _ in pairs(ALL_ICON_DEFAULTS) do
     align_boss_trees[id] = tree_node:new(align_tree_idx)
     align_tree_idx = align_tree_idx + 1
 end
-local zir2_tree   = tree_node:new(align_tree_idx);     align_tree_idx = align_tree_idx + 1
+local zir2_tree   = tree_node:new(align_tree_idx); align_tree_idx = align_tree_idx + 1
 local accept_tree = tree_node:new(align_tree_idx)
 
 -- Public accessor for map_nav to read live values
@@ -124,20 +126,27 @@ function gui.get_boss_icon(boss_id)
     local ex = gui.elements.boss_icon_x[boss_id]
     local ey = gui.elements.boss_icon_y[boss_id]
     if ex and ey then
-        return ex:get() / 1920, ey:get() / 1080
+        local sw = get_screen_width()
+        local sh = get_screen_height()
+        return ex:get() / sw, ey:get() / sh
     end
     return nil, nil
 end
 
 function gui.get_zir2_icon()
-    return gui.elements.zir2_x:get() / 1920,
-           gui.elements.zir2_y:get() / 1080
+    local sw = get_screen_width()
+    local sh = get_screen_height()
+    return gui.elements.zir2_x:get() / sw,
+           gui.elements.zir2_y:get() / sh
 end
 
 function gui.get_accept()
-    return gui.elements.accept_x:get() / 1920,
-           gui.elements.accept_y:get() / 1080
+    local sw = get_screen_width()
+    local sh = get_screen_height()
+    return gui.elements.accept_x:get() / sw,
+           gui.elements.accept_y:get() / sh
 end
+
 
 -- -------------------------------------------------------
 function gui.render()
@@ -178,12 +187,13 @@ function gui.render()
             "Draws colored crosshairs at each boss icon position.\nOpen the map to see if clicks land correctly.")
         -- Accept button
         if accept_tree:push("Accept Button") then
-            gui.elements.accept_x:render("X (px)", "Pixel X at 1920x1080")
-            gui.elements.accept_y:render("Y (px)", "Pixel Y at 1920x1080")
+            gui.elements.accept_x:render("X (px)", "Pixel X at your screen resolution")
+            gui.elements.accept_y:render("Y (px)", "Pixel Y at your screen resolution")
             local ax = gui.elements.accept_x:get()
             local ay = gui.elements.accept_y:get()
-            graphics.text_2d(string.format("Accept: (%d, %d)  ratio=(%.4f, %.4f)",
-                ax, ay, ax/1920, ay/1080), vec2:new(0,0), 11, color_yellow(255))
+            local sw = get_screen_width(); local sh = get_screen_height()
+            graphics.text_2d(string.format("Accept: (%d, %d)  ratio=(%.4f, %.4f)  screen=%dx%d",
+                ax, ay, ax/sw, ay/sh, sw, sh), vec2:new(0,0), 11, color_yellow(255))
             accept_tree:pop()
         end
 
@@ -201,8 +211,9 @@ function gui.render()
                     gui.elements.boss_icon_y[id]:render("Y (px)", "")
                     local bx = gui.elements.boss_icon_x[id]:get()
                     local by = gui.elements.boss_icon_y[id]:get()
+                    local sw = get_screen_width(); local sh = get_screen_height()
                     graphics.text_2d(string.format("(%d, %d)  ratio=(%.4f, %.4f)",
-                        bx, by, bx/1920, by/1080), vec2:new(0,0), 11, color_yellow(255))
+                        bx, by, bx/sw, by/sh), vec2:new(0,0), 11, color_yellow(255))
                     tree:pop()
                 end
             end
@@ -214,8 +225,9 @@ function gui.render()
             gui.elements.zir2_y:render("Y (px)", "")
             local bx = gui.elements.zir2_x:get()
             local by = gui.elements.zir2_y:get()
+            local sw = get_screen_width(); local sh = get_screen_height()
             graphics.text_2d(string.format("(%d, %d)  ratio=(%.4f, %.4f)",
-                bx, by, bx/1920, by/1080), vec2:new(0,0), 11, color_yellow(255))
+                bx, by, bx/sw, by/sh), vec2:new(0,0), 11, color_yellow(255))
             zir2_tree:pop()
         end
 
@@ -228,8 +240,9 @@ function gui.render()
                     gui.elements.boss_icon_y[id]:render("Y (px)", "")
                     local bx = gui.elements.boss_icon_x[id]:get()
                     local by = gui.elements.boss_icon_y[id]:get()
+                    local sw = get_screen_width(); local sh = get_screen_height()
                     graphics.text_2d(string.format("(%d, %d)  ratio=(%.4f, %.4f)",
-                        bx, by, bx/1920, by/1080), vec2:new(0,0), 11, color_yellow(255))
+                        bx, by, bx/sw, by/sh), vec2:new(0,0), 11, color_yellow(255))
                     tree:pop()
                 end
             end
@@ -249,6 +262,8 @@ function gui.render()
             "Farm bosses using consumable summoning materials (Shards of Agony, Living Steel, etc.)")
         gui.elements.run_sigils:render("Run Lair Boss Sigils",
             "Farm bosses using Bloodied and Bloodsoaked Lair Boss Sigils from your dungeon key inventory.")
+        gui.elements.use_sigil_clicks:render("Use mouse clicks for sigils",
+            "After activating a sigil, teleport to the anchor waypoint, open the map,\nand click the boss icon using the Boss Icon Alignment positions.\nDisable to use D4Assistant (START_NMD_SKIP_SIGIL) instead.")
 
         gui.elements.misc_tree:pop()
     end
@@ -285,9 +300,6 @@ function gui.render_overlay()
         harbinger = color_red(200),
     }
 
-    local sw = get_screen_width()
-    local sh = get_screen_height()
-
     -- Accept button — white
     local ax = gui.elements.accept_x:get()
     local ay = gui.elements.accept_y:get()
@@ -312,6 +324,7 @@ function gui.render_overlay()
     local zx = gui.elements.zir2_x:get()
     local zy = gui.elements.zir2_y:get()
     draw_crosshair(zx, zy, color_cyan(180), "Zir2")
+
 end
 
 return gui

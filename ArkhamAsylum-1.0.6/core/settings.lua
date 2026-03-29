@@ -23,6 +23,7 @@ local settings = {
     check_distance = 12,
     follower_explore = false,
     batmobile_priority = 'distance',
+    use_long_path = false,
 }
 
 settings.get_keybind_state = function ()
@@ -60,7 +61,8 @@ settings.update_settings = function ()
     settings.use_magoogle_tool = gui.elements.use_magoogle_tool:get()
     settings.follower_explore = gui.elements.follower_explore:get()
     settings.batmobile_priority = gui.batmobile_priority[gui.elements.batmobile_priority:get()+1]
-    
+    settings.use_long_path = gui.elements.use_long_path:get()
+
 end
 
 return settings

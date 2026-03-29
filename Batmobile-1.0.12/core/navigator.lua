@@ -455,6 +455,18 @@ navigator.move = function ()
     if not local_player then return end
     local player_pos = local_player:get_position()
     local cur_node = utils.normalize_node(player_pos)
+    -- Update nav state snapshot for perf report (cheap string, overwritten every allowed frame)
+    if tracker.bench_enabled then
+        tracker.bench_nav_state = string.format(
+            "paused=%s  custom=%s  trav_routing=%s  last_trav=%s  pfail=%d  unstuck=%d  path_len=%d",
+            tostring(navigator.paused),
+            tostring(navigator.is_custom_target),
+            tostring(navigator.trav_final_target ~= nil),
+            tostring(navigator.last_trav ~= nil),
+            navigator.pathfind_fail_count,
+            navigator.unstuck_count,
+            #navigator.path)
+    end
     local traversals = get_nearby_travs(local_player)
     if #traversals > 0 then
         local trav = navigator.last_trav
@@ -489,6 +501,7 @@ navigator.move = function ()
             end
         end
         if has_traversal_buff(local_player) then
+            tracker.bench_count("trav_crossed")
             navigator.trav_delay = get_time_since_inject() + 4
             navigator.path = {}
             navigator.disable_spell = nil
@@ -582,7 +595,9 @@ navigator.move = function ()
     then
         local dist_to_target = utils.distance(cur_node, navigator.target)
         console.print('[nav] STUCK target=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' path=#' .. #navigator.path .. ' unstuck_count=' .. navigator.unstuck_count)
+        tracker.bench_start("unstuck")
         unstuck(local_player)
+        tracker.bench_stop("unstuck")
         navigator.last_update = navigator.last_update + 0.25
     end
     if navigator.last_pos == nil or
@@ -643,6 +658,7 @@ navigator.move = function ()
         if #result == 0 then
             tracker.debug_node = navigator.target
             navigator.pathfind_fail_count = navigator.pathfind_fail_count + 1
+            tracker.bench_count("pathfind_fail")
             console.print('[nav] PATHFIND FAILED #' .. navigator.pathfind_fail_count .. ' target=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' paused=' .. tostring(navigator.paused) .. ' frontiers=' .. explorer.frontier_count)
             -- After N consecutive pathfind failures, handle unreachable target
             -- Custom targets (kill_monster): 3 failures (quick give-up, mark unreachable)
@@ -677,6 +693,7 @@ navigator.move = function ()
                         local approach_node = get_closeby_node(closest_trav:get_position(), 2)
                         if approach_node ~= nil then
                             console.print('[nav] routing via traversal ' .. closest_trav:get_skin_name() .. ' to reach ' .. utils.vec_to_string(navigator.target))
+                            tracker.bench_count("trav_route_attempt")
                             navigator.trav_final_target = navigator.target
                             navigator.last_trav = closest_trav
                             navigator.target = approach_node

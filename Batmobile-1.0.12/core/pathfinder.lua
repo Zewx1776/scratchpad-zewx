@@ -181,4 +181,67 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     return {}
 end
 
+-- Debug variant: no distance-scaled limits — runs until path found, open-set exhausted,
+-- or safety caps hit. Returns (path_or_nil, iterations, elapsed_seconds, status_string).
+-- status: "found" | "no_path" | "iter_limit" | "time_limit"
+pathfinder.find_path_debug = function(start, goal)
+    local start_node = utils.normalize_node(start)
+    local goal_node  = utils.normalize_node(goal)
+    local start_str  = utils.vec_to_string(start_node)
+    local open_set   = {[start_str] = start_node}
+    local closed_set = {}
+    local g_score    = {[start_str] = 0}
+    local f_score    = {[start_str] = heuristic(start_node, goal_node)}
+    local prev_nodes = {}
+    local counter    = 0
+    local evaluated  = {}
+    local t0         = os.clock()
+
+    -- Safety ceiling — prevents total game freeze; still far above normal 5000/0.3s limits
+    local HARD_ITER_LIMIT = 100000
+    local HARD_TIME_LIMIT = 15.0
+
+    local dist = settings.step
+    local directions = {
+        {-dist, 0}, {0, dist}, {dist, 0}, {0, -dist},
+        {-dist, dist}, {-dist, -dist}, {dist, dist}, {dist, -dist},
+    }
+
+    while true do
+        local cur_str, cur_node = get_lowest_f_score(open_set, f_score)
+        if cur_str == nil then
+            return nil, counter, os.clock() - t0, "no_path"
+        end
+        if counter >= HARD_ITER_LIMIT then
+            return nil, counter, os.clock() - t0, "iter_limit"
+        end
+        if (os.clock() - t0) >= HARD_TIME_LIMIT then
+            return nil, counter, os.clock() - t0, "time_limit"
+        end
+        counter = counter + 1
+        if utils.distance(cur_node, goal_node) == 0 then
+            return reconstruct_path(closed_set, prev_nodes, cur_node), counter, os.clock() - t0, "found"
+        end
+        open_set[cur_str] = nil
+        closed_set[cur_str] = cur_node
+
+        local neighbours
+        neighbours, evaluated = get_neighbors(cur_node, goal_node, evaluated, true, directions)
+        for _, neighbor in ipairs(neighbours) do
+            local neigh_str = utils.vec_to_string(neighbor)
+            if closed_set[neigh_str] == nil then
+                local t_g = g_score[cur_str] + utils.distance(cur_node, neighbor)
+                if open_set[neigh_str] == nil or t_g < g_score[neigh_str] then
+                    prev_nodes[neigh_str] = cur_str
+                    g_score[neigh_str]    = t_g
+                    f_score[neigh_str]    = t_g + heuristic(neighbor, goal_node)
+                end
+                if open_set[neigh_str] == nil then
+                    open_set[neigh_str] = neighbor
+                end
+            end
+        end
+    end
+end
+
 return pathfinder
