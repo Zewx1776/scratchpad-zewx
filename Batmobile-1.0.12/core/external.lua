@@ -150,4 +150,21 @@ external.stop_long_path = function(caller)
     long_path.stop_navigation()
 end
 
+-- Clear the traversal blacklist and failed-target state so previously crossed
+-- traversals can be selected again.  Call this when the player is stuck on a
+-- platform after a traversal and normal exploration has stalled.
+external.clear_traversal_blacklist = function(caller)
+    if caller == nil then
+        utils.log(2, 'clear_traversal_blacklist called with no caller')
+        return
+    end
+    tracker.external_caller = caller
+    utils.log(2, 'clear_traversal_blacklist called by ' .. tostring(caller))
+    navigator.blacklisted_trav      = {}
+    navigator.trav_delay            = nil
+    navigator.failed_target         = nil
+    navigator.failed_target_time    = -1
+    navigator.failed_target_radius  = 15
+end
+
 return external

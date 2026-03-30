@@ -18,7 +18,8 @@ local settings = {
     use_advance = false,
     use_falling_star = false,
     use_aoj = false,
-    log_level = gui.log_levels_enum['INFO']
+    log_level = gui.log_levels_enum['INFO'],
+    nav_viz = false
 }
 
 settings.update_settings = function ()
@@ -36,6 +37,7 @@ settings.update_settings = function ()
     settings.use_falling_star = gui.elements.use_falling_star:get()
     settings.use_aoj = gui.elements.use_aoj:get()
     settings.log_level = gui.elements.log_level:get()
+    settings.nav_viz   = gui.elements.nav_viz:get()
 end
 
 return settings

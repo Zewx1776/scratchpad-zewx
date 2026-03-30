@@ -1,200 +1,28 @@
-6857.67 :  [nav] pathfinding to=-22.5,-54.5 dist=16.8 custom=false 
-6857.67 :  [nav] pathfind OK, path=#25 
-6857.78 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6857.78 :  [nav] pathfind OK, path=#3 
-6858.49 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6858.49 :  [select_target] picked 13,-19.5 dist=33.5 frontiers=218 bt=#1 bting=false 
-6858.49 :  [nav] new target=13,-19.5 
-6858.49 :  [nav] pathfinding to=13,-19.5 dist=33.2 custom=false 
-6858.49 :  [nav] pathfind OK, path=#49 
-6858.60 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6858.60 :  [select_target] picked 13,-20 dist=32.6 frontiers=217 bt=#1 bting=false 
-6858.60 :  [nav] new target=13,-20 
-6858.60 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
-6858.60 :  [nav] pathfind OK, path=#48 
-6858.70 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6858.70 :  [select_target] picked 13,-20.5 dist=31.7 frontiers=216 bt=#1 bting=false 
-6858.70 :  [nav] new target=13,-20.5 
-6858.70 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
-6858.70 :  [nav] pathfind OK, path=#47 
-6858.82 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6858.82 :  [nav] pathfind OK, path=#3 
-6859.59 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6859.59 :  [select_target] picked 13,-19.5 dist=32.2 frontiers=218 bt=#1 bting=false 
-6859.59 :  [nav] new target=13,-19.5 
-6859.59 :  [nav] pathfinding to=13,-19.5 dist=32.5 custom=false 
-6859.59 :  [nav] pathfind OK, path=#48 
-6859.70 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6859.70 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
-6859.70 :  [nav] new target=13,-20 
-6859.70 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
-6859.70 :  [nav] pathfind OK, path=#48 
-6859.80 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6859.80 :  [select_target] picked 13,-20.5 dist=31.3 frontiers=216 bt=#1 bting=false 
-6859.80 :  [nav] new target=13,-20.5 
-6859.80 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
-6859.80 :  [nav] pathfind OK, path=#47 
-6859.90 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6859.90 :  [nav] pathfind OK, path=#3 
-6860.58 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6860.58 :  [select_target] picked 13,-19.5 dist=31.5 frontiers=218 bt=#1 bting=false 
-6860.58 :  [nav] new target=13,-19.5 
-6860.58 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
-6860.58 :  [nav] pathfind OK, path=#47 
-6860.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6860.69 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
-6860.69 :  [nav] new target=13,-20 
-6860.69 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
-6860.69 :  [nav] pathfind OK, path=#48 
-6860.80 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6860.80 :  [select_target] picked 13,-20.5 dist=31.1 frontiers=216 bt=#1 bting=false 
-6860.80 :  [nav] new target=13,-20.5 
-6860.80 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
-6860.80 :  [nav] pathfind OK, path=#47 
-6860.92 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
-6860.92 :  [nav] pathfind OK, path=#4 
-6861.60 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6861.60 :  [select_target] picked 13,-19.5 dist=32.2 frontiers=218 bt=#1 bting=false 
-6861.60 :  [nav] new target=13,-19.5 
-6861.60 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
-6861.60 :  [nav] pathfind OK, path=#47 
-6861.71 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6861.71 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
-6861.71 :  [nav] new target=13,-20 
-6861.71 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
-6861.71 :  [nav] pathfind OK, path=#48 
-6861.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6861.81 :  [select_target] picked 13,-20.5 dist=31.2 frontiers=216 bt=#1 bting=false 
-6861.81 :  [nav] new target=13,-20.5 
-6861.81 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
-6861.81 :  [nav] pathfind OK, path=#47 
-6861.94 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
-6861.94 :  [nav] pathfind OK, path=#4 
-6862.53 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6862.53 :  [select_target] picked 13,-19.5 dist=31.6 frontiers=218 bt=#1 bting=false 
-6862.53 :  [nav] new target=13,-19.5 
-6862.53 :  [nav] pathfinding to=13,-19.5 dist=31.8 custom=false 
-6862.53 :  [nav] pathfind OK, path=#47 
-6862.53 :  [BATMOBILE PERF] === 5.0s window === 
-6862.53 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=2 
-6862.53 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-6862.53 :    total_update               44( 8.7/s)  avg  23.386ms  max  99.000ms  total  1029.0ms 
-6862.53 :    total_move                 44( 8.7/s)  avg   6.023ms  max  66.000ms  total   265.0ms 
-6862.53 :    find_path                  19( 3.8/s)  avg  12.158ms  max  63.000ms  total   231.0ms 
-6862.53 :    get_nearby_travs           44( 8.7/s)  avg   0.455ms  max   4.000ms  total    20.0ms 
-6862.53 :    select_target              14( 2.8/s)  avg   0.786ms  max   2.000ms  total    11.0ms 
-6862.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6862.69 :  [select_target] picked 13,-20 dist=32.1 frontiers=217 bt=#1 bting=false 
-6862.69 :  [nav] new target=13,-20 
-6862.69 :  [nav] pathfinding to=13,-20 dist=32.3 custom=false 
-6862.69 :  [nav] pathfind OK, path=#48 
-6862.79 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6862.79 :  [select_target] picked 13,-20.5 dist=31.1 frontiers=216 bt=#1 bting=false 
-6862.79 :  [nav] new target=13,-20.5 
-6862.79 :  [nav] pathfinding to=13,-20.5 dist=31.4 custom=false 
-6862.79 :  [nav] pathfind OK, path=#47 
-6862.90 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
-6862.90 :  [nav] pathfind OK, path=#4 
-6863.57 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6863.57 :  [select_target] picked 13,-21 dist=30.9 frontiers=215 bt=#1 bting=false 
-6863.57 :  [nav] new target=13,-21 
-6863.57 :  [nav] pathfinding to=13,-21 dist=31.2 custom=false 
-6863.57 :  [nav] pathfind OK, path=#47 
-6863.71 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6863.71 :  [select_target] picked 13,-21.5 dist=31.4 frontiers=214 bt=#1 bting=false 
-6863.71 :  [nav] new target=13,-21.5 
-6863.71 :  [nav] pathfinding to=13,-21.5 dist=31.7 custom=false 
-6863.71 :  [nav] pathfind OK, path=#48 
-6863.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6863.81 :  [select_target] picked 13,-22 dist=30.6 frontiers=213 bt=#1 bting=false 
-6863.81 :  [nav] new target=13,-22 
-6863.81 :  [nav] pathfinding to=13,-22 dist=30.8 custom=false 
-6863.81 :  [nav] pathfind OK, path=#47 
-6863.93 :  [nav] pathfinding to=-10,-42.5 dist=2.1 custom=true 
-6863.93 :  [nav] pathfind OK, path=#4 
-6864.69 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6864.69 :  [select_target] picked 13,-22.5 dist=30.9 frontiers=212 bt=#1 bting=false 
-6864.69 :  [nav] new target=13,-22.5 
-6864.69 :  [nav] pathfinding to=13,-22.5 dist=30.6 custom=false 
-6864.69 :  [nav] pathfind OK, path=#47 
-6864.86 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6864.86 :  [select_target] picked 13,-23 dist=30.8 frontiers=211 bt=#1 bting=false 
-6864.86 :  [nav] new target=13,-23 
-6864.86 :  [nav] pathfinding to=13,-23 dist=31.1 custom=false 
-6864.86 :  [nav] pathfind OK, path=#48 
-6865.00 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6865.00 :  [nav] pathfind OK, path=#3 
-6865.85 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6865.85 :  [select_target] picked 13,-23.5 dist=30.5 frontiers=210 bt=#1 bting=false 
-6865.85 :  [nav] new target=13,-23.5 
-6865.85 :  [nav] pathfinding to=13,-23.5 dist=30.2 custom=false 
-6865.85 :  [nav] pathfind OK, path=#47 
-6865.98 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6865.98 :  [select_target] picked 12.5,-19.5 dist=32.1 frontiers=209 bt=#1 bting=false 
-6865.98 :  [nav] new target=12.5,-19.5 
-6865.98 :  [nav] pathfinding to=12.5,-19.5 dist=32.3 custom=false 
-6865.98 :  [nav] pathfind OK, path=#47 
-6866.08 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6866.08 :  [select_target] picked 12.5,-20 dist=30.9 frontiers=208 bt=#1 bting=false 
-6866.08 :  [nav] new target=12.5,-20 
-6866.08 :  [nav] pathfinding to=12.5,-20 dist=31.1 custom=false 
-6866.08 :  [nav] pathfind OK, path=#46 
-6866.18 :  [nav] pathfinding to=-10,-42.5 dist=1.9 custom=true 
-6866.18 :  [nav] pathfind OK, path=#4 
-6866.83 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6866.83 :  [select_target] picked 12.5,-20.5 dist=31.4 frontiers=207 bt=#1 bting=false 
-6866.83 :  [nav] new target=12.5,-20.5 
-6866.83 :  [nav] pathfinding to=12.5,-20.5 dist=31.6 custom=false 
-6866.83 :  [nav] pathfind OK, path=#47 
-6866.95 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6866.95 :  [nav] pathfind OK, path=#3 
-6867.51 :  [Reaper] EXPLORING: long path retry 1 (traversal crossed?)... 
-6867.51 :  [LONG PATH] navigate_to: finding uncapped path (dist=2.1) ... 
-6867.51 :  [LONG PATH] navigate_to: found  nodes=4  iters=4  time=0.0ms 
-6867.51 :  [LONG PATH] Navigation started | nodes=4 | target=(-10.0, -42.5) 
-6867.51 :  [Reaper] Long path found – switching to LONG_PATHING. 
-6867.66 :  [LONG PATH] Reached target! 
-6867.74 :  [Reaper] Seed reached but altar not visible – switching to EXPLORING. 
-6867.84 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6867.84 :  [select_target] picked -22,-54.5 dist=17.2 frontiers=318 bt=#1 bting=false 
-6867.84 :  [nav] new target=-22,-54.5 
-6867.84 :  [nav] pathfinding to=-22,-54.5 dist=17.0 custom=false 
-6867.84 :  [nav] pathfind OK, path=#25 
-6867.84 :  [BATMOBILE PERF] === 5.2s window === 
-6867.84 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=0 
-6867.84 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-6867.84 :    total_update               44( 8.5/s)  avg  17.250ms  max  51.000ms  total   759.0ms 
-6867.84 :    total_move                 44( 8.5/s)  avg  11.886ms  max  94.000ms  total   523.0ms 
-6867.84 :    find_path                  17( 3.3/s)  avg  28.529ms  max  90.000ms  total   485.0ms 
-6867.84 :    get_nearby_travs           46( 8.8/s)  avg   0.413ms  max   1.000ms  total    19.0ms 
-6867.84 :    select_target              12( 2.3/s)  avg   1.167ms  max   2.000ms  total    14.0ms 
-6867.95 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6867.95 :  [select_target] picked -22.5,-54.5 dist=17.0 frontiers=318 bt=#1 bting=false 
-6867.95 :  [nav] new target=-22.5,-54.5 
-6867.95 :  [nav] pathfinding to=-22.5,-54.5 dist=16.8 custom=false 
-6867.95 :  [nav] pathfind OK, path=#25 
-6868.06 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6868.06 :  [nav] pathfind OK, path=#3 
-6868.81 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6868.81 :  [select_target] picked 11.5,-21 dist=30.7 frontiers=193 bt=#1 bting=false 
-6868.81 :  [nav] new target=11.5,-21 
-6868.81 :  [nav] pathfinding to=11.5,-21 dist=30.4 custom=false 
-6868.81 :  [nav] pathfind OK, path=#45 
-6868.93 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6868.93 :  [select_target] picked 11.5,-21.5 dist=29.6 frontiers=192 bt=#1 bting=false 
-6868.93 :  [nav] new target=11.5,-21.5 
-6868.93 :  [nav] pathfinding to=11.5,-21.5 dist=29.5 custom=false 
-6868.93 :  [nav] pathfind OK, path=#44 
-6869.06 :  [nav] pathfinding to=-10,-42.5 dist=1.4 custom=true 
-6869.06 :  [nav] pathfind OK, path=#3 
-6870.33 :  [nav] pathfinding to=-10,-42.5 dist=6.7 custom=true 
-6870.33 :  [nav] pathfind OK, path=#12 
-6870.88 :  [nav] pathfinding to=-10,-42.5 dist=11.7 custom=true 
-6870.88 :  [nav] pathfind OK, path=#22 
-6872.61 :  [nav] no target or reached, selecting new (prev=-10,-42.5) 
-6872.61 :  [select_target] picked 13,-19.5 dist=33.7 frontiers=218 bt=#2 bting=false 
-6872.61 :  [nav] new target=13,-19.5 
-6872.61 :  [nav] pathfinding to=13,-19.5 dist=33.5 custom=false 
-6872.61 :  [nav] pathfind OK, path=#49 
-6872.70 :  [nav] pathfinding to=-10,-42.5 dist=1.2 custom=true 
-6872.70 :  [nav] pathfind OK, path=#3 
+local plugin_label = 'minimap_reveal'
+
+local gui = {}
+gui.elements = {
+    reveal_key = keybind:new(0x74, false, get_hash(plugin_label .. '_reveal')), -- F5
+    main_tree  = tree_node:new(0),
+}
+
+local last_reveal_time = 0.0
+local REVEAL_COOLDOWN  = 1.0
+
+on_render_menu(function()
+    if gui.elements.main_tree:push("Minimap Reveal") then
+        gui.elements.reveal_key:render("Reveal Map (F5)")
+        gui.elements.main_tree:pop()
+    end
+end)
+
+on_update(function()
+    local now = get_time_since_inject()
+    if gui.elements.reveal_key:get_state() == 1 and (now - last_reveal_time) > REVEAL_COOLDOWN then
+        last_reveal_time = now
+        utility.reveal_minimap()
+        console.print("[minimap] Map revealed")
+    end
+end)
+
+console.print("[minimap_reveal] loaded — F5 to reveal map")

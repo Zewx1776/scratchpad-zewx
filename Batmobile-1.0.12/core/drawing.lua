@@ -5,6 +5,32 @@ local utils     = require 'core.utils'
 local tracker   = require 'core.tracker'
 local long_path = require 'core.long_path'
 
+-- Nav viz: live walkable-grid scan state
+local nav_viz_cache    = {}   -- array of {pos=vec3, walkable=bool}
+local nav_viz_last     = -1
+local NAV_VIZ_INTERVAL = 0.3  -- seconds between rescans
+local NAV_VIZ_RADIUS   = 5.0  -- half-extent in game units around player
+
+local function refresh_nav_viz(player_pos, valid_z)
+    local step = settings.step
+    local cx   = utils.normalize_value(player_pos:x())
+    local cy   = utils.normalize_value(player_pos:y())
+    local cache = {}
+    local x = cx - NAV_VIZ_RADIUS
+    while x <= cx + NAV_VIZ_RADIUS do
+        local y = cy - NAV_VIZ_RADIUS
+        while y <= cy + NAV_VIZ_RADIUS do
+            local raw = vec3:new(x, y, valid_z)
+            local n   = utils.get_valid_node(raw, valid_z)
+            cache[#cache + 1] = { pos = raw, walkable = (n ~= nil) }
+            y = y + step
+        end
+        x = x + step
+    end
+    nav_viz_cache = cache
+    nav_viz_last  = os.clock()
+end
+
 local get_max_length = function(messages)
     local max = 0
     for _, msg in ipairs(messages) do
@@ -80,6 +106,45 @@ drawing.draw_nodes = function (local_player)
             graphics.circle_3d(valid_node, 0.05, color_green(255))
         else
             graphics.circle_3d(valid_node, 0.05, color_blue(255))
+        end
+    end
+
+    -- Nav viz: live walkable-grid + key navigator vectors
+    if settings.nav_viz then
+        if os.clock() - nav_viz_last >= NAV_VIZ_INTERVAL then
+            refresh_nav_viz(player_pos, valid_z)
+        end
+        for _, entry in ipairs(nav_viz_cache) do
+            local v = vec3:new(entry.pos:x(), entry.pos:y(), valid_z)
+            if entry.walkable then
+                graphics.circle_3d(v, 0.12, color_green(160))
+            else
+                graphics.circle_3d(v, 0.10, color_red(80))
+            end
+        end
+        -- Current target (white, medium)
+        if navigator.target then
+            local v = vec3:new(navigator.target:x(), navigator.target:y(), valid_z)
+            graphics.circle_3d(v, 0.5, color_white(255))
+            graphics.line(player_pos, v, color_white(180), 1)
+        end
+        -- Failed target + its block radius ring (yellow)
+        if navigator.failed_target then
+            local v = vec3:new(navigator.failed_target:x(), navigator.failed_target:y(), valid_z)
+            graphics.circle_3d(v, 0.4, color_yellow(255))
+            graphics.circle_3d(v, navigator.failed_target_radius or 15, color_yellow(80))
+        end
+        -- Traversal approach node (blue)
+        if navigator.last_trav then
+            local v = vec3:new(navigator.last_trav:x(), navigator.last_trav:y(), valid_z)
+            graphics.circle_3d(v, 0.5, color_blue(255))
+            graphics.line(player_pos, v, color_blue(180), 1)
+        end
+        -- Saved post-traversal enemy target (green, large)
+        if navigator.trav_final_target then
+            local v = vec3:new(navigator.trav_final_target:x(), navigator.trav_final_target:y(), valid_z)
+            graphics.circle_3d(v, 0.5, color_green(255))
+            graphics.line(player_pos, v, color_green(180), 1)
         end
     end
 

@@ -25,6 +25,19 @@ function long_path.set_target()
         long_path.pinned_target:z()))
 end
 
+function long_path.set_target_cursor()
+    local cursor = get_cursor_position()
+    if not cursor then
+        console.print("[LONG PATH] No cursor position available")
+        return
+    end
+    -- Snap to valid Z so the pinned point renders correctly on the ground
+    local snapped = utility.set_height_of_valid_position(cursor)
+    long_path.pinned_target = snapped
+    console.print(string.format("[LONG PATH] Target pinned at cursor (%.2f, %.2f, %.2f)",
+        snapped:x(), snapped:y(), snapped:z()))
+end
+
 local function start_navigation(path, goal)
     long_path.active_path = path
     long_path.navigating  = true

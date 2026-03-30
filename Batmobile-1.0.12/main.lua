@@ -51,6 +51,14 @@ local function main_pulse()
             gui.long_path_target_str = string.format("(%.1f, %.1f, %.1f)", p:x(), p:y(), p:z())
         end
     end
+    if gui.elements.long_path_set_target_cursor:get_state() == 1 then
+        gui.elements.long_path_set_target_cursor:set(false)
+        long_path.set_target_cursor()
+        if long_path.pinned_target then
+            local p = long_path.pinned_target
+            gui.long_path_target_str = string.format("(%.1f, %.1f, %.1f) [cursor]", p:x(), p:y(), p:z())
+        end
+    end
     if gui.elements.long_path_test:get_state() == 1 then
         gui.elements.long_path_test:set(false)
         long_path.test_path()

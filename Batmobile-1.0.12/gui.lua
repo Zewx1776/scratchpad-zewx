@@ -61,10 +61,12 @@ gui.elements = {
     max_iteration = slider_int:new(250, 5000, 1500, get_hash(plugin_label .. '_' .. 'max_iteration')),
     debug_tree = tree_node:new(1),
     log_level = combo_box:new(0, get_hash(plugin_label .. '_' .. 'log_level')),
+    nav_viz = create_checkbox(false, "nav_viz"),
     freeroam_keybind_toggle = keybind:new(0x0A, true, get_hash(plugin_label .. '_freeroam_keybind_toggle' )),
     long_path_tree = tree_node:new(1),
-    long_path_set_target = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_set_target')),
-    long_path_test       = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_test')),
+    long_path_set_target        = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_set_target')),
+    long_path_set_target_cursor = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_set_target_cursor')),
+    long_path_test              = keybind:new(0x0A, true, get_hash(plugin_label .. '_long_path_test')),
 }
 gui.long_path_target_str  = nil    -- updated by main.lua after set_target()
 gui.long_path_navigating  = false  -- updated by main.lua each frame
@@ -101,6 +103,7 @@ function gui.render()
         gui.elements.freeroam_keybind_toggle:render('Toggle explorer', 'enable freeroam explorer')
         render_menu_header('WARNING running explorer in overworld can cause big lag spike due to multiple elevation and traversals close by')
         gui.elements.log_level:render('logging', gui.log_level, 'Select log level')
+        gui.elements.nav_viz:render('Nav viz (walkable grid)', 'Show walkable/wall grid + nav vectors around player. Green=walkable, Red=blocked. Rescans every 0.3s.')
         gui.elements.debug_tree:pop()
     end
     -- if gui.elements.advanced_tree:push('Advanced settings') then
@@ -117,7 +120,8 @@ function gui.render()
         if gui.long_path_navigating then
             render_menu_header('Status: NAVIGATING — click Test Long Path to stop')
         end
-        gui.elements.long_path_set_target:render('Set Target', 'Pin current player position as path goal')
+        gui.elements.long_path_set_target:render('Set Target (Player)', 'Pin current player position as path goal')
+        gui.elements.long_path_set_target_cursor:render('Set Target (Cursor)', 'Pin current cursor world position as path goal')
         local test_label = gui.long_path_navigating and 'Stop Navigation' or 'Test Long Path'
         gui.elements.long_path_test:render(test_label, 'Run uncapped A* from here to pinned target (click again to stop)')
         gui.elements.long_path_tree:pop()
