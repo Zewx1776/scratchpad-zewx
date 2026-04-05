@@ -171,8 +171,22 @@ function task.shouldExecute()
     -- Boss_*_Primary quest disappears when the boss dies); fall back to enemy check.
     local boss = rotation.current()
     if boss and boss.run_type == "sigil" then
-        if tracker.sigil_chest_done then return false end
+        if tracker.sigil_chest_done then
+            -- Deadlock recovery: sigil_chest_done was set but the doom chest is still
+            -- interactable (e.g. THEME timed out while mini bosses were alive and the
+            -- safety check in WAIT_COMPLETE missed it). Clear the flag and re-open.
+            if find_theme_chest() ~= nil then
+                console.print("[Chest] sigil_chest_done set but doom chest still present — re-opening.")
+                tracker.sigil_chest_done = false
+                if phase ~= "THEME" then set_phase("THEME") end
+            else
+                return false
+            end
+        end
         if phase ~= "IDLE" then return true end  -- already mid-sequence
+        -- Doom chest visible = boss dead. altar_activated may never be set for sigils
+        -- that spawn the boss directly without an altar — use chest visibility as signal.
+        if find_theme_chest() ~= nil then return true end
         return tracker.altar_activated
     end
     -- If doom chest is visible from IDLE (e.g. Alfred interrupted mid-THEME and
@@ -305,6 +319,17 @@ function task.Execute()
         local theme_timeout = (cur_boss and cur_boss.run_type == "sigil")
             and SIGIL_THEME_WAIT_SECS or THEME_WAIT_SECS
         local elapsed = phase_elapsed()
+
+        -- In sigil mode, reset the timer any tick enemies are alive (mini-boss events).
+        -- Without this, two sequential mini-boss waves exhaust the combined 15s budget
+        -- even though we couldn't open the chest yet. Resetting phase_start on each enemy
+        -- tick keeps the deadline a rolling "15s after the last enemy died".
+        if cur_boss and cur_boss.run_type == "sigil"
+                and (utils.get_closest_enemy() ~= nil or utils.get_suppressor() ~= nil) then
+            set_phase("THEME")  -- resets phase_start, keeps doom_chest_interacted intact
+            return
+        end
+
         if elapsed > theme_timeout then
             console.print(string.format("[Chest] No theme chest after %.0fs — moving on.", elapsed))
             set_phase("WAIT_COMPLETE")

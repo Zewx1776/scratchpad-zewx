@@ -17,13 +17,28 @@ local unstuck_attempt_start = 0
 local last_chest_interaction_time = 0
 local chest_interaction_cooldown = 10  -- 5 seconds cooldown between chest interactions
 
--- Function to find and return any EGB chest actor or Boss_WT_Belial_Chest
+-- Debug: log all nearby actor skin names every 5s (remove once sigil chest name confirmed)
+local last_actor_debug_time = 0
+local function debug_nearby_actors()
+    local current_time = os.time()
+    if current_time - last_actor_debug_time < 5 then return end
+    last_actor_debug_time = current_time
+    local actors = actors_manager:get_all_actors()
+    local player_pos = get_player_position()
+    for _, actor in pairs(actors) do
+        if player_pos:dist_to(actor:get_position()) < 30 then
+            console.print("[actor_debug] " .. actor:get_skin_name())
+        end
+    end
+end
+
+-- Function to find and return any EGB chest, Boss_WT_Belial_Chest, or sigil theme chest
 local function find_egb_chest()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
-        -- Check if the actor name starts with EGB_Chest or is Boss_WT_Belial_Chest
-        if name:find("EGB_Chest") == 1 or name == "Boss_WT_Belial_Chest" then
+        if name:find("EGB_Chest") == 1 or name == "Boss_WT_Belial_Chest"
+        or name:find("S12_Prop_Theme_Chest") == 1 then
             console.print("Found chest: " .. name)
             return actor
         end
@@ -86,7 +101,8 @@ local task = {
     
     -- Function to determine if the task should be executed
     shouldExecute = function()
-        -- Check if any EGB chest is present
+        local is_in_boss_zone = get_current_world():get_current_zone_name():match("Boss_")
+        if is_in_boss_zone then debug_nearby_actors() end
         local chest = find_egb_chest()
         return chest ~= nil
     end,

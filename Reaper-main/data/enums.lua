@@ -67,7 +67,7 @@ enums.positions = {
         ["Boss_WT4_Andariel"]       = vec3:new( 8.2821,  -8.7344, -6.223),
         ["Boss_WT4_MegaDemon"]      = vec3:new( 4.9245,   5.3086,  0.127),
         ["_Varshan"]                = vec3:new(-3.2805,  -3.1949, -3.304),
-        ["Boss_WT5_Harbinger"]      = vec3:new( 0.93,    16.18,   0.0),
+        ["Boss_WT5_Harbinger"]      = vec3:new( 2.9,     15.0,    0.0),
     },
 }
 

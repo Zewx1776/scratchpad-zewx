@@ -77,6 +77,9 @@ function task.shouldExecute()
     -- Only start watching once altar is activated and we're in the zone,
     -- or if sigil_entry_t is set and 60s have passed (stale dungeon fallback).
     if tracker.altar_activated and in_sigil_zone() then return true end
+    -- Fallback: open_chest set sigil_chest_done without altar_activated being true
+    -- (sigil dungeon where boss spawns directly without an interactable altar).
+    if tracker.sigil_chest_done and in_sigil_zone() then return true end
     if tracker.sigil_entry_t > 0
             and (now() - tracker.sigil_entry_t) >= 60.0
             and in_sigil_zone() then

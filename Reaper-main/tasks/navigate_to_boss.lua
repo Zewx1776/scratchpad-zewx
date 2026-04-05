@@ -146,8 +146,9 @@ local STATE = {
 }
 
 local MAX_LONG_PATH_RETRIES   = 8
-local LONG_PATH_RETRY_DELAY   = 3.0
-local TRAVERSAL_TRIGGER       = 5     -- long-path failures before searching for a traversal
+local LONG_PATH_WAIT_FRAMES   = 150   -- frames to wait between retries (~5s at 30fps); frame-counted
+                                      -- to avoid game-time freeze during blocking pathfind calls
+local TRAVERSAL_TRIGGER       = 1     -- long-path failures before searching for a traversal
 local TRAVERSAL_NAV_TIMEOUT   = 20.0  -- seconds before giving up on crossing a traversal
 local MAX_TRAVERSAL_ATTEMPTS  = 3     -- give up entirely after this many failed traversal attempts
 
@@ -165,8 +166,9 @@ local nav = {
     last_enter_try      = 0,
     path_exhausted      = false,
     long_path_goal      = nil,    -- destination vec3 for the current LONG_PATHING phase
-    long_path_retries   = 0,      -- consecutive failed navigate_long_path attempts
-    last_long_path_try  = -999,   -- time of last navigate_long_path call (for retry delay)
+    long_path_retries     = 0,      -- consecutive failed navigate_long_path attempts
+    long_path_wait_frames = 0,      -- frame cap safety net while exploring between retries
+    long_path_explore_start = nil,  -- player position when exploration began (for distance check)
     -- traversal fields
     trav_target_pos     = nil,    -- vec3 position of the traversal gizmo
     trav_start_pos      = nil,    -- player position when we started approaching traversal
@@ -186,9 +188,10 @@ local function reset_nav()
     nav.phase_start        = now()
     nav.attempts           = 0
     nav.path_exhausted     = false
-    nav.long_path_goal     = nil
-    nav.long_path_retries  = 0
-    nav.last_long_path_try = -999
+    nav.long_path_goal          = nil
+    nav.long_path_retries       = 0
+    nav.long_path_wait_frames   = 0
+    nav.long_path_explore_start = nil
     nav.trav_target_pos    = nil
     nav.trav_start_pos     = nil
     nav.trav_got_close     = false
@@ -457,9 +460,10 @@ function task.Execute()
 
         if settings.use_batmobile then
             -- ---- Batmobile-ONLY branch ----
-            -- Strictly uses navigate_long_path (uncapped A*).  No pathwalker, no
-            -- explorerlite.  If the path cannot be found (navmesh not yet loaded,
-            -- position unreachable), we wait and retry up to MAX_LONG_PATH_RETRIES.
+            -- Primary nav: navigate_long_path (uncapped A* to altar/seed).
+            -- On failure: Batmobile standard nav (set_target/update/move) walks us
+            -- closer for LONG_PATH_WAIT_FRAMES frames, then long path is retried.
+            -- pathfinder.request_move is never used — it can't route around walls.
 
             if not BatmobilePlugin then
                 console.print("[Reaper] BatmobilePlugin not available — cannot navigate.")
@@ -483,13 +487,44 @@ function task.Execute()
                 return
             end
 
-            -- Rate-limit: don't hammer navigate_long_path every tick
-            if (now() - nav.last_long_path_try) < LONG_PATH_RETRY_DELAY then return end
+            -- If we're already standing at the target and the altar isn't visible,
+            -- the altar was activated and is now gone (e.g. Alfred reset tracker state
+            -- mid-run). Stop navigating — open_chest / sigil_complete will take over.
+            if utils.distance_to(target) <= 8.0 and not altar then
+                console.print("[Reaper] Already at altar position, no altar visible — yielding.")
+                reset_nav()
+                return
+            end
+
+            -- Frame-count rate-limit: navigate_long_path blocks the game loop while
+            -- computing, so get_time_since_inject() does NOT advance during the call.
+            -- Counting real game frames (each Execute() call = one frame) guarantees
+            -- the player actually moves and loads navmesh tiles between retries.
+            if nav.long_path_wait_frames > 0 then
+                nav.long_path_wait_frames = nav.long_path_wait_frames - 1
+                local pp = get_player_position()
+                local moved = nav.long_path_explore_start
+                              and pp:dist_to(nav.long_path_explore_start) or 0
+                if moved >= 30 then
+                    -- Moved far enough — stop exploring and retry long path now.
+                    console.print(string.format(
+                        "[Reaper] Explored %.1f units — retrying navigate_long_path.", moved))
+                    nav.long_path_wait_frames   = 0
+                    nav.long_path_explore_start = nil
+                    BatmobilePlugin.clear_target(plugin_label)
+                    return
+                end
+                -- Still exploring: free BFS, no custom target so Batmobile expands
+                -- the navmesh frontier without thrashing on an unreachable destination.
+                BatmobilePlugin.clear_target(plugin_label)
+                BatmobilePlugin.update(plugin_label)
+                BatmobilePlugin.move(plugin_label)
+                return
+            end
 
             -- Debug: show exactly what we're trying to path to
             local pp = get_player_position()
             nav.long_path_retries  = nav.long_path_retries + 1
-            nav.last_long_path_try = now()
             console.print(string.format(
                 "[Reaper] navigate_long_path #%d → %s  target=(%.1f, %.1f)  player=(%.1f, %.1f)  dist=%.1f",
                 nav.long_path_retries, target_label,
@@ -499,13 +534,18 @@ function task.Execute()
 
             local ok = BatmobilePlugin.navigate_long_path(plugin_label, target)
             if ok then
-                nav.long_path_goal    = target
-                nav.long_path_retries = 0
+                nav.long_path_goal          = target
+                nav.long_path_retries       = 0
+                nav.long_path_wait_frames   = 0
+                nav.long_path_explore_start = nil
                 set_state(STATE.LONG_PATHING)
             else
                 console.print(string.format(
-                    "[Reaper] Long path failed (attempt %d) — retrying in %.0fs.",
-                    nav.long_path_retries, LONG_PATH_RETRY_DELAY))
+                    "[Reaper] Long path failed (attempt %d) — retrying after %d frames.",
+                    nav.long_path_retries, LONG_PATH_WAIT_FRAMES))
+                nav.long_path_wait_frames   = LONG_PATH_WAIT_FRAMES
+                nav.long_path_explore_start = get_player_position()
+                BatmobilePlugin.clear_target(plugin_label)
 
                 -- After TRAVERSAL_TRIGGER consecutive failures, look for a traversal blocking us
                 if nav.long_path_retries >= TRAVERSAL_TRIGGER then
@@ -537,17 +577,20 @@ function task.Execute()
                         console.print(string.format(
                             "[Reaper] Found traversal at dist=%.1f — switching to TRAVERSAL state.",
                             nearest_dist))
-                        nav.trav_target_pos = nearest_trav:get_position()
-                        nav.trav_start_pos  = pp2
-                        nav.trav_got_close  = false
-                        nav.trav_attempts   = nav.trav_attempts + 1
-                        nav.long_path_retries = 0
+                        nav.trav_target_pos         = nearest_trav:get_position()
+                        nav.trav_start_pos          = pp2
+                        nav.trav_got_close          = false
+                        nav.trav_attempts           = nav.trav_attempts + 1
+                        nav.long_path_retries       = 0
+                        nav.long_path_wait_frames   = 0
+                        nav.long_path_explore_start = nil
                         if BatmobilePlugin then
                             BatmobilePlugin.clear_target(plugin_label)
                         end
                         set_state(STATE.TRAVERSAL)
                     end
                 end
+
             end
             return
         end
@@ -676,11 +719,12 @@ function task.Execute()
             console.print(string.format(
                 "[Reaper] Traversal crossed (%s) — resuming long-path navigation.",
                 z_crossed and "z-change" or "portal"))
-            nav.trav_target_pos   = nil
-            nav.trav_start_pos    = nil
-            nav.trav_got_close    = false
-            nav.long_path_retries = 0
-            nav.last_long_path_try = -999
+            nav.trav_target_pos         = nil
+            nav.trav_start_pos          = nil
+            nav.trav_got_close          = false
+            nav.long_path_retries       = 0
+            nav.long_path_wait_frames   = 0
+            nav.long_path_explore_start = nil
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             set_state(STATE.PATHWALKING)
             return
@@ -691,11 +735,12 @@ function task.Execute()
             console.print(string.format(
                 "[Reaper] Traversal timeout (%.0fs) — returning to PATHWALKING.",
                 TRAVERSAL_NAV_TIMEOUT))
-            nav.trav_target_pos   = nil
-            nav.trav_start_pos    = nil
-            nav.trav_got_close    = false
-            nav.long_path_retries = 0
-            nav.last_long_path_try = -999
+            nav.trav_target_pos         = nil
+            nav.trav_start_pos          = nil
+            nav.trav_got_close          = false
+            nav.long_path_retries       = 0
+            nav.long_path_wait_frames   = 0
+            nav.long_path_explore_start = nil
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             set_state(STATE.PATHWALKING)
             return
