@@ -119,8 +119,8 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     local path_start_time = os.clock()
     -- Scale limits by distance: far targets need more A* iterations
     local goal_dist = heuristic(start_node, goal_node)
-    local iter_limit = math.max(1500, math.min(5000, math.floor(goal_dist * 150)))
-    local time_limit = math.max(0.100, math.min(0.300, goal_dist * 0.012))
+    local iter_limit = math.max(3000, math.min(10000, math.floor(goal_dist * 300)))
+    local time_limit = math.max(0.200, math.min(0.600, goal_dist * 0.024))
 
     -- Pre-compute directions once per find_path call
     -- (previously recreated inside get_valid_neighbor and get_neighbors on every call)

@@ -21,6 +21,7 @@ gui.elements = {
     chaos_rift_toggle = create_checkbox(true, plugin_label .. "chaos_rift_toggle"),
     prioritize_traversals_toggle = create_checkbox(false, plugin_label .. "prioritize_traversals_toggle"),
     kill_monsters_toggle = create_checkbox(true, plugin_label .. "kill_monsters_toggle"),
+    experimental_explorer_toggle = create_checkbox(false, plugin_label .. "experimental_explorer_toggle"),
 }
 
 function gui.render()
@@ -40,6 +41,7 @@ function gui.render()
         gui.elements.chaos_rift_toggle:render("Do chaos rift", "Do chaos rift")
         gui.elements.prioritize_traversals_toggle:render("Prioritize Traversals", "Move to nearby traversals (ladders/portals) before kill monsters; blacklists unreachable ones for 30s")
         gui.elements.kill_monsters_toggle:render("Kill Monsters", "Navigate to and kill nearby monsters while exploring")
+        gui.elements.experimental_explorer_toggle:render("Experimental Explorer", "Zone-wide grid coverage instead of Batmobile frontier. Tracks chest locations across the full helltide hour. Resets only when helltide ends.")
         gui.elements.settings_tree:pop()
     end
 

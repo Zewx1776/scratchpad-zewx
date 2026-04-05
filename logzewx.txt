@@ -1,28 +1,200 @@
-local plugin_label = 'minimap_reveal'
-
-local gui = {}
-gui.elements = {
-    reveal_key = keybind:new(0x74, false, get_hash(plugin_label .. '_reveal')), -- F5
-    main_tree  = tree_node:new(0),
-}
-
-local last_reveal_time = 0.0
-local REVEAL_COOLDOWN  = 1.0
-
-on_render_menu(function()
-    if gui.elements.main_tree:push("Minimap Reveal") then
-        gui.elements.reveal_key:render("Reveal Map (F5)")
-        gui.elements.main_tree:pop()
-    end
-end)
-
-on_update(function()
-    local now = get_time_since_inject()
-    if gui.elements.reveal_key:get_state() == 1 and (now - last_reveal_time) > REVEAL_COOLDOWN then
-        last_reveal_time = now
-        utility.reveal_minimap()
-        console.print("[minimap] Map revealed")
-    end
-end)
-
-console.print("[minimap_reveal] loaded — F5 to reveal map")
+1347.26 :    total_move                154(30.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1347.26 :    total_update              154(30.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1347.84 :  [CHEST DEBUG] No chest actors in actor list | cinders: 79 
+1349.86 :  [CHEST DEBUG] No chest actors in actor list | cinders: 79 
+1350.36 :  [EXPLORER] Node 9 scouted (dist=29.7) — picking next target 
+1350.36 :  [LONG PATH] Navigation stopped 
+1350.40 :  [EXPLORER] New target: node 10 at (-822.4,326.7) | last_scouted=0 
+1350.40 :  [LONG PATH] navigate_to: finding uncapped path (dist=116.0) ... 
+1350.40 :  [LONG PATH] navigate_to: found  nodes=211  iters=7070  time=286.0ms 
+1350.40 :  [LONG PATH] Navigation started | nodes=211 | target=(-822.5, 326.5) 
+1350.40 :  [EXPLORER] Long path started to (-822.4,326.7) dist=114 
+1351.59 :  [LONG PATH] Navigation complete 
+1351.65 :  [HR PERF] ============ 5.0s window ============ 
+1351.65 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1351.65 :    check_events                          135   27.0    4.126   18.000    557.00 
+1351.65 :    scan_remember_chests                    2    0.4    4.500    8.000      9.00 
+1351.65 :    get_all_actors                          9    1.8    0.111    1.000      1.00 
+1351.65 :    [EVENTS]  actor_cache_hit=1073(214.4/s)   actor_cache_miss=9(1.8/s)   chest_scan_skip=133(26.6/s)   find_closest_target=945(188.8/s)   state_EXPLORE_HELLTIDE=140(28.0/s) 
+1351.87 :  [CHEST DEBUG] No chest actors in actor list | cinders: 79 
+1352.02 :  [nav] no target or reached, selecting new (prev=nil) 
+1352.02 :  [select_target] picked -886.5,384.5 dist=17.1 frontiers=9874 bt=#50 bting=false 
+1352.02 :  [nav] new target=-886.5,384.5 
+1352.02 :  [nav] pathfinding to=-886.5,384.5 dist=17.0 custom=false 
+1352.02 :  [nav] pathfind OK, path=#25 
+1352.29 :  [BATMOBILE PERF] === 5.1s window === 
+1352.29 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=23 
+1352.29 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1352.29 :    total_update              114(22.5/s)  avg   0.895ms  max  52.000ms  total   102.0ms 
+1352.29 :    get_nearby_travs           59(11.7/s)  avg   1.034ms  max   3.000ms  total    61.0ms 
+1352.29 :    total_move                114(22.5/s)  avg   0.228ms  max  21.000ms  total    26.0ms 
+1352.29 :    find_path                   1( 0.2/s)  avg  16.000ms  max  16.000ms  total    16.0ms 
+1352.29 :    select_target               1( 0.2/s)  avg   2.000ms  max   2.000ms  total     2.0ms 
+1353.88 :  [CHEST DEBUG] No chest actors in actor list | cinders: 79 
+1355.92 :  [CHEST DEBUG] No chest actors in actor list | cinders: 79 
+1356.66 :  [HR PERF] ============ 5.0s window ============ 
+1356.66 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1356.66 :    check_events                            5    1.0   19.000   47.000     95.00 
+1356.66 :    scan_remember_chests                    1    0.2   26.000   26.000     26.00 
+1356.66 :    get_all_actors                          1    0.2    0.000    0.000      0.00 
+1356.66 :    [EVENTS]  actor_cache_hit=40(8.0/s)   actor_cache_miss=1(0.2/s)   chest_scan_skip=4(0.8/s)   find_closest_target=35(7.0/s)   state_EXPLORE_HELLTIDE=179(35.7/s) 
+1356.89 :  [LONG PATH] navigate_to: finding uncapped path (dist=106.0) ... 
+1356.89 :  [LONG PATH] navigate_to: found  nodes=212  iters=7877  time=296.0ms 
+1356.89 :  [LONG PATH] Navigation started | nodes=212 | target=(-822.5, 326.5) 
+1356.89 :  [EXPLORER] Long path started to (-822.4,326.7) dist=99 
+1356.89 :  [nav] STUCK target=-822.5,326.5 dist=105.8 path=#212 unstuck_count=0 
+1357.32 :  [BATMOBILE PERF] === 5.0s window === 
+1357.32 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=210 
+1357.32 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1357.32 :    total_update                7( 1.4/s)  avg   1.714ms  max  11.000ms  total    12.0ms 
+1357.32 :    get_nearby_travs            5( 1.0/s)  avg   0.800ms  max   1.000ms  total     4.0ms 
+1357.32 :    total_move                  7( 1.4/s)  avg   0.286ms  max   1.000ms  total     2.0ms 
+1357.32 :    unstuck                     1( 0.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1357.92 :  [CHEST DEBUG] No chest actors in actor list | cinders: 80 
+1358.23 :  [nav] pathfinding to=-822.5,326.5 dist=99.5 custom=true 
+1358.23 :  [nav] pathfind OK, path=#199 
+1359.91 :  [LONG PATH] Navigation complete 
+1359.94 :  [CHEST DEBUG] No chest actors in actor list | cinders: 80 
+1360.90 :  [nav] no target or reached, selecting new (prev=nil) 
+1360.90 :  [select_target] picked -888,366 dist=17.1 frontiers=10463 bt=#52 bting=false 
+1360.90 :  [nav] new target=-888,366 
+1360.90 :  [nav] pathfinding to=-888,366 dist=17.0 custom=false 
+1360.90 :  [nav] pathfind OK, path=#25 
+1361.41 :  [nav] pathfinding to=-888,366 dist=21.5 custom=false 
+1361.41 :  [nav] pathfind OK, path=#34 
+1361.66 :  [HR PERF] ============ 5.0s window ============ 
+1361.66 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1361.66 :    check_events                           81   16.2    3.568   18.000    289.00 
+1361.66 :    scan_remember_chests                    3    0.6    7.000   13.000     21.00 
+1361.66 :    get_all_actors                          8    1.6    0.000    0.000      0.00 
+1361.66 :    [EVENTS]  actor_cache_hit=643(128.6/s)   actor_cache_miss=8(1.6/s)   chest_scan_skip=78(15.6/s)   find_closest_target=567(113.4/s)   state_EXPLORE_HELLTIDE=131(26.2/s) 
+1361.93 :  [CHEST DEBUG] No chest actors in actor list | cinders: 81 
+1362.39 :  [BATMOBILE PERF] === 5.0s window === 
+1362.39 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=24 
+1362.39 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1362.39 :    find_path                   3( 0.6/s)  avg 134.000ms  max 315.000ms  total   402.0ms 
+1362.39 :    total_update               97(19.3/s)  avg   2.897ms  max  51.000ms  total   281.0ms 
+1362.39 :    total_move                 97(19.3/s)  avg   1.082ms  max  85.000ms  total   105.0ms 
+1362.39 :    get_nearby_travs           51(10.2/s)  avg   0.765ms  max   2.000ms  total    39.0ms 
+1362.39 :    select_target               1( 0.2/s)  avg   1.000ms  max   1.000ms  total     1.0ms 
+1363.95 :  [CHEST DEBUG] No chest actors in actor list | cinders: 81 
+1364.28 :  [LONG PATH] navigate_to: finding uncapped path (dist=97.0) ... 
+1364.28 :  [LONG PATH] navigate_to: found  nodes=197  iters=7244  time=300.0ms 
+1364.28 :  [LONG PATH] Navigation started | nodes=197 | target=(-822.5, 326.5) 
+1364.28 :  [EXPLORER] Long path started to (-822.4,326.7) dist=91 
+1365.97 :  [CHEST DEBUG] No chest actors in actor list | cinders: 82 
+1366.02 :  [LONG PATH] Navigation complete 
+1366.68 :  [HR PERF] ============ 5.0s window ============ 
+1366.68 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1366.68 :    check_events                          126   25.1    2.730   13.000    344.00 
+1366.68 :    scan_remember_chests                    2    0.4    4.000    7.000      8.00 
+1366.68 :    get_all_actors                          8    1.6    0.000    0.000      0.00 
+1366.68 :    [EVENTS]  actor_cache_hit=1002(199.8/s)   actor_cache_miss=8(1.6/s)   chest_scan_skip=124(24.7/s)   find_closest_target=882(175.9/s)   state_EXPLORE_HELLTIDE=180(35.9/s) 
+1366.76 :  [nav] no target or reached, selecting new (prev=nil) 
+1366.76 :  [select_target] picked -878.5,361.5 dist=17.2 frontiers=10946 bt=#53 bting=false 
+1366.76 :  [nav] new target=-878.5,361.5 
+1366.76 :  [nav] pathfinding to=-878.5,361.5 dist=17.0 custom=false 
+1366.76 :  [nav] pathfind OK, path=#32 
+1367.40 :  [BATMOBILE PERF] === 5.0s window === 
+1367.40 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=29 
+1367.40 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1367.40 :    total_update              122(24.4/s)  avg   1.025ms  max  48.000ms  total   125.0ms 
+1367.40 :    total_move                122(24.4/s)  avg   0.664ms  max  51.000ms  total    81.0ms 
+1367.40 :    find_path                   1( 0.2/s)  avg  47.000ms  max  47.000ms  total    47.0ms 
+1367.40 :    get_nearby_travs           50(10.0/s)  avg   0.440ms  max   2.000ms  total    22.0ms 
+1367.40 :    select_target               1( 0.2/s)  avg   3.000ms  max   3.000ms  total     3.0ms 
+1368.03 :  [CHEST DEBUG] No chest actors in actor list | cinders: 82 
+1368.99 :  [nav] no target or reached, selecting new (prev=nil) 
+1368.99 :  [select_target] picked -873.5,357.5 dist=17.2 frontiers=10891 bt=#53 bting=false 
+1368.99 :  [nav] new target=-873.5,357.5 
+1368.99 :  [nav] pathfinding to=-873.5,357.5 dist=17.0 custom=false 
+1368.99 :  [nav] pathfind OK, path=#30 
+1369.78 :  [LONG PATH] navigate_to: finding uncapped path (dist=75.9) ... 
+1369.78 :  [LONG PATH] navigate_to: found  nodes=163  iters=5260  time=230.0ms 
+1369.78 :  [LONG PATH] Navigation started | nodes=163 | target=(-822.5, 326.5) 
+1369.78 :  [EXPLORER] Long path started to (-822.4,326.7) dist=72 
+1369.88 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1371.70 :  [HR PERF] ============ 5.0s window ============ 
+1371.70 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1371.70 :    check_events                          102   20.4    4.745   25.000    484.00 
+1371.70 :    scan_remember_chests                    3    0.6    9.333   15.000     28.00 
+1371.70 :    get_all_actors                          8    1.6    0.000    0.000      0.00 
+1371.70 :    [EVENTS]  actor_cache_hit=811(161.8/s)   actor_cache_miss=8(1.6/s)   chest_scan_skip=99(19.8/s)   find_closest_target=714(142.5/s)   state_EXPLORE_HELLTIDE=151(30.1/s) 
+1372.07 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1372.41 :  [BATMOBILE PERF] === 5.1s window === 
+1372.41 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=151 
+1372.41 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1372.41 :    total_update              109(21.5/s)  avg   2.339ms  max  50.000ms  total   255.0ms 
+1372.41 :    total_move                109(21.5/s)  avg   1.009ms  max  93.000ms  total   110.0ms 
+1372.41 :    find_path                   1( 0.2/s)  avg  89.000ms  max  89.000ms  total    89.0ms 
+1372.41 :    get_nearby_travs           52(10.2/s)  avg   0.904ms  max   3.000ms  total    47.0ms 
+1372.41 :    select_target               1( 0.2/s)  avg   2.000ms  max   2.000ms  total     2.0ms 
+1374.10 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1376.15 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1376.70 :  [HR PERF] ============ 5.0s window ============ 
+1376.70 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1376.70 :    check_events                          116   23.2    4.836   35.000    561.00 
+1376.70 :    scan_remember_chests                    2    0.4    9.500   17.000     19.00 
+1376.70 :    get_all_actors                         10    2.0    0.500    2.000      5.00 
+1376.70 :    [EVENTS]  actor_cache_hit=920(183.8/s)   actor_cache_miss=10(2.0/s)   chest_scan_skip=114(22.8/s)   find_closest_target=812(162.2/s)   state_EXPLORE_HELLTIDE=116(23.2/s) 
+1377.47 :  [BATMOBILE PERF] === 5.0s window === 
+1377.47 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=95 
+1377.47 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1377.47 :    get_nearby_travs           66(13.1/s)  avg   1.258ms  max   8.000ms  total    83.0ms 
+1377.47 :    total_move                119(23.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1377.47 :    total_update              119(23.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1378.16 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1380.17 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1381.38 :  [EXPLORER] Node 10 scouted (dist=29.7) — picking next target 
+1381.38 :  [LONG PATH] Navigation stopped 
+1381.41 :  [EXPLORER] New target: node 3 at (-1002.4,386.7) | last_scouted=1291 
+1381.41 :  [LONG PATH] navigate_to: finding uncapped path (dist=178.6) ... 
+1381.41 :  [LONG PATH] navigate_to: no_path  iters=94450  time=4259.0ms 
+1381.41 :  [EXPLORER] No route to node 3 — backoff 300s 
+1381.42 :  [HR PERF] ============ 9.0s window ============ 
+1381.42 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1381.42 :    check_events                          140   15.6    3.557   17.000    498.00 
+1381.42 :    scan_remember_chests                    3    0.3    4.000   10.000     12.00 
+1381.42 :    get_all_actors                          9    1.0    0.000    0.000      0.00 
+1381.42 :    [EVENTS]  actor_cache_hit=1114(123.8/s)   actor_cache_miss=9(1.0/s)   chest_scan_skip=137(15.2/s)   find_closest_target=980(108.9/s)   state_EXPLORE_HELLTIDE=140(15.6/s) 
+1381.42 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1381.42 :  [EXPLORER] New target: node 4 at (-1002.4,446.7) | last_scouted=1303 
+1381.42 :  [LONG PATH] navigate_to: finding uncapped path (dist=203.5) ... 
+1381.42 :  [LONG PATH] navigate_to: no_path  iters=94450  time=4166.0ms 
+1381.42 :  [EXPLORER] No route to node 4 — backoff 300s 
+1381.45 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1381.45 :  [EXPLORER] New target: node 5 at (-942.4,326.7) | last_scouted=1335 
+1381.45 :  [LONG PATH] navigate_to: finding uncapped path (dist=114.0) ... 
+1381.45 :  [LONG PATH] navigate_to: found  nodes=235  iters=8282  time=440.0ms 
+1381.45 :  [LONG PATH] Navigation started | nodes=235 | target=(-942.5, 326.5) 
+1381.45 :  [EXPLORER] Long path started to (-942.4,326.7) dist=107 
+1381.45 :  [BATMOBILE PERF] === 12.8s window === 
+1381.45 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=235 
+1381.45 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1381.45 :    get_nearby_travs           57( 4.4/s)  avg   0.754ms  max   2.000ms  total    43.0ms 
+1381.45 :    total_update              111( 8.6/s)  avg   0.108ms  max  12.000ms  total    12.0ms 
+1381.45 :    total_move                111( 8.6/s)  avg   0.009ms  max   1.000ms  total     1.0ms 
+1381.87 :  [nav] pathfinding to=-942.5,326.5 dist=112.5 custom=true 
+1381.87 :  [nav] pathfind OK, path=#247 
+1381.87 :  [HR PERF] ============ 5.3s window ============ 
+1381.87 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1381.87 :    check_events                            4    0.7    2.250    6.000      9.00 
+1381.87 :    scan_remember_chests                    2    0.4    0.500    1.000      1.00 
+1381.87 :    get_all_actors                          3    0.6    0.000    0.000      0.00 
+1381.87 :    [EVENTS]  actor_cache_hit=31(5.8/s)   actor_cache_miss=3(0.6/s)   chest_scan_skip=2(0.4/s)   find_closest_target=28(5.2/s)   state_EXPLORE_HELLTIDE=4(0.7/s) 
+1383.50 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1385.55 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 
+1386.92 :  [BATMOBILE PERF] === 5.0s window === 
+1386.92 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=195 
+1386.92 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+1386.92 :    find_path                   1( 0.2/s)  avg 528.000ms  max 528.000ms  total   528.0ms 
+1386.92 :    get_nearby_travs           65(12.9/s)  avg   0.831ms  max  11.000ms  total    54.0ms 
+1386.92 :    total_move                131(26.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1386.92 :    total_update              131(26.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+1387.58 :  [HR PERF] ============ 5.0s window ============ 
+1387.58 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+1387.58 :    check_events                          147   29.4    3.333   66.000    490.00 
+1387.58 :    scan_remember_chests                    2    0.4   12.500   13.000     25.00 
+1387.58 :    get_all_actors                         10    2.0    0.100    1.000      1.00 
+1387.58 :    [EVENTS]  actor_cache_hit=1168(233.6/s)   actor_cache_miss=10(2.0/s)   chest_scan_skip=145(29.0/s)   find_closest_target=1029(205.8/s)   state_EXPLORE_HELLTIDE=147(29.4/s) 
+1387.58 :  [CHEST DEBUG] No chest actors in actor list | cinders: 83 

@@ -12,6 +12,7 @@ local settings = {
     event = true,
     prioritize_traversals = false,
     kill_monsters = true,
+    experimental_explorer = false,
 }
 
 function settings:update_settings()
@@ -27,6 +28,7 @@ function settings:update_settings()
     settings.chaos_rift = gui.elements.chaos_rift_toggle:get()
     settings.prioritize_traversals = gui.elements.prioritize_traversals_toggle:get()
     settings.kill_monsters = gui.elements.kill_monsters_toggle:get()
+    settings.experimental_explorer = gui.elements.experimental_explorer_toggle:get()
 end
 
 return settings

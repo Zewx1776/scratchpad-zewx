@@ -3,6 +3,7 @@ local tracker = require "core.tracker"
 local settings = require "core.settings"
 local enums = require "data.enums"
 local perf = require "core.perf"
+local helltide_explorer = require "core.helltide_explorer"
 
 local found_chest = nil
 local found_chest_position = nil -- cached position so we can navigate even when actor unloads
@@ -27,6 +28,10 @@ local patrol_stuck_time = nil
 local patrol_stuck_pos = nil
 local patrol_free_explore = false
 local patrol_free_explore_start = nil -- time when we entered free-explore mode
+
+local explorer_last_target        = nil  -- tracks current long-path target so we detect changes
+local explorer_path_complete_time = nil  -- wall-clock when navigate_long_path last stopped (for cooldown)
+local explorer_came_from_combat   = false -- set when kill_monsters yields back to explore
 
 local TRAVERSAL_RECOVERY_TIMEOUT  = 15 -- seconds in free-explore before clearing traversal blacklist
 local TRAVERSAL_RECOVERY_COOLDOWN = 25 -- minimum seconds between recovery attempts
@@ -877,6 +882,99 @@ local helltide_task = {
             return
         end
 
+        -- EXPERIMENTAL EXPLORER: zone-wide grid coverage, no Batmobile frontier
+        if settings.experimental_explorer then
+            local player_pos = get_player_position()
+            -- Register any chests visible from current position
+            helltide_explorer.scan_nearby_chests(get_cached_actors(), player_pos)
+            -- Get next grid node to navigate toward
+            local target = helltide_explorer.get_exploration_target(player_pos)
+
+            if target then
+                local dist = player_pos:dist_to(target)
+                -- Detect if target changed (new node selected after scout or backoff)
+                local target_changed = explorer_last_target == nil
+                    or explorer_last_target:dist_to(target) > 1
+
+                if BatmobilePlugin then
+                    local has_long_path = BatmobilePlugin.navigate_long_path ~= nil
+                        and BatmobilePlugin.is_long_path_navigating ~= nil
+
+                    if dist > 30 and has_long_path then
+                        -- Far target: use uncapped long-path pathfinder
+                        local now = get_time_since_inject()
+                        local long_path_active = BatmobilePlugin.is_long_path_navigating()
+
+                        -- Track when navigation stops so cooldown is from COMPLETION, not start.
+                        -- Reset while actively navigating; stamp first frame after nav ends.
+                        if long_path_active then
+                            explorer_path_complete_time = nil
+                        elseif not explorer_path_complete_time then
+                            explorer_path_complete_time = now
+                        end
+
+                        -- Restart when: target changed, returning from combat (no cooldown),
+                        -- or nav stopped and 3s elapsed since completion (stuck-loop guard).
+                        local should_start = target_changed
+                            or explorer_came_from_combat
+                            or (not long_path_active
+                                and explorer_path_complete_time ~= nil
+                                and (now - explorer_path_complete_time) >= 3.0)
+
+                        if should_start then
+                            explorer_came_from_combat = false  -- consumed
+                            -- Always stop first: clears navigator stuck-state from previous path
+                            BatmobilePlugin.stop_long_path(plugin_label)
+                            local ok = BatmobilePlugin.navigate_long_path(plugin_label, target)
+                            if not ok then
+                                helltide_explorer.on_path_failed()
+                                explorer_last_target       = nil
+                                explorer_path_complete_time = nil
+                                return
+                            end
+                            explorer_path_complete_time = nil
+                            console.print(string.format("[EXPLORER] Long path started to (%.1f,%.1f) dist=%.0f",
+                                target:x(), target:y(), dist))
+                        end
+
+                        explorer_last_target = target
+                        -- While long_path is active: let Batmobile drive it normally.
+                        -- During cooldown (path finished early): pause Batmobile so frontier
+                        -- doesn't take over, and use the game pathfinder to keep heading toward
+                        -- the target until the 3s cooldown expires and we restart.
+                        if BatmobilePlugin.is_long_path_navigating() then
+                            BatmobilePlugin.resume(plugin_label)
+                            BatmobilePlugin.update(plugin_label)
+                            BatmobilePlugin.move(plugin_label)
+                        else
+                            BatmobilePlugin.pause(plugin_label)
+                            pathfinder.request_move(target)
+                        end
+                    else
+                        -- Close target: standard set_target
+                        explorer_last_target = target
+                        BatmobilePlugin.resume(plugin_label)
+                        BatmobilePlugin.set_target(plugin_label, target, false)
+                        BatmobilePlugin.update(plugin_label)
+                        BatmobilePlugin.move(plugin_label)
+                    end
+                else
+                    pathfinder.request_move(target)
+                end
+            else
+                -- Just scouted a node — stop any active long path and wait for next selection
+                explorer_last_target       = nil
+                explorer_path_complete_time = nil
+                if BatmobilePlugin and BatmobilePlugin.stop_long_path
+                    and BatmobilePlugin.is_long_path_navigating
+                    and BatmobilePlugin.is_long_path_navigating()
+                then
+                    BatmobilePlugin.stop_long_path(plugin_label)
+                end
+            end
+            return
+        end
+
         local total = #tracker.waypoints
         local player_pos = get_player_position()
         local now = get_time_since_inject()
@@ -1169,6 +1267,9 @@ local helltide_task = {
             if chest_dist <= 2 then
                 console.print(string.format("[HELLTIDE CHEST] Interacting with %s", found_chest))
                 interact_object(chest)
+                if settings.experimental_explorer then
+                    helltide_explorer.mark_chest_opened(chest:get_position())
+                end
                 found_chest = nil
                 found_chest_position = nil
                 clear_movement()
@@ -1278,6 +1379,9 @@ local helltide_task = {
                 if chest_dist <= 2 then
                     console.print(string.format("[CHEST RECALL] Opening remembered %s", entry.name))
                     interact_object(chest)
+                    if settings.experimental_explorer then
+                        helltide_explorer.mark_chest_opened(chest:get_position())
+                    end
                     remembered_chests[remembered_chest_target] = nil
                     remembered_chest_target = nil
                     clear_movement()
@@ -1404,6 +1508,7 @@ local helltide_task = {
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             console.print("[KILL MONSTERS] No targets, resuming patrol")
             clear_movement()
+            explorer_came_from_combat = true  -- skip path cooldown on return to explore
             self.current_state = helltide_state.EXPLORE_HELLTIDE
             return
         end
@@ -1430,7 +1535,9 @@ local helltide_task = {
 
         if cur_dist > 2 then
             if BatmobilePlugin then
-                BatmobilePlugin.resume(plugin_label)
+                -- Use pause (not resume) so the long-path navigator state is frozen
+                -- while fighting — long_path.navigating stays true, path resumes after combat.
+                BatmobilePlugin.pause(plugin_label)
                 local accepted = BatmobilePlugin.set_target(plugin_label, target)
                 if accepted == false then
                     km_mark_unreachable(target_pos)
