@@ -58,6 +58,7 @@ gui.elements = {
     use_6_wave = create_checkbox(true, "use_6_wave"),
     use_8_wave = create_checkbox(true, "use_8_wave"),
     use_10_wave = create_checkbox(true, "use_10_wave"),
+    use_bloodied = create_checkbox(false, "use_bloodied"),
 }
 
 function gui.render()
@@ -119,6 +120,7 @@ function gui.render()
         gui.elements.use_6_wave:render("Use 6 wave compasses", "Use 6 wave compasses")
         gui.elements.use_8_wave:render("Use 8 wave compasses", "Use 8 wave compasses")
         gui.elements.use_10_wave:render("Use 10 wave compasses", "Use 10 wave compasses")
+        gui.elements.use_bloodied:render("Use bloodied", "Use bloodied (S12_DungeonSigil_BSK_SpecialButcher)")
         gui.elements.pick_pylon_delay:render("Pick Pylon delay", "Adjust delay for the picking pylon. DO NOT GO LOWER THAN 1.5!", 1)
         gui.elements.open_ga_chest_delay:render("GA Chest open delay", "Adjust delay for the chest opening (1.0-3.0)", 1)
         gui.elements.open_chest_delay:render("Chest open delay", "Adjust delay for the chest opening (1.0-3.0)", 1)

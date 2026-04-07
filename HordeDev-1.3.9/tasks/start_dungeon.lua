@@ -32,6 +32,10 @@ local function use_dungeon_sigil()
     if settings.use_10_wave then
         table.insert(valid_sigils, "S05_DungeonSigil_BSK_Wave10")
     end
+
+    if settings.use_bloodied then
+        table.insert(valid_sigils, "S12_DungeonSigil_BSK_SpecialButcher")
+    end
     
     for _, item in pairs(inventory) do
         local item_info = utils.get_consumable_info(item)

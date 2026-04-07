@@ -37,6 +37,7 @@ local settings = {
     use_6_wave = true,
     use_8_wave = true,
     use_10_wave = true,
+    use_bloodied = false,
 }
 
 function settings:update_settings()
@@ -74,6 +75,7 @@ function settings:update_settings()
     settings.use_6_wave = gui.elements.use_6_wave:get()
     settings.use_8_wave = gui.elements.use_8_wave:get()
     settings.use_10_wave = gui.elements.use_10_wave:get()
+    settings.use_bloodied = gui.elements.use_bloodied:get()
 end
 
 return settings

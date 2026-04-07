@@ -25,6 +25,7 @@ task.Execute = function ()
     local local_player = get_local_player()
     if not local_player then return end
     orbwalker.set_clear_toggle(true)
+    orbwalker.set_block_movement(true)
     BatmobilePlugin.set_priority(plugin_label, settings.batmobile_priority)
     BatmobilePlugin.resume(plugin_label)
     BatmobilePlugin.update(plugin_label)

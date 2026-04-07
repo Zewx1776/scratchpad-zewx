@@ -150,6 +150,16 @@ external.stop_long_path = function(caller)
     long_path.stop_navigation()
 end
 
+-- Returns the navigator's current target (vec3 or nil).
+external.get_target = function()
+    return navigator.target
+end
+
+-- Returns the navigator's current path (array of vec3, may be empty).
+external.get_path = function()
+    return navigator.path
+end
+
 -- Clear the traversal blacklist and failed-target state so previously crossed
 -- traversals can be selected again.  Call this when the player is stuck on a
 -- platform after a traversal and normal exploration has stalled.
