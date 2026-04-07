@@ -1,200 +1,203 @@
-18084.73 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18084.75 :  [LONG PATH] Reached target! 
-18084.85 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18084.95 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18084.95 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18084.95 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18084.95 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18084.96 :  [LONG PATH] Reached target! 
-18085.06 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18085.18 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18085.18 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18085.18 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18085.18 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18085.20 :  [LONG PATH] Reached target! 
-18085.28 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18085.40 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18085.40 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18085.40 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18085.40 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18085.41 :  [LONG PATH] Reached target! 
-18085.51 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18085.61 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18085.61 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18085.61 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18085.61 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18085.63 :  [LONG PATH] Reached target! 
-18085.73 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18085.85 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18085.85 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18085.85 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18085.85 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18085.86 :  [LONG PATH] Reached target! 
-18085.95 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18086.06 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18086.06 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18086.06 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18086.06 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18086.08 :  [LONG PATH] Reached target! 
-18086.16 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18086.28 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18086.28 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18086.28 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18086.28 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18086.29 :  [LONG PATH] Reached target! 
-18086.40 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18086.51 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18086.51 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18086.51 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18086.51 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18086.53 :  [LONG PATH] Reached target! 
-18086.63 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18086.75 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18086.75 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18086.75 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18086.75 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18086.76 :  [LONG PATH] Reached target! 
-18086.86 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18086.98 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18086.98 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18086.98 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18086.98 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18087.00 :  [LONG PATH] Reached target! 
-18087.08 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18087.20 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18087.20 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18087.20 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18087.20 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18087.21 :  [LONG PATH] Reached target! 
-18087.31 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18087.43 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18087.43 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18087.43 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18087.43 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18087.45 :  [LONG PATH] Reached target! 
-18087.55 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18087.65 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18087.65 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18087.65 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18087.65 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18087.66 :  [LONG PATH] Reached target! 
-18087.76 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18087.88 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18087.88 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18087.88 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18087.88 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18087.90 :  [LONG PATH] Reached target! 
-18088.00 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18088.11 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18088.11 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18088.11 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18088.11 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18088.13 :  [LONG PATH] Reached target! 
-18088.23 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18088.35 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18088.35 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18088.35 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18088.35 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18088.36 :  [LONG PATH] Reached target! 
-18088.45 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18088.56 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18088.56 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18088.56 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=1.0ms 
-18088.56 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18088.58 :  [LONG PATH] Reached target! 
-18088.66 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18088.78 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18088.78 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18088.78 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18088.78 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18088.80 :  [LONG PATH] Reached target! 
-18088.90 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18089.01 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18089.01 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18089.01 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18089.01 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18089.03 :  [LONG PATH] Reached target! 
-18089.13 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18089.25 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18089.25 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18089.25 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18089.25 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18089.26 :  [LONG PATH] Reached target! 
-18089.35 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18089.46 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18089.46 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18089.46 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18089.46 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18089.48 :  [LONG PATH] Reached target! 
-18089.58 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18089.70 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18089.70 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18089.70 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18089.70 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18089.71 :  [LONG PATH] Reached target! 
-18089.81 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18089.91 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18089.91 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18089.91 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18089.91 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18089.93 :  [LONG PATH] Reached target! 
-18090.03 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18090.13 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18090.13 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18090.13 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18090.13 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18090.15 :  [LONG PATH] Reached target! 
-18090.25 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18090.33 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18090.33 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18090.33 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18090.33 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18090.35 :  [LONG PATH] Reached target! 
-18090.45 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18090.56 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18090.56 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18090.56 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18090.56 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18090.58 :  [LONG PATH] Reached target! 
-18090.68 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18090.80 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18090.80 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18090.80 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18090.80 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18090.81 :  [LONG PATH] Reached target! 
-18090.91 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18091.03 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18091.03 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18091.03 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18091.03 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18091.04 :  [LONG PATH] Reached target! 
-18091.15 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18091.26 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18091.26 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18091.26 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18091.26 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18091.28 :  [LONG PATH] Reached target! 
-18091.36 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18091.48 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18091.48 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18091.48 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18091.48 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18091.50 :  [LONG PATH] Reached target! 
-18091.60 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18091.71 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18091.71 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18091.71 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18091.71 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18091.73 :  [LONG PATH] Reached target! 
-18091.83 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18091.93 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18091.93 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18091.93 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18091.93 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18091.95 :  [LONG PATH] Reached target! 
-18092.04 :  [Reaper] At goal, altar not visible — returning to PATHWALKING. 
-18092.16 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-9.4, -8.9)  player=(-9.7, -9.1)  dist=0.4 
-18092.16 :  [LONG PATH] navigate_to: finding uncapped path (dist=0.4) ... 
-18092.16 :  [LONG PATH] navigate_to: found  nodes=1  iters=1  time=0.0ms 
-18092.16 :  [LONG PATH] Navigation started | nodes=1 | target=(-9.5, -9.0) 
-18092.18 :  [LONG PATH] Reached target! 
+14826.06 :  [nav] pathfind OK, path=#11 
+14826.06 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (769, 422) 
+14826.13 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (731, 418) 
+14826.18 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (711, 415) 
+14826.24 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (693, 413) 
+14826.31 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (693, 413) 
+14826.38 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (705, 415) 
+14826.44 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (727, 418) 
+14826.51 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (749, 421) 
+14826.56 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (766, 423) 
+14826.62 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (788, 426) 
+14826.69 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (811, 429) 
+14826.76 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (833, 431) 
+14826.81 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (850, 432) 
+14826.88 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (861, 424) 
+14826.92 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (875, 416) 
+14826.99 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (890, 427) 
+14827.06 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (905, 439) 
+14827.12 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (921, 453) 
+14827.24 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (948, 476) 
+14827.29 :  [AltClick] monster click (23.4, 561.8, 0.3) -> screen (949, 479) 
+14827.39 :  [AltClick] monster click (23.5, 561.8, 0.2) -> screen (950, 483) 
+14827.44 :  [AltClick] monster click (23.5, 561.8, 0.2) -> screen (950, 483) 
+14827.54 :  [AltClick] monster click (23.5, 561.8, 0.2) -> screen (950, 483) 
+14827.59 :  [AltClick] monster click (23.5, 561.8, 0.2) -> screen (950, 483) 
+14827.64 :  [AltClick] monster click (23.5, 561.8, 0.2) -> screen (950, 483) 
+14827.75 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14827.84 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14827.89 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14827.99 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.09 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.14 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.24 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.29 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.39 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.44 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.54 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.59 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.64 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.74 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.79 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.85 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14828.95 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.00 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.05 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.11 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.21 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.27 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.33 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.43 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.49 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.59 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.64 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.74 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.80 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.85 :  [AltClick] monster click (23.4, 561.8, 0.2) -> screen (950, 482) 
+14829.96 :  [AltClick] monster click (24.2, 560.7, 0.3) -> screen (947, 480) 
+14830.01 :  [AltClick] monster click (24.2, 560.7, 0.3) -> screen (988, 486) 
+14830.07 :  [nav] STUCK target=24,560.5 dist=1.9 path=#0 unstuck_count=0 
+14830.07 :  [nav] pathfinding to=24,560.5 dist=1.9 custom=true 
+14830.07 :  [nav] pathfind OK, path=#4 
+14830.07 :  [BATMOBILE PERF] === 7.9s window === 
+14830.07 :    [NAV STATE] paused=true  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=0 
+14830.07 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+14830.07 :    total_update              118(15.0/s)  avg   1.144ms  max  13.000ms  total   135.0ms 
+14830.07 :    total_move                 32( 4.1/s)  avg   0.344ms  max   5.000ms  total    11.0ms 
+14830.07 :    find_path                   6( 0.8/s)  avg   1.000ms  max   5.000ms  total     6.0ms 
+14830.07 :    get_nearby_travs           32( 4.1/s)  avg   0.094ms  max   1.000ms  total     3.0ms 
+14830.07 :    unstuck                     2( 0.3/s)  avg   0.500ms  max   1.000ms  total     1.0ms 
+14830.07 :  [AltClick] monster click (24.1, 560.7, 0.3) -> screen (1035, 491) 
+14830.17 :  [AltClick] monster click (28.3, 560.8, 0.2) -> screen (971, 592) 
+14830.27 :  [nav] pathfinding to=28,560.5 dist=2.8 custom=true 
+14830.27 :  [nav] pathfind OK, path=#5 
+14830.27 :  [AltClick] monster click (28.2, 560.7, 0.2) -> screen (972, 589) 
+14830.32 :  [AltClick] monster click (28.0, 560.5, 0.2) -> screen (961, 578) 
+14830.38 :  [nav] pathfinding to=24,560.5 dist=2.1 custom=true 
+14830.38 :  [nav] pathfind OK, path=#4 
+14830.38 :  [AltClick] monster click (23.9, 560.7, 0.3) -> screen (1050, 489) 
+14830.43 :  [AltClick] monster click (23.9, 560.7, 0.3) -> screen (1017, 485) 
+14830.53 :  [nav] pathfinding to=27,560 dist=3.4 custom=true 
+14830.53 :  [nav] pathfind OK, path=#7 
+14830.53 :  [AltClick] monster click (27.0, 559.9, 0.2) -> screen (843, 527) 
+14830.63 :  [nav] pathfinding to=28,560 dist=5.3 custom=true 
+14830.63 :  [nav] pathfind OK, path=#10 
+14830.63 :  [AltClick] monster click (28.2, 559.9, 0.2) -> screen (767, 549) 
+14830.74 :  [AltClick] monster click (28.2, 559.9, 0.2) -> screen (765, 549) 
+14830.79 :  [AltClick] monster click (28.2, 559.9, 0.2) -> screen (764, 550) 
+14830.89 :  [nav] pathfinding to=28.5,560 dist=5.8 custom=true 
+14830.89 :  [nav] pathfind OK, path=#11 
+14830.89 :  [AltClick] monster click (28.3, 559.9, 0.2) -> screen (763, 551) 
+14830.99 :  [nav] pathfinding to=29.5,561.5 dist=5.7 custom=true 
+14830.99 :  [nav] pathfind OK, path=#12 
+14830.99 :  [AltClick] monster click (29.5, 561.6, 0.0) -> screen (783, 620) 
+14831.04 :  [AltClick] monster click (29.5, 561.4, 0.0) -> screen (798, 610) 
+14831.15 :  [nav] pathfinding to=29.5,561 dist=4.5 custom=true 
+14831.15 :  [nav] pathfind OK, path=#10 
+14831.15 :  [AltClick] monster click (29.3, 560.9, 0.0) -> screen (829, 588) 
+14831.20 :  [nav] pathfinding to=29,560.5 dist=3.7 custom=true 
+14831.20 :  [nav] pathfind OK, path=#8 
+14831.20 :  [AltClick] monster click (28.8, 559.7, 0.0) -> screen (829, 547) 
+14831.31 :  [nav] pathfinding to=28,560 dist=1.7 custom=true 
+14831.31 :  [nav] pathfind OK, path=#4 
+14831.31 :  [AltClick] monster click (28.2, 560.0, 0.0) -> screen (892, 531) 
+14831.41 :  [AltClick] monster click (27.7, 560.2, 0.1) -> screen (937, 515) 
+14851.41 : stack index 1, expected number, received number: not a numeric type or numeric string (bad argument into 'void(int, int)')
+stack traceback:
+	[C]: in function 'send_mouse_click'
+	...wx\Desktop\diablo_qqt\scripts\BatmobileAltClick\main.lua:55: in function <...wx\Desktop\diablo_qqt\scripts\BatmobileAltClick\main.lua:21> 
+14831.47 :  [AltClick] monster click (27.4, 560.2, 0.2) -> screen (947, 510) 
+14831.57 :  [AltClick] monster click (27.1, 560.3, 0.2) -> screen (958, 505) 
+14831.62 :  [AltClick] monster click (27.0, 560.4, 0.2) -> screen (960, 503) 
+14831.69 :  [AltClick] monster click (26.9, 560.4, 0.2) -> screen (963, 502) 
+14831.74 :  [AltClick] monster click (26.9, 560.4, 0.2) -> screen (965, 501) 
+14831.80 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14831.85 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14831.96 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.01 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.13 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.18 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.24 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.29 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.34 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.40 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.45 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.56 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.61 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.66 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.77 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.87 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14832.94 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.00 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.11 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.21 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.27 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.37 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.42 :  [AltClick] monster click (26.8, 560.4, 0.2) -> screen (967, 500) 
+14833.53 :  [nav] STUCK target=28.5,559.5 dist=1.7 path=#0 unstuck_count=0 
+14833.53 :  [nav] pathfinding to=28.5,559.5 dist=1.7 custom=true 
+14833.53 :  [nav] pathfind OK, path=#4 
+14833.53 :  [AltClick] monster click (28.7, 559.7, 0.0) -> screen (896, 530) 
+14833.58 :  [nav] pathfinding to=29,559.5 dist=2.2 custom=true 
+14833.58 :  [nav] pathfind OK, path=#5 
+14833.58 :  [AltClick] monster click (28.8, 559.7, 0.0) -> screen (892, 534) 
+14833.63 :  [nav] pathfinding to=29,560 dist=2.0 custom=true 
+14833.63 :  [nav] pathfind OK, path=#5 
+14833.63 :  [AltClick] monster click (28.9, 559.8, 0.0) -> screen (888, 537) 
+14833.69 :  [AltClick] monster click (29.1, 559.8, 0.0) -> screen (891, 535) 
+14833.74 :  [nav] pathfinding to=29,559 dist=1.9 custom=true 
+14833.74 :  [nav] pathfind OK, path=#4 
+14833.74 :  [AltClick] monster click (29.2, 559.8, 0.0) -> screen (905, 520) 
+14833.80 :  [nav] pathfinding to=29.5,560 dist=1.2 custom=true 
+14833.80 :  [nav] pathfind OK, path=#3 
+14833.80 :  [AltClick] monster click (29.4, 559.8, 0.0) -> screen (914, 499) 
+14833.85 :  [AltClick] monster click (29.5, 559.8, 0.0) -> screen (916, 476) 
+14833.91 :  [AltClick] monster click (29.6, 559.8, 0.0) -> screen (910, 455) 
+14833.96 :  [nav] pathfinding to=30,560 dist=2.0 custom=true 
+14833.96 :  [nav] pathfind OK, path=#5 
+14833.96 :  [AltClick] monster click (29.8, 559.8, 0.0) -> screen (904, 437) 
+14834.02 :  [AltClick] monster click (29.9, 559.8, 0.0) -> screen (900, 438) 
+14834.09 :  [AltClick] monster click (30.0, 560.0, 0.0) -> screen (909, 449) 
+14834.19 :  [AltClick] monster click (30.1, 560.5, 0.0) -> screen (943, 480) 
+14834.25 :  [AltClick] monster click (30.2, 560.8, 0.0) -> screen (964, 500) 
+14834.36 :  [AltClick] monster click (30.2, 560.9, 0.0) -> screen (974, 509) 
+14834.42 :  [AltClick] monster click (30.2, 561.0, 0.0) -> screen (976, 511) 
+14834.49 :  [AltClick] monster click (30.2, 561.0, 0.0) -> screen (977, 513) 
+14834.59 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 514) 
+14834.64 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 514) 
+14834.70 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14834.80 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14834.86 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14834.92 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.02 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.13 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.18 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.24 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.34 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.44 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.54 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.64 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.70 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.80 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.85 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.91 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14835.96 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.02 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.07 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.13 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.18 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.28 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.33 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.43 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.49 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.54 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.60 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.65 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.75 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.86 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.91 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14836.96 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14837.02 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14837.07 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14837.13 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
+14837.18 :  [AltClick] monster click (30.2, 561.1, 0.0) -> screen (978, 513) 
