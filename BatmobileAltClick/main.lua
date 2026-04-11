@@ -61,6 +61,21 @@ end
 on_update(function()
     if not enabled_toggle:get() then return end
 
+    -- Suppress during states where clicking interferes with navigation or teleporting
+    if HelltideRevampedPlugin then
+        local state = HelltideRevampedPlugin.getState()
+        if state == "MOVING_TO_HELLTIDE_CHEST"
+        or state == "MOVING_TO_SILENT_CHEST"
+        or state == "MOVING_TO_REMEMBERED_CHEST"
+        or state == "BACK_TO_TOWN"
+        or state == "TELEPORTING"
+        or state == "WAITING_FOR_TELEPORT"
+        or state == "SEARCHING_HELLTIDE" then
+            console.print('[AltClick] suppressed — HR state: ' .. state)
+            return
+        end
+    end
+
     local now = get_time_since_inject()
 
     -- Fire pending click once delay has elapsed
@@ -86,6 +101,8 @@ on_update(function()
             console.print('[AltClick] skipping portal target: ' .. target:get_skin_name())
             target = nil
         elseif min_monster > 0 and dist2d(player_pos, target:get_position()) < min_monster then
+            console.print(string.format('[AltClick] monster too close (%.1f < %d), using path',
+                dist2d(player_pos, target:get_position()), min_monster))
             target = nil
         end
     end
@@ -97,14 +114,28 @@ on_update(function()
     else
         local min_d = path_min_slider:get()
         local max_d = path_max_slider:get()
+        local path = BatmobilePlugin and BatmobilePlugin.get_path()
         world_point = get_path_point(player_pos, min_d, max_d)
         label = 'nav'
+        if not world_point then
+            console.print('[AltClick] no path point and no nav target')
+        elseif path and #path > 0 then
+            console.print(string.format('[AltClick] path fallback: %d nodes, picked dist=%.1f',
+                #path, dist2d(player_pos, world_point)))
+        else
+            console.print('[AltClick] using nav target (no path available)')
+        end
     end
 
     if not world_point then return end
 
     local screen = graphics.w2s(world_point)
-    if not screen or screen:is_zero() then return end
+    if not screen or screen:is_zero() then
+        console.print(string.format('[AltClick] w2s failed (off-screen) world=(%.1f,%.1f,%.1f) dist=%.1f',
+            world_point:x(), world_point:y(), world_point:z(),
+            dist2d(player_pos, world_point)))
+        return
+    end
 
     local sx = math.floor(screen.x)
     local sy = math.floor(screen.y)
@@ -136,6 +167,6 @@ on_render_menu(function()
     monster_dist:render('Monster max range', 'Max distance to search for monsters')
     path_min_slider:render('Path point min dist', 'Minimum distance along path to target when no monster')
     path_max_slider:render('Path point max dist', 'Maximum distance along path to target when no monster')
-    cooldown_slider:render('Cooldown (s)', 'Seconds between each move+click cycle')
+    cooldown_slider:render('Cooldown (s)', 'Seconds between each move+click cycle', 2)
     main_tree:pop()
 end)

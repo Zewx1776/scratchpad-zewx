@@ -70,8 +70,8 @@ drawing.draw_nodes = function (local_player)
     -- end
     local prev_node = nil
     for index = #backtrack, 1, -1 do
-        if counter < 30 then
-            local node = backtrack[index]
+        local node = backtrack[index]
+        if utils.distance(cur_node, node) <= max_dist then
             local valid = vec3:new(node:x(), node:y(), valid_z)
             graphics.circle_3d(valid, 0.05, color_yellow(255))
             if prev_node ~= nil then
@@ -80,9 +80,6 @@ drawing.draw_nodes = function (local_player)
                 graphics.line(player_pos, valid, color_yellow(255), 1)
             end
             prev_node = valid
-            counter = counter + 1
-        else
-            break
         end
     end
     prev_node = nil

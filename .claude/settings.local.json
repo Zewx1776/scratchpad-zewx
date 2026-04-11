@@ -5,7 +5,8 @@
       "Bash(find /c/Users/Zewx/Desktop/diablo_qqt/scripts -type f -name *.txt -o -type f -name *.md -o -type f -name *.lua)",
       "Bash(grep -r \"iter_limit\\\\|max_iterations\\\\|max_nodes\\\\|HARD_.*_LIMIT\\\\|find_path\" /c/Users/Zewx/Desktop/diablo_qqt/scripts --include=*.lua)",
       "Bash(grep -r \"is_custom_target\\\\|mode\\\\|MODE\\\\|normal\\\\|pathfinder\\\\|navigator\\\\|traversal\" /c/Users/Zewx/Desktop/diablo_qqt/scripts/Batmobile-1.0.12 --include=*.lua)",
-      "Bash(ls c:/Users/Zewx/Desktop/diablo_qqt/scripts/ArkhamAsylum-*/)"
+      "Bash(ls c:/Users/Zewx/Desktop/diablo_qqt/scripts/ArkhamAsylum-*/)",
+      "Bash(luac -p BatmobileAltClick/main.lua)"
     ]
   }
 }

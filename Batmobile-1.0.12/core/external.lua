@@ -42,6 +42,17 @@ external.reset = function (caller)
     utils.log(2, 'reset called by ' .. tostring(caller))
     navigator.reset()
 end
+-- reset_movement: clears movement/pathfinding state only; exploration history
+-- (visited, backtrack, frontier) is preserved.  Use for mid-session interruptions.
+external.reset_movement = function (caller)
+    if caller == nil then
+        utils.log(2,'reset_movement called with no caller')
+        return
+    end
+    tracker.external_caller = caller
+    utils.log(2, 'reset_movement called by ' .. tostring(caller))
+    navigator.reset_movement()
+end
 external.move = function (caller)
     if caller == nil then
         utils.log(2,'move called with no caller')

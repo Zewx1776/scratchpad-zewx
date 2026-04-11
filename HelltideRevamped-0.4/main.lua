@@ -61,6 +61,10 @@ HelltideRevampedPlugin = {
             return false
         end
     end,
+    getState = function()
+        local task = task_manager.get_current_task()
+        return task and task.current_state or nil
+    end,
 }
 
 on_update(function()

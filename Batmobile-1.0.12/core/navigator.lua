@@ -23,6 +23,8 @@ local navigator = {
     unstuck_nodes = {},
     unstuck_count = 0,
     pathfind_fail_count = 0,
+    pathfind_area_cooldown = -1,   -- wall-clock time after which pathfinding is allowed again
+    pathfind_replan_cooldown = -1, -- wall-clock time after which a *successful* replan is allowed
     exploration_resets = 0,
     failed_target = nil,
     failed_target_time = -1,
@@ -36,7 +38,43 @@ local navigator = {
     update_timeout = 0.05,
     disable_spell = nil,
     is_custom_target = false,
+    -- Post-traversal escape: push player away from the crossing point before resuming
+    trav_escape_pos = nil,      -- traversal position when crossed; non-nil = escape phase active
+    post_trav_target = nil,     -- { pos, is_custom } real target stored during escape
 }
+
+-- Compute a walkable escape waypoint away from trav_pos in the direction of player_pos.
+-- Tries decreasing distances so that narrow platforms (top of a ladder, small ledge)
+-- still get a valid escape point rather than a point off the edge that A* rejects.
+local TRAV_ESCAPE_DIST = 20  -- maximum desired escape distance
+local TRAV_ESCAPE_MIN  = 5   -- minimum fallback escape distance
+local function compute_escape_target(trav_pos, player_pos)
+    local dx = player_pos:x() - trav_pos:x()
+    local dy = player_pos:y() - trav_pos:y()
+    local len = math.sqrt(dx*dx + dy*dy)
+    if len < 0.1 then dx, dy = 1, 0 else dx, dy = dx/len, dy/len end
+    -- Walk from max to min distance, return first walkable point found
+    local dist = TRAV_ESCAPE_DIST
+    while dist >= TRAV_ESCAPE_MIN do
+        local pt = vec3:new(
+            player_pos:x() + dx * dist,
+            player_pos:y() + dy * dist,
+            player_pos:z()
+        )
+        pt = utility.set_height_of_valid_position(pt)
+        if utility.is_point_walkeable(pt) then
+            return pt
+        end
+        dist = dist - 5
+    end
+    -- Last resort: minimum nudge (may not be walkable but better than nothing)
+    local pt = vec3:new(
+        player_pos:x() + dx * TRAV_ESCAPE_MIN,
+        player_pos:y() + dy * TRAV_ESCAPE_MIN,
+        player_pos:z()
+    )
+    return utility.set_height_of_valid_position(pt)
+end
 
 -- Per-frame caching to avoid redundant expensive calls
 -- Cache expires after 10ms (well within a single 50ms frame)
@@ -381,9 +419,12 @@ navigator.update = function ()
     end
     explorer.update(local_player)
 end
-navigator.reset = function ()
-    utils.log(1, 'reseting')
-    explorer.reset()
+-- reset_movement: clears only movement/pathfinding state; preserves explorer's
+-- visited/backtrack/frontier so long-session exploration is not lost.
+-- Use this for mid-session interruptions (death, stuck, traversal recovery).
+-- Use reset() only for full session restarts.
+navigator.reset_movement = function ()
+    utils.log(1, 'reset_movement (exploration state preserved)')
     navigator.target = nil
     navigator.is_custom_target = false
     navigator.done = false
@@ -393,17 +434,25 @@ navigator.reset = function ()
     navigator.trav_delay = nil
     navigator.last_pos = nil
     navigator.last_update = nil
-    navigator.done_delay = nil
     navigator.unstuck_nodes = {}
     navigator.unstuck_count = 0
     navigator.pathfind_fail_count = 0
-    navigator.exploration_resets = 0
+    navigator.pathfind_area_cooldown = -1
+    navigator.pathfind_replan_cooldown = -1
     navigator.failed_target = nil
     navigator.failed_target_time = -1
     navigator.failed_target_radius = 15
     navigator.trav_final_target = nil
     navigator.blacklisted_trav = {}
     navigator.blacklisted_spell_node = {}
+    navigator.trav_escape_pos = nil
+    navigator.post_trav_target = nil
+end
+navigator.reset = function ()
+    utils.log(1, 'reseting')
+    explorer.reset()
+    navigator.reset_movement()
+    navigator.exploration_resets = 0
 end
 navigator.set_target = function (target, disable_spell)
     if target.get_position then
@@ -417,6 +466,12 @@ navigator.set_target = function (target, disable_spell)
     then
         return false
     end
+    -- Post-traversal escape in progress: store the caller's target for later restoration
+    -- but don't let it override the escape waypoint.
+    if navigator.trav_escape_pos ~= nil then
+        navigator.post_trav_target = { pos = new_target, is_custom = true }
+        return true
+    end
     -- If we are mid-traversal to reach a custom target, don't disrupt the route
     -- (kill_monster keeps calling set_target every frame; return true so it doesn't
     -- mark the enemy unreachable, but keep routing to the traversal node)
@@ -428,16 +483,23 @@ navigator.set_target = function (target, disable_spell)
             navigator.trav_final_target = nil
         end
     end
+    local target_moved = navigator.target ~= nil and utils.distance(navigator.target, new_target) > 2
     if navigator.target == nil or
-        utils.distance(navigator.target, new_target) > 0 or
+        target_moved or
         navigator.disable_spell ~= disable_spell
     then
         navigator.failed_target = nil
         navigator.target = new_target
         navigator.is_custom_target = true
-        navigator.path = {}
+        -- Only clear the path when the target moved far enough to matter.
+        -- For moving enemies (kill_monsters calls set_target every frame) a sub-2-unit
+        -- drift is noise — keep the existing path to avoid triggering A* every 50ms.
+        if navigator.path == nil or #navigator.path == 0 or target_moved then
+            navigator.path = {}
+            navigator.pathfind_fail_count = 0
+            navigator.pathfind_replan_cooldown = -1  -- new target: allow immediate pathfind
+        end
         navigator.disable_spell = disable_spell
-        navigator.pathfind_fail_count = 0  -- each new target starts fresh
     end
     explorer.backtracking = false
     return true
@@ -447,6 +509,7 @@ navigator.clear_target = function ()
     navigator.is_custom_target = false
     navigator.path = {}
     navigator.disable_spell = nil
+    navigator.pathfind_replan_cooldown = -1
 end
 navigator.move = function ()
     if navigator.move_time + navigator.move_timeout > get_time_since_inject() then return end
@@ -475,19 +538,105 @@ navigator.move = function ()
         then
             interact_object(trav)
             local name = trav:get_skin_name()
+            if not name:match('Jump') then
+                -- Non-jump traversals (ladders, FreeClimb, etc.) have a traversal buff
+                -- but it can be very short — short enough to be missed at the 50ms poll
+                -- rate.  Set a 2s interact cooldown immediately so we don't spam
+                -- interact_object every frame while the player is climbing.  Also clear
+                -- the stale approach-node path and target so the player doesn't follow
+                -- them back to the base of the ladder if the buff is never detected.
+                navigator.trav_delay = get_time_since_inject() + 2
+                navigator.path = {}
+                navigator.target = nil
+                navigator.is_custom_target = false
+                console.print('[nav] non-jump traversal interacted: ' .. name .. ', waiting for buff (2s cooldown)')
+            end
             if name:match('Jump') then
                 -- jump doesnt have traversal buff for some reason
                 navigator.path = {}
                 navigator.disable_spell = nil
-                local crossed_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
+                local trav_pos = trav:get_position()
+                local crossed_str = trav:get_skin_name() .. utils.vec_to_string(trav_pos)
                 navigator.blacklisted_trav[crossed_str] = crossed_str
                 console.print('[nav] blacklisting jumped traversal ' .. trav:get_skin_name())
+                -- Blacklist landing-side traversals so the player doesn't immediately
+                -- bounce back through the same or adjacent traversal after landing.
+                for _, lt in ipairs(traversals) do
+                    local lt_pos = lt:get_position()
+                    if utils.distance(player_pos, lt_pos) <= 10 then
+                        local lt_str = lt:get_skin_name() .. utils.vec_to_string(lt_pos)
+                        if navigator.blacklisted_trav[lt_str] == nil then
+                            navigator.blacklisted_trav[lt_str] = lt_str
+                            console.print('[nav] blacklisting landing traversal ' .. lt:get_skin_name())
+                        end
+                    end
+                end
                 navigator.last_trav = nil
                 navigator.trav_delay = get_time_since_inject() + 4
                 navigator.failed_target = nil
                 navigator.failed_target_radius = 15
+                -- Escape: move away from the traversal before resuming, so the landing-side
+                -- gizmo isn't immediately re-selected and the player doesn't bounce back.
+                local escape_pt = compute_escape_target(trav_pos, player_pos)
+                navigator.trav_escape_pos = trav_pos
                 if navigator.trav_final_target ~= nil then
-                    console.print('[nav] jump crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
+                    console.print('[nav] jump crossed, escaping before restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
+                    navigator.post_trav_target = { pos = navigator.trav_final_target, is_custom = true }
+                    navigator.trav_final_target = nil
+                else
+                    navigator.post_trav_target = nil
+                end
+                navigator.target = escape_pt
+                navigator.is_custom_target = false
+                navigator.pathfind_fail_count = 0
+                console.print('[nav] post-jump escape target: ' .. utils.vec_to_string(escape_pt))
+            end
+        end
+        if has_traversal_buff(local_player) then
+            tracker.bench_count("trav_crossed")
+            navigator.trav_delay = get_time_since_inject() + 4
+            navigator.path = {}
+            navigator.disable_spell = nil
+            local trav_pos_for_escape = navigator.last_trav and navigator.last_trav:get_position() or nil
+            if navigator.last_trav ~= nil then
+                local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
+                navigator.blacklisted_trav[crossed_str] = crossed_str
+                console.print('[nav] blacklisting crossed traversal ' .. navigator.last_trav:get_skin_name())
+            end
+            -- Blacklist all traversals near the landing position to prevent the player from
+            -- immediately bouncing back through the same or adjacent gizmo.
+            -- Traversal recovery (external, after ~15s stuck) will clear these when needed.
+            for _, lt in ipairs(traversals) do
+                local lt_pos = lt:get_position()
+                if utils.distance(player_pos, lt_pos) <= 10 then
+                    local lt_str = lt:get_skin_name() .. utils.vec_to_string(lt_pos)
+                    if navigator.blacklisted_trav[lt_str] == nil then
+                        navigator.blacklisted_trav[lt_str] = lt_str
+                        console.print('[nav] blacklisting landing traversal ' .. lt:get_skin_name())
+                    end
+                end
+            end
+            navigator.last_trav = nil
+            navigator.failed_target = nil
+            navigator.failed_target_radius = 15
+            -- Escape: move away from the traversal before resuming
+            if trav_pos_for_escape then
+                local escape_pt = compute_escape_target(trav_pos_for_escape, player_pos)
+                navigator.trav_escape_pos = trav_pos_for_escape
+                if navigator.trav_final_target ~= nil then
+                    console.print('[nav] traversal crossed, escaping before restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
+                    navigator.post_trav_target = { pos = navigator.trav_final_target, is_custom = true }
+                    navigator.trav_final_target = nil
+                else
+                    navigator.post_trav_target = nil
+                end
+                navigator.target = escape_pt
+                navigator.is_custom_target = false
+                navigator.pathfind_fail_count = 0
+                console.print('[nav] post-traversal escape target: ' .. utils.vec_to_string(escape_pt))
+            else
+                if navigator.trav_final_target ~= nil then
+                    console.print('[nav] traversal crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
                     navigator.target = navigator.trav_final_target
                     navigator.is_custom_target = true
                     navigator.pathfind_fail_count = 0
@@ -500,31 +649,80 @@ navigator.move = function ()
                 end
             end
         end
-        if has_traversal_buff(local_player) then
-            tracker.bench_count("trav_crossed")
-            navigator.trav_delay = get_time_since_inject() + 4
-            navigator.path = {}
-            navigator.disable_spell = nil
-            if navigator.last_trav ~= nil then
-                local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
-                navigator.blacklisted_trav[crossed_str] = crossed_str
-                console.print('[nav] blacklisting crossed traversal ' .. navigator.last_trav:get_skin_name())
+    end
+
+    -- Buff-missed fallback: some traversals (ladders, FreeClimb, etc.) have a traversal
+    -- buff that is too short to be reliably caught at the 50ms poll rate.  If last_trav
+    -- is still set after the 2s interact cooldown has expired AND the player has physically
+    -- moved > 8 units from the gizmo, the crossing happened but the buff was never seen.
+    -- Treat it the same as a buff-detected crossing: blacklist + escape.
+    if navigator.last_trav ~= nil and
+        navigator.trav_delay ~= nil and
+        get_time_since_inject() > navigator.trav_delay and
+        utils.distance(player_pos, navigator.last_trav:get_position()) > 8
+    then
+        local missed_trav = navigator.last_trav
+        local missed_pos  = missed_trav:get_position()
+        console.print('[nav] buff-missed crossing: ' .. missed_trav:get_skin_name() ..
+            ' (dist=' .. string.format('%.1f', utils.distance(player_pos, missed_pos)) .. ')')
+        local crossed_str = missed_trav:get_skin_name() .. utils.vec_to_string(missed_pos)
+        navigator.blacklisted_trav[crossed_str] = crossed_str
+        local nearby_for_bl = get_nearby_travs(local_player)
+        for _, lt in ipairs(nearby_for_bl) do
+            local lt_pos = lt:get_position()
+            if utils.distance(player_pos, lt_pos) <= 10 then
+                local lt_str = lt:get_skin_name() .. utils.vec_to_string(lt_pos)
+                if navigator.blacklisted_trav[lt_str] == nil then
+                    navigator.blacklisted_trav[lt_str] = lt_str
+                    console.print('[nav] blacklisting landing traversal (buff-missed) ' .. lt:get_skin_name())
+                end
             end
-            navigator.last_trav = nil
-            navigator.failed_target = nil
-            navigator.failed_target_radius = 15
-            if navigator.trav_final_target ~= nil then
-                console.print('[nav] traversal crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
-                navigator.target = navigator.trav_final_target
-                navigator.is_custom_target = true
+        end
+        navigator.last_trav      = nil
+        navigator.trav_delay     = get_time_since_inject() + 4
+        navigator.failed_target  = nil
+        navigator.failed_target_radius = 15
+        local escape_pt = compute_escape_target(missed_pos, player_pos)
+        navigator.trav_escape_pos = missed_pos
+        if navigator.trav_final_target ~= nil then
+            navigator.post_trav_target = { pos = navigator.trav_final_target, is_custom = true }
+            navigator.trav_final_target = nil
+        else
+            navigator.post_trav_target = nil
+        end
+        navigator.target             = escape_pt
+        navigator.is_custom_target   = false
+        navigator.pathfind_fail_count = 0
+        console.print('[nav] buff-missed escape target: ' .. utils.vec_to_string(escape_pt))
+    end
+
+    -- Post-traversal escape: complete when the player has either moved TRAV_ESCAPE_DIST
+    -- units from the crossing point (normal path) OR actually reached the escape target
+    -- (small platform where the closest walkable point is <20 units from the traversal).
+    if navigator.trav_escape_pos ~= nil then
+        local dist_from_trav = utils.distance(player_pos, navigator.trav_escape_pos)
+        local reached_escape = navigator.target ~= nil
+            and utils.distance(player_pos, navigator.target) <= 2
+        if dist_from_trav >= TRAV_ESCAPE_DIST or reached_escape then
+            local ptt = navigator.post_trav_target
+            if ptt ~= nil then
+                console.print('[nav] post-trav escape complete (dist=' .. string.format('%.1f', dist_from_trav) .. '), restoring target ' .. utils.vec_to_string(ptt.pos))
+                console.print(string.format('[nav] restored target feasibility: dist=%.1f custom=%s walkable=%s',
+                    utils.distance(player_pos, ptt.pos), tostring(ptt.is_custom),
+                    tostring(utility.is_point_walkeable(ptt.pos))))
+                navigator.target = ptt.pos
+                navigator.is_custom_target = ptt.is_custom
                 navigator.pathfind_fail_count = 0
-                navigator.trav_final_target = nil
             else
+                console.print('[nav] post-trav escape complete (dist=' .. string.format('%.1f', dist_from_trav) .. '), no stored target — selecting new')
                 if not navigator.paused then
                     navigator.target = nil
                     navigator.is_custom_target = false
                 end
             end
+            navigator.path = {}
+            navigator.post_trav_target = nil
+            navigator.trav_escape_pos = nil
         end
     end
 
@@ -649,9 +847,37 @@ navigator.move = function ()
         navigator.done_delay = nil
     end
 
+    -- Deadlock guard: last_trav is set (blocking target selection) but target is nil
+    -- and the player is not within interaction range.  This can happen when the traversal
+    -- approach node pathfind fails and select_target returns nil (all nearby frontiers
+    -- were blacklisted).  Clear last_trav so the "no target or reached" block can fire
+    -- next tick and pick a fresh explorer target.
+    if navigator.last_trav ~= nil and navigator.target == nil and
+        utils.distance(player_pos, navigator.last_trav:get_position()) > 5
+    then
+        console.print('[nav] deadlock: last_trav set but target nil and player far from traversal — clearing last_trav')
+        navigator.last_trav = nil
+    end
+
     if navigator.target ~= nil and (#navigator.path == 0 or
         utils.distance(navigator.path[1], navigator.last_pos) > navigator.movement_dist)
     then
+        -- Cooldown after pathfind failure: avoid hammering A* at 20Hz on blocked terrain.
+        if navigator.pathfind_area_cooldown > get_time_since_inject() then
+            if #navigator.path > 0 then
+                pathfinder.request_move(navigator.path[1])
+            end
+            return
+        end
+        -- Cooldown after successful replan: when the player swerves (looting, dodge) the path
+        -- becomes stale but a fresh A* is expensive.  Keep moving on the old path for 0.5s
+        -- before committing to a replan so brief deviations don't cause a pathfind storm.
+        if navigator.pathfind_replan_cooldown > get_time_since_inject() then
+            if #navigator.path > 0 then
+                pathfinder.request_move(navigator.path[1])
+            end
+            return
+        end
         local dist_to_target = utils.distance(navigator.last_pos, navigator.target)
         console.print('[nav] pathfinding to=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' custom=' .. tostring(navigator.is_custom_target))
         local result = path_finder.find_path(navigator.last_pos, navigator.target, navigator.is_custom_target)
@@ -659,11 +885,23 @@ navigator.move = function ()
             tracker.debug_node = navigator.target
             navigator.pathfind_fail_count = navigator.pathfind_fail_count + 1
             tracker.bench_count("pathfind_fail")
+            navigator.pathfind_area_cooldown = get_time_since_inject() + 0.4
             console.print('[nav] PATHFIND FAILED #' .. navigator.pathfind_fail_count .. ' target=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' paused=' .. tostring(navigator.paused) .. ' frontiers=' .. explorer.frontier_count)
+            -- Post-traversal escape: A* may fail when the escape point is on the edge of
+            -- a small platform (top of ladder, narrow ledge).  Use direct movement to
+            -- physically push the player away from the traversal instead of calling
+            -- select_target (which would pick the landing-side gizmo and bounce back).
+            if navigator.trav_escape_pos ~= nil then
+                console.print('[nav] escape pathfind failed — nudging away from traversal directly')
+                pathfinder.request_move(navigator.target)
+                return
+            end
             -- After N consecutive pathfind failures, handle unreachable target
             -- Custom targets (kill_monster): 3 failures (quick give-up, mark unreachable)
-            -- Explorer targets: 6 failures (more patient — adjacent nodes fail individually)
-            local fail_threshold = navigator.is_custom_target and 3 or 6
+            -- Explorer targets: 3 failures — was 6, but with the heap-based A* each failed
+            -- call still burns 200-600ms, so 6 failures = up to 3.6s of freeze. 3 is enough
+            -- since adjacent frontier nodes in the same blocked area all fail the same way.
+            local fail_threshold = navigator.is_custom_target and 3 or 3
             -- After a traversal crossing, walkability data for the new area may not be
             -- loaded yet — be more patient before giving up on the custom target
             if navigator.trav_delay ~= nil and get_time_since_inject() < navigator.trav_delay then
@@ -715,13 +953,28 @@ navigator.move = function ()
                     navigator.disable_spell = nil
                     return
                 end
-                -- Only blacklist explorer area for explorer-picked targets
-                console.print('[nav] BLACKLISTING 24x24 area around ' .. utils.vec_to_string(navigator.target))
+                -- Only blacklist explorer area for explorer-picked targets.
+                -- Special case: if last_trav is set, the failing target IS the traversal
+                -- approach node.  Blacklisting its 48x48 area would wipe out the traversal
+                -- zone entirely.  Instead, blacklist the traversal gizmo itself and clear
+                -- last_trav so the explorer can resume without a deadlock.
+                if navigator.last_trav ~= nil then
+                    local trav_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
+                    navigator.blacklisted_trav[trav_str] = trav_str
+                    console.print('[nav] traversal approach failed — blacklisting traversal ' .. navigator.last_trav:get_skin_name() .. ' and clearing last_trav')
+                    navigator.last_trav = nil
+                    navigator.target    = nil
+                    navigator.path      = {}
+                    return  -- let explorer pick fresh target next tick
+                end
+                -- Use 48x48 radius (vs old 24x24) to cover adjacent 0.5-unit frontier
+                -- nodes that fell just outside the old box and were immediately re-selected.
+                console.print('[nav] BLACKLISTING 48x48 area around ' .. utils.vec_to_string(navigator.target))
                 local failed_pos = navigator.target
                 if failed_pos then
                     local step = settings.step or 2
-                    for i = -12, 12, step do
-                        for j = -12, 12, step do
+                    for i = -24, 24, step do
+                        for j = -24, 24, step do
                             local node_str = tostring(utils.normalize_value(failed_pos:x() + i)) .. ',' .. tostring(utils.normalize_value(failed_pos:y() + j))
                             explorer.visited[node_str] = node_str
                         end
@@ -742,25 +995,38 @@ navigator.move = function ()
         tracker.debug_node = nil
         navigator.pathfind_fail_count = 0
         navigator.path = result
+        -- Gate the next replan: brief player deviations (looting, dodge) won't re-trigger A*.
+        -- Custom targets (kill_monsters) get a shorter window since enemy movement matters more.
+        navigator.pathfind_replan_cooldown = get_time_since_inject() + (navigator.is_custom_target and 0.3 or 0.5)
+    end
+
+    -- Find the last node the player has already reached (within 1 unit).
+    -- Using "last consumed" rather than "first not consumed" handles winding paths
+    -- where a later node curves back near the player without meaning prior nodes
+    -- are all passed.  The old `new_path = {}` reset dropped valid forward nodes
+    -- whenever any mid-path node was near the player, leaving path[1] potentially
+    -- > movement_dist away and triggering a spurious re-pathfind.
+    local last_consumed = 0
+    for i, node in ipairs(navigator.path) do
+        if utils.distance(node, cur_node) < 1 then
+            last_consumed = i
+        end
     end
 
     local moved = false
     local new_path = {}
-    for _, node in ipairs(navigator.path) do
-        if utils.distance(node, cur_node) >= 1 then
-            if not moved and
-                -- move to nodes that is >= movement step
-                (utils.distance(node, cur_node) >= navigator.movement_step or
-                -- or if it is close to target
-                (navigator.target ~= nil and utils.distance(node, navigator.target) == 0))
-            then
-                pathfinder.request_move(node)
-                moved = true
-            end
-            new_path[#new_path+1] = node
-        else
-            new_path = {}
+    for i = last_consumed + 1, #navigator.path do
+        local node = navigator.path[i]
+        if not moved and
+            -- move to nodes that is >= movement step
+            (utils.distance(node, cur_node) >= navigator.movement_step or
+            -- or if it is close to target
+            (navigator.target ~= nil and utils.distance(node, navigator.target) == 0))
+        then
+            pathfinder.request_move(node)
+            moved = true
         end
+        new_path[#new_path+1] = node
     end
     if not moved and #navigator.path > 0 then
         console.print('[nav] has path (#' .. #navigator.path .. ') but no move, remaining=#' .. #new_path .. ' target=' .. (navigator.target and utils.vec_to_string(navigator.target) or 'nil'))

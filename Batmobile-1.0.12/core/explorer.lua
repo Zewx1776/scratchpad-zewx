@@ -228,12 +228,18 @@ local select_node_distance = function ()
         local last_index = #explorer.backtrack
         local last_pos = explorer.backtrack[last_index]
         explorer.backtrack[last_index] = nil
+        -- Skip backtrack points that were blacklisted by the navigator (added to visited
+        -- as a 48x48 area after repeated pathfind failures).  Without this check the
+        -- same blacklisted point is re-returned every call, creating an infinite loop.
+        local last_pos_str = utils.vec_to_string(last_pos)
+        if explorer.visited[last_pos_str] ~= nil then goto continue_bt_distance end
         if utils.distance(last_pos, explorer.cur_pos) ~= 0 then
             explorer.backtracking = true
             -- store backrack to secondary so it can be restored
             explorer.backtrack_secondary[#explorer.backtrack_secondary+1] = last_pos
             return last_pos
         end
+        ::continue_bt_distance::
     end
     -- no perimeter, no frontier, no backtracks — all explored or unreachable
     explorer.backtracking = false
@@ -311,6 +317,9 @@ local select_node_direction = function (failed)
         local last_index = #explorer.backtrack
         local last_pos = explorer.backtrack[last_index]
         explorer.backtrack[last_index] = nil
+        -- Skip blacklisted backtrack points (see select_node_distance comment)
+        local last_pos_str = utils.vec_to_string(last_pos)
+        if explorer.visited[last_pos_str] ~= nil then goto continue_bt_direction end
         if utils.distance(last_pos, explorer.cur_pos) ~= 0 then
             explorer.backtracking = true
             local dx = last_pos:x() - explorer.cur_pos:x()
@@ -318,6 +327,7 @@ local select_node_direction = function (failed)
             explorer.last_dir = {dx, dy}
             return last_pos
         end
+        ::continue_bt_direction::
     end
     -- no perimeter, no frontier, no backtracks — all explored or unreachable
     explorer.backtracking = false

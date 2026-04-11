@@ -15,26 +15,84 @@ local found_herb = nil
 -- Key: "name_x_y" to deduplicate, Value: { name, cost, position (vec3), discovered_at }
 local remembered_chests = {}
 local remembered_chest_target = nil -- the key of the chest we're currently navigating to
+local remembered_chest_long_path_started = false -- true after navigate_long_path fires once; prevents repeated expensive A* calls
+local remembered_chest_long_path_ok = false      -- true if navigate_long_path succeeded (false = fell back to navigate_to)
+
+-- Farm-chest state: when a nearby chest needs <50 more cinders we stay in its 30-unit
+-- circle killing monsters instead of wandering away.
+local farm_chest_entry = nil  -- { name, cost, position } of the chest we're farming near
+
+-- Farm-cinders roam patrol: evenly-spaced ring of points around the chest.
+-- Cycled through when no monsters are visible, replacing Batmobile free-roam
+-- which oscillates on its own backtrack path.
+local farm_roam_points   = {}   -- array of vec3
+local farm_roam_idx      = 1    -- which point we're heading to next
+local farm_roam_built_for = nil -- chest pos used to build current ring (vec3 key)
+local FARM_ROAM_RADIUS   = 22   -- ring radius in meters
+local FARM_ROAM_COUNT    = 8    -- evenly-spaced points on the ring
+local FARM_ROAM_ARRIVE   = 6    -- meters: close enough to advance to next point
+
+local function build_farm_roam(chest_pos)
+    farm_roam_points = {}
+    for i = 0, FARM_ROAM_COUNT - 1 do
+        local angle = (i / FARM_ROAM_COUNT) * 2 * math.pi
+        local tx = chest_pos:x() + math.cos(angle) * FARM_ROAM_RADIUS
+        local ty = chest_pos:y() + math.sin(angle) * FARM_ROAM_RADIUS
+        local pt = vec3:new(tx, ty, chest_pos:z())
+        pt = utility.set_height_of_valid_position(pt)
+        farm_roam_points[#farm_roam_points + 1] = pt
+    end
+    -- Start at the point closest to the player to avoid a long initial run
+    local player_pos = get_player_position()
+    local best_i, best_d = 1, math.huge
+    for i, pt in ipairs(farm_roam_points) do
+        local d = player_pos:dist_to(pt)
+        if d < best_d then best_i, best_d = i, d end
+    end
+    farm_roam_idx      = best_i
+    farm_roam_built_for = chest_pos
+end
 
 local plugin_label = "helltide_revamped"
+
+-- Throttle BatmobilePlugin.update+move to 10fps.
+-- Batmobile has its own 50ms internal timeout, so calling at 16fps runs it every call.
+-- Capping at 10fps halves the path-following CPU cost with no perceptible navigation loss.
+-- Pass force=true immediately after set_target so the new path starts right away.
+local bm_pulse_time     = -math.huge
+local BM_PULSE_INTERVAL = 0.1  -- 10fps
+
+local function bm_pulse(force)
+    if not BatmobilePlugin then return end
+    local now = get_time_since_inject()
+    if not force and (now - bm_pulse_time) < BM_PULSE_INTERVAL then return end
+    bm_pulse_time = now
+    BatmobilePlugin.update(plugin_label)
+    BatmobilePlugin.move(plugin_label)
+end
+
 local was_dead = false
 local ni = 1
 local last_target_ni = nil -- track which waypoint we last sent to Batmobile to avoid redundant set_target calls
 local WAYPOINT_LOOKAHEAD = 5 -- skip ahead 5 waypoints (~20m) so Batmobile gets a real long-distance target
 local WAYPOINT_ARRIVAL_DIST = 8 -- consider waypoints "reached" within 8m — prevents stalling on exact points
 local WAYPOINT_MAX_DIST = 50 -- if target waypoint is further than this, re-snap to nearest
-local PATROL_STUCK_TIMEOUT = 10 -- seconds without progress before switching to free explore
+local PATROL_STUCK_TIMEOUT = 5 -- seconds without progress before switching to free explore
 local patrol_stuck_time = nil
 local patrol_stuck_pos = nil
 local patrol_free_explore = false
 local patrol_free_explore_start = nil -- time when we entered free-explore mode
 
-local explorer_last_target        = nil  -- tracks current long-path target so we detect changes
-local explorer_path_complete_time = nil  -- wall-clock when navigate_long_path last stopped (for cooldown)
-local explorer_came_from_combat   = false -- set when kill_monsters yields back to explore
+local CHEST_INTERACT_COOLDOWN  = 4.0   -- seconds between interact_object calls on the same chest
+local last_chest_interact_time = -math.huge -- ensures first interact fires immediately
 
-local TRAVERSAL_RECOVERY_TIMEOUT  = 15 -- seconds in free-explore before clearing traversal blacklist
-local TRAVERSAL_RECOVERY_COOLDOWN = 25 -- minimum seconds between recovery attempts
+-- Zone-exit recovery: when the player walks out of the helltide boundary
+-- we navigate back instead of letting search_helltide teleport away.
+local returning_to_helltide = false  -- true while navigating back to zone
+local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as return target)
+
+local TRAVERSAL_RECOVERY_TIMEOUT  = 5  -- seconds in free-explore before clearing traversal blacklist
+local TRAVERSAL_RECOVERY_COOLDOWN = 12 -- minimum seconds between recovery attempts
 local traversal_recovery_time = nil    -- wall-clock of last triggered recovery
 
 -- ============================================================
@@ -45,8 +103,7 @@ local function move_to(target, disable_spell)
     if BatmobilePlugin then
         BatmobilePlugin.pause(plugin_label)
         BatmobilePlugin.set_target(plugin_label, target, disable_spell or false)
-        BatmobilePlugin.update(plugin_label)
-        BatmobilePlugin.move(plugin_label)
+        bm_pulse(true)
     else
         local pos = target
         if type(target) ~= "userdata" or (target.get_position and target:get_position()) then
@@ -62,8 +119,7 @@ local function patrol_move(waypoint)
     if BatmobilePlugin then
         BatmobilePlugin.resume(plugin_label)
         BatmobilePlugin.set_target(plugin_label, waypoint, false)
-        BatmobilePlugin.update(plugin_label)
-        BatmobilePlugin.move(plugin_label)
+        bm_pulse(true)
     else
         pathfinder.request_move(waypoint)
     end
@@ -80,6 +136,15 @@ local try_traversal_recovery  -- forward declaration; defined after reset_naviga
 
 local navigate_to_debug_time = 0
 local navigate_to_start_pos = nil -- position when stuck timer started
+local navigate_to_last_target = nil -- last target passed to set_target; avoid redundant calls that clear Batmobile's path
+local navigate_to_last_set_time = -math.huge -- wall-clock of last set_target call
+local NAVIGATE_TO_DIVERGE_COOLDOWN = 2.0 -- seconds before re-asserting same target after bm_diverged (limits A* spam on unreachable targets)
+-- Track consecutive re-assertions after bm_diverged without the player getting closer.
+-- Fires helltide_explorer.report_intermediate_fail() after this many failed re-asserts.
+local navigate_to_reassert_fails = 0
+local navigate_to_reassert_last_dist = nil
+local NAVIGATE_TO_REASSERT_LIMIT = 4  -- ~8s of re-assertion with no progress → skip node
+local NAVIGATE_TO_REASSERT_PROGRESS = 8 -- metres closer to target required to reset the counter
 
 local function navigate_to(target)
     perf.start("navigate_to")
@@ -107,8 +172,7 @@ local function navigate_to(target)
                 navigate_to_free_explore_start = now
             end
 
-            BatmobilePlugin.update(plugin_label)
-            BatmobilePlugin.move(plugin_label)
+            bm_pulse()
 
             -- If stuck in free-explore too long, clear traversal blacklist so Batmobile
             -- can use a nearby traversal to escape the platform
@@ -130,10 +194,70 @@ local function navigate_to(target)
             return
         end
 
-        -- Normal mode: set custom target
-        BatmobilePlugin.set_target(plugin_label, target, false)
-        BatmobilePlugin.update(plugin_label)
-        BatmobilePlugin.move(plugin_label)
+        -- Normal mode: set custom target only when it changes to avoid clearing Batmobile's
+        -- active path on every frame (which forces a costly find_path call each time).
+        local target_pos = target
+        if type(target) == "userdata" and target.get_position then
+            target_pos = target:get_position()
+        end
+        -- Also re-set if Batmobile has drifted to a different internal target.
+        -- This happens when Batmobile reaches the goal and the explorer picks a new frontier:
+        -- navigate_to_last_target still equals the original position so target_changed is false,
+        -- but Batmobile is now driving toward the frontier instead of our desired target.
+        -- Rate-limit re-assertion on diverge: pathfind failures also cause bm_diverged (Batmobile
+        -- picks a fallback after failing), and hammering set_target resets pathfind_fail_count to 0
+        -- every frame, causing continuous 350ms A* runs.  Only re-assert on diverge after a cooldown.
+        local bm_current = BatmobilePlugin.get_target and BatmobilePlugin.get_target()
+        local bm_diverged = bm_current == nil or bm_current:dist_to(target_pos) > 2
+        local diverge_ready = (now - navigate_to_last_set_time) >= NAVIGATE_TO_DIVERGE_COOLDOWN
+        -- Threshold >6 (not >1) so small intermediate drifts from AltClick movement don't
+        -- bypass the diverge cooldown — each click moves the player ~4-6m which shifts the
+        -- cached intermediate, but that shouldn't count as a genuinely new target.
+        local target_changed = navigate_to_last_target == nil
+            or navigate_to_last_target:dist_to(target_pos) > 6
+            or (bm_diverged and diverge_ready)
+        if target_changed then
+            navigate_to_last_target = target_pos
+            navigate_to_last_set_time = now
+            -- Re-assertion failure tracking: when Batmobile diverged (pathfind fail) and we
+            -- re-assert the helltide_explorer intermediate, count how many times we do this
+            -- without the player getting meaningfully closer to the target.  After
+            -- NAVIGATE_TO_REASSERT_LIMIT re-asserts with no real progress, tell helltide_explorer
+            -- to skip the node so we don't oscillate forever on an unreachable intermediate.
+            -- "target_changed due to diverge" = bm_diverged AND we had a previous target
+            -- (navigate_to_reassert_last_dist ~= nil).  First-time calls are excluded.
+            if bm_diverged and diverge_ready and navigate_to_reassert_last_dist ~= nil then
+                local dist_now = player_pos:dist_to(target_pos)
+                if navigate_to_reassert_last_dist - dist_now < NAVIGATE_TO_REASSERT_PROGRESS then
+                    navigate_to_reassert_fails = navigate_to_reassert_fails + 1
+                    console.print(string.format(
+                        "[NAV] reassert fail #%d/%d dist=%.1f (was %.1f, need -%dm progress)",
+                        navigate_to_reassert_fails, NAVIGATE_TO_REASSERT_LIMIT,
+                        dist_now, navigate_to_reassert_last_dist, NAVIGATE_TO_REASSERT_PROGRESS))
+                    if navigate_to_reassert_fails >= NAVIGATE_TO_REASSERT_LIMIT then
+                        console.print(string.format(
+                            "[NAV] intermediate unreachable after %d re-asserts (dist=%.1f) — skipping explorer node",
+                            navigate_to_reassert_fails, dist_now))
+                        navigate_to_reassert_fails = 0
+                        navigate_to_reassert_last_dist = nil
+                        helltide_explorer.report_intermediate_fail()
+                        perf.stop("navigate_to")
+                        return
+                    end
+                else
+                    navigate_to_reassert_fails = 0
+                end
+                navigate_to_reassert_last_dist = dist_now
+            else
+                -- Genuine target change (not a diverge re-assert) — reset counter
+                if not bm_diverged then
+                    navigate_to_reassert_fails = 0
+                end
+                navigate_to_reassert_last_dist = player_pos:dist_to(target_pos)
+            end
+            BatmobilePlugin.set_target(plugin_label, target, false)
+        end
+        bm_pulse(target_changed)
 
         -- Detect stuck by actual position change (not speed — speed spikes from failed pathing)
         if navigate_to_stuck_time == nil then
@@ -145,12 +269,13 @@ local function navigate_to(target)
                 -- Actually made real progress (not just drift), reset timer
                 navigate_to_stuck_time = now
                 navigate_to_start_pos = player_pos
-            elseif now - navigate_to_stuck_time > 10 then
-                -- Hasn't moved >5 units in 10 seconds — stuck (allow time for traversal routing)
-                console.print(string.format("[NAV] Stuck 10s (moved only %.1f), switching to FREE_EXPLORE", dist_moved))
+            elseif now - navigate_to_stuck_time > 4 then
+                -- Hasn't moved >5 units in 4 seconds — stuck
+                console.print(string.format("[NAV] Stuck 4s (moved only %.1f), switching to FREE_EXPLORE", dist_moved))
                 BatmobilePlugin.clear_target(plugin_label)
                 navigate_to_free_explore = true
                 navigate_to_stuck_time = nil
+                navigate_to_last_target = nil
                 -- Keep navigate_to_start_pos so free explore can detect when we've moved away
             end
         end
@@ -170,6 +295,10 @@ local function reset_navigate_state()
     navigate_to_start_pos = nil
     navigate_to_free_explore = false
     navigate_to_free_explore_start = nil
+    navigate_to_last_target = nil
+    navigate_to_last_set_time = -math.huge
+    navigate_to_reassert_fails = 0
+    navigate_to_reassert_last_dist = nil
 end
 
 -- Traversal recovery: called when the player has been stuck in free-explore mode
@@ -182,14 +311,19 @@ try_traversal_recovery = function(now)
     end
     if not BatmobilePlugin then return false end
 
+    -- Stamp the cooldown FIRST so a crash below can never cause a spam-loop
+    traversal_recovery_time = now
+
     console.print("[TRAVERSAL RECOVERY] Stuck on platform — clearing traversal blacklist + failed-target")
     if BatmobilePlugin.clear_traversal_blacklist then
         BatmobilePlugin.clear_traversal_blacklist(plugin_label)
     end
+    trav_blacklist = {}  -- also clear helltide's own traversal blacklist
 
     -- Find nearest Traversal_Gizmo actor and navigate to it so Batmobile
     -- can interact with it and carry the player to the other side.
-    local actors = get_cached_actors()
+    -- Use actors_manager directly: get_cached_actors is a local defined later in the file.
+    local actors = actors_manager:get_all_actors()
     local nearest_trav = nil
     local nearest_dist = math.huge
     for _, actor in pairs(actors) do
@@ -204,17 +338,20 @@ try_traversal_recovery = function(now)
 
     BatmobilePlugin.resume(plugin_label)
     if nearest_trav and nearest_dist < 50 then
-        console.print(string.format("[TRAVERSAL RECOVERY] Moving to %s dist=%.1f",
+        console.print(string.format("[TRAVERSAL RECOVERY] Nearest traversal %s dist=%.1f — clearing target, letting Batmobile self-route via select_target",
             nearest_trav:get_skin_name(), nearest_dist))
-        BatmobilePlugin.set_target(plugin_label, nearest_trav:get_position(), false)
+        -- Do NOT set_target to the raw gizmo position: it is a non-walkable cell, so
+        -- pathfinding fails, the traversal area gets blacklisted in explorer.visited,
+        -- and failed_target is set — undoing the recovery.
+        -- clear_target lets navigator.move()'s "no target" branch call select_target(),
+        -- which uses get_closeby_node() to find a proper walkable approach cell.
+        BatmobilePlugin.clear_target(plugin_label)
     else
-        console.print("[TRAVERSAL RECOVERY] No traversal nearby — resetting Batmobile explorer")
-        BatmobilePlugin.reset(plugin_label)
+        console.print("[TRAVERSAL RECOVERY] No traversal nearby — resetting Batmobile movement (exploration preserved)")
+        BatmobilePlugin.reset_movement(plugin_label)
     end
-    BatmobilePlugin.update(plugin_label)
-    BatmobilePlugin.move(plugin_label)
+    bm_pulse(true)
 
-    traversal_recovery_time = now
     return true
 end
 
@@ -245,36 +382,10 @@ local helltide_state = {
     CHASE_GOBLIN = "CHASE_GOBLIN",
     KILL_MONSTERS = "KILL_MONSTERS",
     MOVING_TO_REMEMBERED_CHEST = "MOVING_TO_REMEMBERED_CHEST",
-    BACK_TO_TOWN = "BACK_TO_TOWN"
+    FARM_CHEST_CINDERS = "FARM_CHEST_CINDERS",
+    BACK_TO_TOWN = "BACK_TO_TOWN",
+    RETURN_TO_HELLTIDE = "RETURN_TO_HELLTIDE",
 }
-
--- DEBUG: scan for all chest actors every 2 seconds
-local last_chest_debug_time = 0
-local function debug_chest_scan()
-    local now = get_time_since_inject()
-    if now - last_chest_debug_time < 2 then return end
-    last_chest_debug_time = now
-
-    local current_cinders = get_helltide_coin_cinders()
-    local actors = actors_manager:get_all_actors()
-    local found_any = false
-
-    for _, actor in pairs(actors) do
-        local skin = actor:get_skin_name()
-        for chest_name, cost in pairs(enums.chest_types) do
-            if skin:match(chest_name) then
-                local dist = utils.distance_to(actor:get_position())
-                local interactable = actor:is_interactable()
-                console.print("[CHEST DEBUG] " .. chest_name .. " | dist: " .. string.format("%.1f", dist) .. " | interactable: " .. tostring(interactable) .. " | cinders: " .. current_cinders .. "/" .. cost)
-                found_any = true
-            end
-        end
-    end
-
-    if not found_any and current_cinders >= 75 then
-        console.print("[CHEST DEBUG] No chest actors in actor list | cinders: " .. current_cinders)
-    end
-end
 
 -- Cached actor list: get_all_actors() is expensive, share one snapshot across all
 -- find_closest_target() and scan_and_remember_chests() calls within the same frame.
@@ -296,8 +407,43 @@ local function get_cached_actors()
     return cached_actors
 end
 
+-- DEBUG: scan for all chest actors every 2 seconds
+local last_chest_debug_time = 0
+local function debug_chest_scan()
+    local now = get_time_since_inject()
+    if now - last_chest_debug_time < 2 then return end
+    last_chest_debug_time = now
+
+    local current_cinders = get_helltide_coin_cinders()
+    local actors = get_cached_actors()
+
+    for _, actor in pairs(actors) do
+        local skin = actor:get_skin_name()
+        for chest_name, cost in pairs(enums.chest_types) do
+            if skin:match(chest_name) then
+                local dist = utils.distance_to(actor:get_position())
+                local interactable = actor:is_interactable()
+                console.print("[CHEST DEBUG] " .. chest_name .. " | dist: " .. string.format("%.1f", dist) .. " | interactable: " .. tostring(interactable) .. " | cinders: " .. current_cinders .. "/" .. cost)
+            end
+        end
+    end
+end
+
+local _fct_cache = {}          -- pattern -> { result, time }
+local FCT_CACHE_TTL = 0.5      -- seconds before re-scanning actors for the same pattern
+
+local function invalidate_fct_cache()
+    _fct_cache = {}
+end
+
 local function find_closest_target(name)
     perf.inc("find_closest_target")
+    local now = get_time_since_inject()
+    local cached = _fct_cache[name]
+    if cached and now - cached.time < FCT_CACHE_TTL then
+        return cached.result
+    end
+
     local actors = get_cached_actors()
     local closest_target = nil
     local closest_distance = math.huge
@@ -313,10 +459,8 @@ local function find_closest_target(name)
         end
     end
 
-    if closest_target then
-        return closest_target
-    end
-    return nil
+    _fct_cache[name] = { result = closest_target, time = now }
+    return closest_target
 end
 
 local function find_closest_waypoint_index(waypoints)
@@ -430,13 +574,15 @@ local function scan_and_remember_chests()
     perf.stop("scan_remember_chests")
 end
 
--- Check if we can now afford any remembered chest — returns the key + entry of the cheapest affordable one
+local REMEMBERED_CHEST_MAX_DIST = 150
+
+-- Check if we can now afford any remembered chest within range — returns key + entry of cheapest affordable one
 local function find_affordable_remembered_chest()
     local current_cinders = get_helltide_coin_cinders()
     local best_key, best_entry = nil, nil
 
     for key, entry in pairs(remembered_chests) do
-        if current_cinders >= entry.cost then
+        if current_cinders >= entry.cost and utils.distance_to(entry.position) <= REMEMBERED_CHEST_MAX_DIST then
             if not best_entry or entry.cost < best_entry.cost then
                 best_key = key
                 best_entry = entry
@@ -571,8 +717,26 @@ local function check_events(self)
             console.print(string.format("[CHEST RECALL] Now have enough cinders (%d/%d) for %s — navigating back to (%.1f, %.1f)",
                 current_cinders, rentry.cost, rentry.name, rentry.position:x(), rentry.position:y()))
             remembered_chest_target = rkey
+            remembered_chest_long_path_started = false
+            remembered_chest_long_path_ok = false
             self.current_state = helltide_state.MOVING_TO_REMEMBERED_CHEST
             return
+        end
+
+        -- Check if a nearby remembered chest needs <50 more cinders — if so, stay and farm monsters
+        if not farm_chest_entry then
+            for key, entry in pairs(remembered_chests) do
+                local shortfall = entry.cost - current_cinders
+                if shortfall > 0 and shortfall < 50 and utils.distance_to(entry.position) <= 50 then
+                    console.print(string.format("[FARM CHEST] %s needs only %d more cinders (%d/%d) — staying to farm",
+                        entry.name, shortfall, current_cinders, entry.cost))
+                    farm_chest_entry = entry
+                    remembered_chests[key] = nil  -- actively farming it now
+                    clear_movement()
+                    self.current_state = helltide_state.FARM_CHEST_CINDERS
+                    return
+                end
+            end
         end
     end
 
@@ -588,15 +752,24 @@ local function check_events(self)
                 local name = actor:get_skin_name()
                 if name:match('[Tt]raversal_Gizmo') then
                     local pos = actor:get_position()
+                    local trav_dist = utils.distance_to(pos)
+                    local z_diff = math.abs(pos:z() - player_pos_z)
                     -- Mirror Batmobile's own z-diff constraint: only route to traversals
                     -- on the same level (z_diff <= 3).  FreeClimb_Up gizmos sit at the
                     -- bottom of a ladder — if the player is already at the top (z_diff > 3)
                     -- Batmobile will never select them, so skip them here too.
-                    if math.abs(pos:z() - player_pos_z) > 3 then goto continue_trav end
+                    if z_diff > 3 then
+                        console.print(string.format("[TRAVERSAL] Skipped %s dist=%.1f z_diff=%.1f (too high)", name, trav_dist, z_diff))
+                        goto continue_trav
+                    end
                     local key = math.floor(pos:x()) .. ',' .. math.floor(pos:y()) .. ',' .. math.floor(pos:z())
                     local blacklisted_at = trav_blacklist[key]
-                    if (blacklisted_at == nil or now - blacklisted_at > TRAV_BLACKLIST_TIMEOUT)
-                        and utils.distance_to(pos) < 30
+                    if blacklisted_at and now - blacklisted_at <= TRAV_BLACKLIST_TIMEOUT then
+                        console.print(string.format("[TRAVERSAL] Skipped %s dist=%.1f — blacklisted %.0fs ago", name, trav_dist, now - blacklisted_at))
+                    elseif trav_dist >= 30 then
+                        console.print(string.format("[TRAVERSAL] Skipped %s dist=%.1f — too far (>=30)", name, trav_dist))
+                    elseif (blacklisted_at == nil or now - blacklisted_at > TRAV_BLACKLIST_TIMEOUT)
+                        and trav_dist < 30
                     then
                         console.print(string.format("[TRAVERSAL] Targeting %s dist=%.1f pos=(%.1f,%.1f,%.1f)",
                             name, utils.distance_to(pos), pos:x(), pos:y(), pos:z()))
@@ -689,6 +862,25 @@ local function check_events(self)
             return
         end
     end
+
+    -- Periodic summary when nothing triggered — reveals blind spots
+    if not self._last_check_events_debug then self._last_check_events_debug = 0 end
+    local now_ce = get_time_since_inject()
+    if now_ce - self._last_check_events_debug > 5 then
+        self._last_check_events_debug = now_ce
+        local cinders = get_helltide_coin_cinders()
+        local rem_count = 0
+        if remembered_chests then
+            for _ in pairs(remembered_chests) do rem_count = rem_count + 1 end
+        end
+        console.print(string.format(
+            "[CHECK_EVENTS] No action | cinders=%d | kill=%s | trav=%s | events=%s | remembered=%d",
+            cinders,
+            tostring(settings.kill_monsters),
+            tostring(settings.prioritize_traversals),
+            tostring(settings.event and utils.do_events()),
+            rem_count))
+    end
 end
 
 local helltide_task = {
@@ -696,7 +888,9 @@ local helltide_task = {
     current_state = helltide_state.INIT,
 
     shouldExecute = function()
+        -- Also keep running when we've wandered out but helltide is still active
         return utils.is_in_helltide()
+            or (returning_to_helltide and utils.helltide_active())
     end,
 
     Execute = function(self)
@@ -712,9 +906,9 @@ local helltide_task = {
             return
         elseif was_dead then
             was_dead = false
-            console.print("[HelltideRevamped] Revived — resetting Batmobile explorer")
+            console.print("[HelltideRevamped] Revived — resetting Batmobile movement (exploration preserved)")
             if BatmobilePlugin then
-                BatmobilePlugin.reset(plugin_label)
+                BatmobilePlugin.reset_movement(plugin_label)
                 BatmobilePlugin.resume(plugin_label)
             end
         end
@@ -725,6 +919,25 @@ local helltide_task = {
                 clear_movement()
                 return
             end
+        end
+
+        -- Track last confirmed in-zone position
+        if utils.is_in_helltide() then
+            last_in_zone_pos = lp and lp:get_position() or last_in_zone_pos
+        end
+
+        -- Detect leaving the zone mid-session (buff lost but hour still active → walk back, don't teleport)
+        if not utils.is_in_helltide() and utils.helltide_active()
+            and self.current_state ~= helltide_state.RETURN_TO_HELLTIDE
+            and self.current_state ~= helltide_state.BACK_TO_TOWN then
+            console.print(string.format("[HELLTIDE] Left helltide zone at (%.1f,%.1f) — navigating back via backtrack",
+                lp and lp:get_position():x() or 0, lp and lp:get_position():y() or 0))
+            if settings.experimental_explorer then
+                helltide_explorer.mark_active_unreachable()
+            end
+            returning_to_helltide = true
+            reset_navigate_state()
+            self.current_state = helltide_state.RETURN_TO_HELLTIDE
         end
 
         if tracker.has_salvaged then
@@ -761,6 +974,8 @@ local helltide_task = {
             perf.stop("kill_monsters")
         elseif self.current_state == helltide_state.MOVING_TO_REMEMBERED_CHEST then
             self:move_to_remembered_chest()
+        elseif self.current_state == helltide_state.FARM_CHEST_CINDERS then
+            self:farm_chest_cinders()
         elseif self.current_state == helltide_state.MOVING_TO_CHAOS_RIFT then
             self:move_to_chaos_rift()
         elseif self.current_state == helltide_state.INTERACT_CHAOS_RIFT then
@@ -769,6 +984,8 @@ local helltide_task = {
             self:stay_near_chaos_rift()
         elseif self.current_state == helltide_state.BACK_TO_TOWN then
             self:back_to_town()
+        elseif self.current_state == helltide_state.RETURN_TO_HELLTIDE then
+            self:return_to_helltide()
         end
     end,
 
@@ -776,6 +993,31 @@ local helltide_task = {
         check_and_load_waypoints()
         last_target_ni = nil
         self.current_state = helltide_state.EXPLORE_HELLTIDE
+    end,
+
+    return_to_helltide = function(self)
+        -- Back in zone: blacklist the exit direction so experimental explorer avoids it,
+        -- clear nav state, resume normal exploration.
+        if utils.is_in_helltide() then
+            console.print("[HELLTIDE] Back in helltide zone — blacklisting exit node, resuming exploration")
+            if settings.experimental_explorer then
+                helltide_explorer.mark_active_unreachable()
+            end
+            returning_to_helltide = false
+            reset_navigate_state()
+            self.current_state = helltide_state.EXPLORE_HELLTIDE
+            return
+        end
+
+        -- Still outside — navigate toward last known in-zone position using the
+        -- existing backtrack path; Batmobile keeps all exploration state intact.
+        if last_in_zone_pos then
+            navigate_to(last_in_zone_pos)
+        elseif BatmobilePlugin then
+            -- No reference point yet — let Batmobile backtrack on its own
+            BatmobilePlugin.resume(plugin_label)
+            bm_pulse()
+        end
     end,
 
     move_to_traversal = function(self)
@@ -809,7 +1051,7 @@ local helltide_task = {
             for _, actor in pairs(actors) do
                 if actor:get_skin_name():match('[Tt]raversal_Gizmo') then
                     local apos = actor:get_position()
-                    if player_pos:dist_to(apos) < 20 then
+                    if player_pos:dist_to(apos) < 10 then
                         local akey = math.floor(apos:x()) .. ',' .. math.floor(apos:y()) .. ',' .. math.floor(apos:z())
                         trav_blacklist[akey] = now
                         console.print(string.format("[TRAVERSAL] Blacklisting return traversal at (%.0f,%.0f,%.0f)",
@@ -838,7 +1080,15 @@ local helltide_task = {
             trav_start_pos = nil
             trav_got_close = false
             reset_navigate_state()
-            clear_movement()
+            -- Use reset_movement (not just clear_target) so Batmobile's post-traversal
+            -- escape state (trav_escape_pos) is cleared.  Without this, every subsequent
+            -- pathfind failure is treated as an escape-nudge toward the unreachable escape
+            -- point rather than blacklisting the area and picking a fresh target.
+            if BatmobilePlugin then
+                BatmobilePlugin.reset_movement(plugin_label)
+            else
+                clear_movement()
+            end
             self.current_state = helltide_state.EXPLORE_HELLTIDE
             return
         end
@@ -860,8 +1110,7 @@ local helltide_task = {
         -- approach node — this only works when is_custom_target=false.
         if BatmobilePlugin then
             BatmobilePlugin.resume(plugin_label)
-            BatmobilePlugin.update(plugin_label)
-            BatmobilePlugin.move(plugin_label)
+            bm_pulse()
         end
     end,
 
@@ -871,105 +1120,36 @@ local helltide_task = {
             return
         end
 
-        perf.start("check_events")
-        check_events(self)
-        perf.stop("check_events")
+        local now = get_time_since_inject()
+        local CHECK_EVENTS_TTL = 0.5
+        if not self._last_check_events_time or now - self._last_check_events_time >= CHECK_EVENTS_TTL then
+            self._last_check_events_time = now
+            perf.start("check_events")
+            check_events(self)
+            perf.stop("check_events")
+        end
         if self.current_state ~= helltide_state.EXPLORE_HELLTIDE then
             last_target_ni = nil
             patrol_free_explore = false
             patrol_stuck_time = nil
             patrol_stuck_pos = nil
+            self._last_check_events_time = nil
+            invalidate_fct_cache()
             return
         end
 
-        -- EXPERIMENTAL EXPLORER: zone-wide grid coverage, no Batmobile frontier
+        -- EXPERIMENTAL EXPLORER: score-based grid coverage of the full zone
         if settings.experimental_explorer then
             local player_pos = get_player_position()
-            -- Register any chests visible from current position
-            helltide_explorer.scan_nearby_chests(get_cached_actors(), player_pos)
-            -- Get next grid node to navigate toward
-            local target = helltide_explorer.get_exploration_target(player_pos)
-
+            helltide_explorer.init()
+            local target = helltide_explorer.get_target(player_pos)
             if target then
-                local dist = player_pos:dist_to(target)
-                -- Detect if target changed (new node selected after scout or backoff)
-                local target_changed = explorer_last_target == nil
-                    or explorer_last_target:dist_to(target) > 1
-
-                if BatmobilePlugin then
-                    local has_long_path = BatmobilePlugin.navigate_long_path ~= nil
-                        and BatmobilePlugin.is_long_path_navigating ~= nil
-
-                    if dist > 30 and has_long_path then
-                        -- Far target: use uncapped long-path pathfinder
-                        local now = get_time_since_inject()
-                        local long_path_active = BatmobilePlugin.is_long_path_navigating()
-
-                        -- Track when navigation stops so cooldown is from COMPLETION, not start.
-                        -- Reset while actively navigating; stamp first frame after nav ends.
-                        if long_path_active then
-                            explorer_path_complete_time = nil
-                        elseif not explorer_path_complete_time then
-                            explorer_path_complete_time = now
-                        end
-
-                        -- Restart when: target changed, returning from combat (no cooldown),
-                        -- or nav stopped and 3s elapsed since completion (stuck-loop guard).
-                        local should_start = target_changed
-                            or explorer_came_from_combat
-                            or (not long_path_active
-                                and explorer_path_complete_time ~= nil
-                                and (now - explorer_path_complete_time) >= 3.0)
-
-                        if should_start then
-                            explorer_came_from_combat = false  -- consumed
-                            -- Always stop first: clears navigator stuck-state from previous path
-                            BatmobilePlugin.stop_long_path(plugin_label)
-                            local ok = BatmobilePlugin.navigate_long_path(plugin_label, target)
-                            if not ok then
-                                helltide_explorer.on_path_failed()
-                                explorer_last_target       = nil
-                                explorer_path_complete_time = nil
-                                return
-                            end
-                            explorer_path_complete_time = nil
-                            console.print(string.format("[EXPLORER] Long path started to (%.1f,%.1f) dist=%.0f",
-                                target:x(), target:y(), dist))
-                        end
-
-                        explorer_last_target = target
-                        -- While long_path is active: let Batmobile drive it normally.
-                        -- During cooldown (path finished early): pause Batmobile so frontier
-                        -- doesn't take over, and use the game pathfinder to keep heading toward
-                        -- the target until the 3s cooldown expires and we restart.
-                        if BatmobilePlugin.is_long_path_navigating() then
-                            BatmobilePlugin.resume(plugin_label)
-                            BatmobilePlugin.update(plugin_label)
-                            BatmobilePlugin.move(plugin_label)
-                        else
-                            BatmobilePlugin.pause(plugin_label)
-                            pathfinder.request_move(target)
-                        end
-                    else
-                        -- Close target: standard set_target
-                        explorer_last_target = target
-                        BatmobilePlugin.resume(plugin_label)
-                        BatmobilePlugin.set_target(plugin_label, target, false)
-                        BatmobilePlugin.update(plugin_label)
-                        BatmobilePlugin.move(plugin_label)
-                    end
-                else
-                    pathfinder.request_move(target)
-                end
+                navigate_to(target)
             else
-                -- Just scouted a node — stop any active long path and wait for next selection
-                explorer_last_target       = nil
-                explorer_path_complete_time = nil
-                if BatmobilePlugin and BatmobilePlugin.stop_long_path
-                    and BatmobilePlugin.is_long_path_navigating
-                    and BatmobilePlugin.is_long_path_navigating()
-                then
-                    BatmobilePlugin.stop_long_path(plugin_label)
+                -- Just arrived at a node; Batmobile free-roams briefly while next node is selected
+                if BatmobilePlugin then
+                    BatmobilePlugin.resume(plugin_label)
+                    bm_pulse()
                 end
             end
             return
@@ -977,7 +1157,7 @@ local helltide_task = {
 
         local total = #tracker.waypoints
         local player_pos = get_player_position()
-        local now = get_time_since_inject()
+        now = get_time_since_inject()
 
         -- FREE EXPLORE MODE: Batmobile explores autonomously (like ArkhamAsylum)
         if patrol_free_explore then
@@ -988,8 +1168,7 @@ local helltide_task = {
 
             if BatmobilePlugin then
                 BatmobilePlugin.resume(plugin_label)
-                BatmobilePlugin.update(plugin_label)
-                BatmobilePlugin.move(plugin_label)
+                bm_pulse()
             end
 
             -- Check if we've moved significantly — time to re-snap to waypoints
@@ -1075,8 +1254,7 @@ local helltide_task = {
                 console.print(string.format("[PATROL] Stuck %ds (moved %.1f), switching to FREE_EXPLORE",
                     PATROL_STUCK_TIMEOUT, dist_moved))
                 if BatmobilePlugin then
-                    BatmobilePlugin.clear_target(plugin_label)
-                    BatmobilePlugin.reset(plugin_label)
+                    BatmobilePlugin.reset_movement(plugin_label)
                 end
                 patrol_free_explore = true
                 patrol_free_explore_start = now  -- track entry time for traversal recovery
@@ -1109,8 +1287,7 @@ local helltide_task = {
             end
 
             if BatmobilePlugin then
-                BatmobilePlugin.update(plugin_label)
-                BatmobilePlugin.move(plugin_label)
+                bm_pulse()
             else
                 patrol_move(tracker.waypoints[ni])
             end
@@ -1260,19 +1437,32 @@ local helltide_task = {
 
         -- Try to find the actual actor
         local chest = find_closest_target(found_chest)
-        if chest and chest:is_interactable() then
+        if chest then
+            if not chest:is_interactable() then
+                -- Chest exists but is no longer interactable — it opened successfully
+                console.print(string.format("[HELLTIDE CHEST] %s opened (no longer interactable) — resuming", found_chest))
+                found_chest = nil
+                found_chest_position = nil
+                last_chest_interact_time = -math.huge
+                tracker.clear_key('chest_drop_time')
+                clear_movement()
+                self.current_state = helltide_state.EXPLORE_HELLTIDE
+                return
+            end
+
             found_chest_position = chest:get_position()
             local chest_dist = utils.distance_to(chest)
 
             if chest_dist <= 2 then
-                console.print(string.format("[HELLTIDE CHEST] Interacting with %s", found_chest))
-                interact_object(chest)
-                if settings.experimental_explorer then
-                    helltide_explorer.mark_chest_opened(chest:get_position())
+                -- Throttle interact calls so we don't restart the open animation timer.
+                -- Stay in MOVING_TO_HELLTIDE_CHEST until the chest becomes non-interactable
+                -- (opened) or disappears — handled by the paths below.
+                local now = get_time_since_inject()
+                if now - last_chest_interact_time >= CHEST_INTERACT_COOLDOWN then
+                    last_chest_interact_time = now
+                    console.print(string.format("[HELLTIDE CHEST] Interacting with %s", found_chest))
+                    interact_object(chest)
                 end
-                found_chest = nil
-                found_chest_position = nil
-                clear_movement()
                 return
             elseif chest_dist <= 6 then
                 -- Close range: actor is directly reachable, use pause for precision
@@ -1336,8 +1526,8 @@ local helltide_task = {
             and BatmobilePlugin.is_long_path_navigating
             and BatmobilePlugin.is_long_path_navigating()
 
-        -- Long path is uncapped so allow reasonable map-distance; give up beyond 300 units
-        if dist > 300 then
+        -- Give up if chest has drifted beyond the max range (player moved away during navigation)
+        if dist > REMEMBERED_CHEST_MAX_DIST then
             console.print(string.format("[CHEST RECALL] %s is too far (%.0f), forgetting it", entry.name, dist))
             remembered_chests[remembered_chest_target] = nil
             remembered_chest_target = nil
@@ -1413,22 +1603,139 @@ local helltide_task = {
         -- Far away: use long path (uncapped pathfinding, handles traversals)
         if has_batmobile and BatmobilePlugin.navigate_long_path and BatmobilePlugin.is_long_path_navigating then
             if not long_path_active then
-                -- Not yet navigating — start the long path
-                local ok = BatmobilePlugin.navigate_long_path(plugin_label, entry.position)
-                if ok then
-                    console.print(string.format("[CHEST RECALL] Long path started to %s (%.1f,%.1f)",
-                        entry.name, entry.position:x(), entry.position:y()))
-                else
-                    console.print("[CHEST RECALL] Long path failed to find route, falling back to navigate_to")
+                if not remembered_chest_long_path_started then
+                    -- First attempt: try navigate_long_path exactly once for this chest target.
+                    -- Set the flag BEFORE calling so a failure never causes a retry next frame.
+                    remembered_chest_long_path_started = true
+                    local ok = BatmobilePlugin.navigate_long_path(plugin_label, entry.position)
+                    if ok then
+                        remembered_chest_long_path_ok = true
+                        console.print(string.format("[CHEST RECALL] Long path started to %s (%.1f,%.1f)",
+                            entry.name, entry.position:x(), entry.position:y()))
+                    else
+                        remembered_chest_long_path_ok = false
+                        console.print("[CHEST RECALL] Long path failed to find route, falling back to navigate_to")
+                        navigate_to(entry.position)
+                        return
+                    end
+                elseif not remembered_chest_long_path_ok then
+                    -- Long path previously failed; skip it and use navigate_to directly
                     navigate_to(entry.position)
+                    return
+                else
+                    -- Long path succeeded and completed; use set_target for the remaining distance
+                    BatmobilePlugin.resume(plugin_label)
+                    BatmobilePlugin.set_target(plugin_label, entry.position, false)
+                    bm_pulse(true)
                     return
                 end
             end
             -- Long path is active — drive it
-            BatmobilePlugin.update(plugin_label)
-            BatmobilePlugin.move(plugin_label)
+            bm_pulse()
         else
             navigate_to(entry.position)
+        end
+    end,
+
+    farm_chest_cinders = function(self)
+        if not farm_chest_entry then
+            self.current_state = helltide_state.EXPLORE_HELLTIDE
+            return
+        end
+
+        local current_cinders = get_helltide_coin_cinders()
+        local chest_pos = farm_chest_entry.position
+        local dist_to_chest = utils.distance_to(chest_pos)
+        local now = get_time_since_inject()
+
+        -- Can now afford it — hand off to the normal chest-open flow
+        if current_cinders >= farm_chest_entry.cost then
+            console.print(string.format("[FARM CHEST] Now affordable (%d/%d) — moving to open %s",
+                current_cinders, farm_chest_entry.cost, farm_chest_entry.name))
+            found_chest = farm_chest_entry.name
+            found_chest_position = chest_pos
+            farm_chest_entry = nil
+            tracker.clear_key("farm_chest_gone")
+            clear_movement()
+            self.current_state = helltide_state.MOVING_TO_HELLTIDE_CHEST
+            return
+        end
+
+        -- When close, verify chest actor still exists (may have despawned or been opened by another)
+        if dist_to_chest <= 20 then
+            local chest_actor = find_closest_target(farm_chest_entry.name)
+            if chest_actor and chest_actor:is_interactable() then
+                tracker.clear_key("farm_chest_gone")
+            else
+                if not tracker.check_time("farm_chest_gone", 8) then
+                    -- Still within grace window — keep farming
+                else
+                    console.print(string.format("[FARM CHEST] %s not found within 20m for 8s — resuming patrol",
+                        farm_chest_entry.name))
+                    farm_chest_entry = nil
+                    tracker.clear_key("farm_chest_gone")
+                    clear_movement()
+                    self.current_state = helltide_state.EXPLORE_HELLTIDE
+                    return
+                end
+            end
+        end
+
+        -- Throttled debug
+        if not self._last_farm_debug then self._last_farm_debug = 0 end
+        if now - self._last_farm_debug > 3 then
+            self._last_farm_debug = now
+            local km_target = get_kill_target()
+            console.print(string.format("[FARM CHEST] %s | need %d more cinders (%d/%d) | dist_to_chest=%.1f | has_target=%s",
+                farm_chest_entry.name, farm_chest_entry.cost - current_cinders,
+                current_cinders, farm_chest_entry.cost, dist_to_chest, tostring(km_target ~= nil)))
+        end
+
+        -- If outside 35-unit circle, navigate back in.
+        -- 35 (not 50) gives enough buffer so that by the time the player actually
+        -- stops and re-routes, they haven't drifted far past the intended boundary.
+        if dist_to_chest > 35 then
+            navigate_to(chest_pos)
+            return
+        end
+
+        -- Inside circle: kill monsters, or free-roam to find them
+        orbwalker.set_clear_toggle(true)
+        local km_target = get_kill_target()
+        if km_target then
+            local cur_dist = utils.distance_to(km_target)
+            local target_pos = km_target:get_position()
+            if cur_dist > 2 then
+                if BatmobilePlugin then
+                    BatmobilePlugin.pause(plugin_label)
+                    local accepted = BatmobilePlugin.set_target(plugin_label, km_target)
+                    if accepted == false then
+                        km_mark_unreachable(target_pos)
+                    else
+                        bm_pulse(true)
+                    end
+                else
+                    pathfinder.request_move(target_pos)
+                end
+            else
+                if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
+            end
+        else
+            -- No monsters — cycle through evenly-spaced ring patrol around the chest.
+            -- Batmobile free-roam would oscillate on its own backtrack path (same corridor
+            -- back-and-forth); explicit ring waypoints cover all directions systematically.
+            if farm_roam_built_for ~= chest_pos or #farm_roam_points == 0 then
+                build_farm_roam(chest_pos)
+            end
+            local roam_target = farm_roam_points[farm_roam_idx]
+            local player_pos  = get_player_position()
+            if player_pos:dist_to(roam_target) <= FARM_ROAM_ARRIVE then
+                farm_roam_idx = (farm_roam_idx % FARM_ROAM_COUNT) + 1
+                roam_target   = farm_roam_points[farm_roam_idx]
+                console.print(string.format("[FARM CHEST] No monsters — roam patrol point %d/%d",
+                    farm_roam_idx, FARM_ROAM_COUNT))
+            end
+            navigate_to(roam_target)
         end
     end,
 
@@ -1508,7 +1815,6 @@ local helltide_task = {
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
             console.print("[KILL MONSTERS] No targets, resuming patrol")
             clear_movement()
-            explorer_came_from_combat = true  -- skip path cooldown on return to explore
             self.current_state = helltide_state.EXPLORE_HELLTIDE
             return
         end
@@ -1545,8 +1851,7 @@ local helltide_task = {
                     BatmobilePlugin.clear_target(plugin_label)
                     return
                 end
-                BatmobilePlugin.update(plugin_label)
-                BatmobilePlugin.move(plugin_label)
+                bm_pulse(true)
             else
                 pathfinder.request_move(target_pos)
             end
@@ -1641,11 +1946,22 @@ local helltide_task = {
         tracker.needs_salvage = false
         found_chest = nil
         found_chest_position = nil
+        last_chest_interact_time = -math.huge
+        tracker.clear_key('chest_drop_time')
         found_silent_chest_position = nil
         found_ore = nil
         found_herb = nil
         remembered_chests = {}
         remembered_chest_target = nil
+        remembered_chest_long_path_started = false
+        remembered_chest_long_path_ok = false
+        returning_to_helltide = false
+        last_in_zone_pos      = nil
+        farm_chest_entry    = nil
+        tracker.clear_key("farm_chest_gone")
+        farm_roam_points    = {}
+        farm_roam_idx       = 1
+        farm_roam_built_for = nil
         km_unreachable = {}
         km_nav_map = {}
         km_target_cache = nil
@@ -1657,5 +1973,11 @@ local helltide_task = {
         end
     end
 }
+
+on_render(function()
+    if farm_chest_entry then
+        graphics.circle_3d(farm_chest_entry.position, 50, color_green(150))
+    end
+end)
 
 return helltide_task
