@@ -790,8 +790,13 @@ on_update(function()
 end)
 
 on_render(function()
-    
+
     if not (settings.enabled and utils:get_keybind_state()) then
+        return
+    end
+
+    -- Skip explorer debug visuals when Batmobile is handling movement
+    if explorer.is_task_running then
         return
     end
 

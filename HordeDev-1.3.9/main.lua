@@ -31,6 +31,7 @@ local function render_pulse()
 end
 
 -- Set Global access for other plugins
+local tracker = require "core.tracker"
 InfernalHordesPlugin = {
     enable = function ()
         console.print('HORDE ACTIVATING')
@@ -48,6 +49,24 @@ InfernalHordesPlugin = {
             ['enabled'] = gui.elements.main_toggle:get(),
             ['task'] = task_manager.get_current_task()
         }
+    end,
+    getState = function ()
+        local current = task_manager.get_current_task()
+        if current then
+            if current.name == "Walking to Horde" then
+                return "WALKING_TO_HORDE"
+            end
+            if current.name == "Infernal Horde" and tracker.interacting_pylon then
+                return "INTERACTING_PYLON"
+            end
+            if current.name == "Open Chests" then
+                return "OPENING_CHESTS"
+            end
+            if current.name == "Exit Horde" then
+                return "EXITING_HORDE"
+            end
+        end
+        return "IDLE"
     end,
     getSettings = function (setting)
         if settings[setting] then

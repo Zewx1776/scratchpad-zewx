@@ -723,11 +723,11 @@ local function check_events(self)
             return
         end
 
-        -- Check if a nearby remembered chest needs <50 more cinders — if so, stay and farm monsters
-        if not farm_chest_entry then
+        -- Check if a nearby remembered chest needs fewer cinders than the threshold — if so, stay and farm monsters
+        if not farm_chest_entry and settings.farm_cinder_threshold > 0 then
             for key, entry in pairs(remembered_chests) do
                 local shortfall = entry.cost - current_cinders
-                if shortfall > 0 and shortfall < 50 and utils.distance_to(entry.position) <= 50 then
+                if shortfall > 0 and shortfall < settings.farm_cinder_threshold and utils.distance_to(entry.position) <= 50 then
                     console.print(string.format("[FARM CHEST] %s needs only %d more cinders (%d/%d) — staying to farm",
                         entry.name, shortfall, current_cinders, entry.cost))
                     farm_chest_entry = entry

@@ -22,6 +22,7 @@ gui.elements = {
     prioritize_traversals_toggle = create_checkbox(false, plugin_label .. "prioritize_traversals_toggle"),
     kill_monsters_toggle = create_checkbox(true, plugin_label .. "kill_monsters_toggle"),
     experimental_explorer_toggle = create_checkbox(false, plugin_label .. "experimental_explorer_toggle"),
+    farm_cinder_threshold = slider_int:new(0, 250, 50, get_hash(plugin_label .. "_farm_cinder_threshold")),
 }
 
 function gui.render()
@@ -42,6 +43,7 @@ function gui.render()
         gui.elements.prioritize_traversals_toggle:render("Prioritize Traversals", "Move to nearby traversals (ladders/portals) before kill monsters; blacklists unreachable ones for 30s")
         gui.elements.kill_monsters_toggle:render("Kill Monsters", "Navigate to and kill nearby monsters while exploring")
         gui.elements.experimental_explorer_toggle:render("Experimental Explorer", "Zone-wide grid coverage instead of Batmobile frontier. Tracks chest locations across the full helltide hour. Resets only when helltide ends.")
+        gui.elements.farm_cinder_threshold:render("Farm Cinder Threshold", "Stay near a remembered chest and kill monsters when you are within this many cinders of affording it (0 = disabled)")
         gui.elements.settings_tree:pop()
     end
 

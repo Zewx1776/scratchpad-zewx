@@ -1,200 +1,200 @@
-3972.82 :  [EXPLORER] Intermediate: (-456,-437) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.83 :  [EXPLORER] Intermediate: (-456,-437) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.85 :  [EXPLORER] Intermediate: (-456,-437) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.90 :  [EXPLORER] Intermediate: (-457,-438) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.92 :  [EXPLORER] Intermediate: (-457,-438) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.93 :  [EXPLORER] Intermediate: (-457,-438) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.95 :  [EXPLORER] Intermediate: (-457,-438) -> node 1 (-451,-479) try_dist=10 walk=true 
-3972.97 :  [EXPLORER] Intermediate: (-457,-438) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.01 :  [EXPLORER] Intermediate: (-457,-439) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.02 :  [EXPLORER] Intermediate: (-457,-439) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.03 :  [EXPLORER] Intermediate: (-457,-439) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.05 :  [EXPLORER] Intermediate: (-457,-439) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.09 :  [EXPLORER] Intermediate: (-457,-439) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.09 :  [nav] pathfinding to=-457,-439.5 dist=10.6 custom=true 
-3973.09 :  [nav] pathfind OK, path=#21 
-3973.12 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.13 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.15 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.17 :  [CHECK_EVENTS] No action | cinders=50 | kill=false | trav=false | events=false | remembered=0 
-3973.17 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.18 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.20 :  [EXPLORER] Intermediate: (-457,-440) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.24 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.25 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.27 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.32 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=0.5 paused=false done=false 
-3973.33 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.35 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.37 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.38 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.42 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.46 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.47 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.48 :  [EXPLORER] Intermediate: (-457,-441) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.50 :  [EXPLORER] Intermediate: (-457,-442) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.52 :  [EXPLORER] Intermediate: (-457,-442) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.53 :  [EXPLORER] Intermediate: (-457,-442) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.55 :  [EXPLORER] Intermediate: (-457,-442) -> node 1 (-451,-479) try_dist=10 walk=true 
-3973.56 :  [EXPLORER] Intermediate: NO walkable step -> node 1 (-451,-479) using node directly 
-3973.67 :  [nav] pathfinding to=-451,-479.5 dist=49.8 custom=true 
-3973.67 :  [nav] pathfind OK, path=#110 
-3974.32 :  [NAV] mode=CUSTOM_TARGET stuck=0.4s moved=3.6 paused=false done=false 
-3975.33 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=0.5 paused=false done=false 
-3976.33 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=0.0 paused=false done=false 
-3976.93 :  [HR PERF] ============ 5.0s window ============ 
-3976.93 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-3976.93 :    navigate_to                           213   42.6    3.765   86.000    802.00 
-3976.93 :    check_events                           10    2.0    0.200    1.000      2.00 
-3976.93 :    scan_remember_chests                    2    0.4    1.000    1.000      2.00 
-3976.93 :    get_all_actors                          5    1.0    0.000    0.000      0.00 
-3976.93 :    [EVENTS]  actor_cache_miss=5(1.0/s)   chest_scan_skip=8(1.6/s)   state_EXPLORE_HELLTIDE=213(42.6/s) 
-3977.36 :  [NAV] mode=CUSTOM_TARGET stuck=0.3s moved=2.6 paused=false done=false 
-3977.36 :  [BATMOBILE PERF] === 5.0s window === 
-3977.36 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=67 
-3977.36 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-3977.36 :    total_update               46( 9.1/s)  avg  15.478ms  max  51.000ms  total   712.0ms 
-3977.36 :    total_move                 46( 9.1/s)  avg   2.065ms  max  69.000ms  total    95.0ms 
-3977.36 :    find_path                   2( 0.4/s)  avg  38.000ms  max  69.000ms  total    76.0ms 
-3977.36 :    get_nearby_travs           45( 8.9/s)  avg   0.156ms  max   1.000ms  total     7.0ms 
-3978.32 :  [CHECK_EVENTS] No action | cinders=54 | kill=false | trav=false | events=false | remembered=0 
-3978.37 :  [NAV] mode=CUSTOM_TARGET stuck=1.3s moved=3.0 paused=false done=false 
-3979.37 :  [NAV] mode=CUSTOM_TARGET stuck=0.7s moved=3.9 paused=false done=false 
-3980.39 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=1.3 paused=false done=false 
-3981.40 :  [NAV] mode=CUSTOM_TARGET stuck=0.5s moved=1.9 paused=false done=false 
-3981.87 :  [EXPLORER] Arrived node 1 (dist=20.0) visit#1 | unvisited remaining: 12 
-3981.88 :  [EXPLORER] -> Node 6 at (-371,-519) dist=109m last=never visits=0 | unvisited=12/17 
-3981.88 :  [EXPLORER] Top picks: #6(s=999999891 d=109) #9(s=999999855 d=145) #10(s=999999849 d=151) 
-3981.88 :  [EXPLORER] Intermediate: (-431,-486) -> node 6 (-371,-519) try_dist=40 walk=true 
-3981.88 :  [NAV] reassert fail #1/4 dist=40.7 (was 48.4, need -8m progress) 
-3981.88 :  [nav] pathfinding to=-431,-485.5 dist=42.6 custom=true 
-3981.88 :  [nav] PATHFIND FAILED #1 target=-431,-485.5 dist=42.6 paused=false frontiers=6343 
-3981.88 :  [select_target] picked -477.5,-478 dist=16.8 frontiers=6343 bt=#29 bting=false 
-3981.88 :  [nav] new target after fail=-477.5,-478 dist=17.0 
-3981.97 :  [HR PERF] ============ 5.3s window ============ 
-3981.97 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-3981.97 :    navigate_to                           220   41.4    4.045  342.000    890.00 
-3981.97 :    check_events                           10    1.9    1.400   13.000     14.00 
-3981.97 :    scan_remember_chests                    3    0.6    4.667   13.000     14.00 
-3981.97 :    get_all_actors                          5    0.9    1.400    6.000      7.00 
-3981.97 :    [EVENTS]  actor_cache_miss=5(0.9/s)   chest_scan_skip=7(1.3/s)   state_EXPLORE_HELLTIDE=221(41.5/s) 
-3982.37 :  [nav] pathfinding to=-477.5,-478 dist=18.3 custom=false 
-3982.37 :  [nav] pathfind OK, path=#29 
-3982.37 :  [BATMOBILE PERF] === 5.0s window === 
-3982.37 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=1  unstuck=0  path_len=0 
-3982.37 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-3982.37 :    total_move                 43( 8.5/s)  avg  10.140ms  max 332.000ms  total   436.0ms 
-3982.37 :    total_update               43( 8.5/s)  avg   9.558ms  max  42.000ms  total   411.0ms 
-3982.37 :    find_path                   2( 0.4/s)  avg 193.000ms  max 331.000ms  total   386.0ms 
-3982.37 :    get_nearby_travs           43( 8.5/s)  avg   0.674ms  max   3.000ms  total    29.0ms 
-3982.37 :    select_target               1( 0.2/s)  avg   1.000ms  max   1.000ms  total     1.0ms 
-3982.37 :    [EVENTS]  pathfind_fail=1(0.2/s) 
-3982.46 :  [NAV] mode=CUSTOM_TARGET stuck=0.6s moved=2.4 paused=false done=false 
-3983.49 :  [CHECK_EVENTS] No action | cinders=55 | kill=false | trav=false | events=false | remembered=0 
-3983.49 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=1.0 paused=false done=false 
-3983.88 :  [NAV] reassert fail #2/4 dist=41.3 (was 40.7, need -8m progress) 
-3983.98 :  [nav] pathfinding to=-431,-485.5 dist=43.9 custom=true 
-3983.98 :  [nav] PATHFIND FAILED #1 target=-431,-485.5 dist=43.9 paused=false frontiers=6491 
-3983.98 :  [select_target] picked -457.5,-484.5 dist=17.2 frontiers=6491 bt=#30 bting=false 
-3983.98 :  [nav] new target after fail=-457.5,-484.5 dist=17.0 
-3984.47 :  [nav] pathfinding to=-457.5,-484.5 dist=18.3 custom=false 
-3984.47 :  [nav] pathfind OK, path=#35 
-3984.55 :  [NAV] mode=CUSTOM_TARGET stuck=1.2s moved=4.9 paused=false done=false 
-3985.58 :  [NAV] mode=CUSTOM_TARGET stuck=1.0s moved=3.7 paused=false done=false 
-3985.90 :  [NAV] reassert fail #3/4 dist=37.1 (was 41.3, need -8m progress) 
-3985.90 :  [nav] pathfinding to=-431,-485.5 dist=38.3 custom=true 
-3985.90 :  [nav] PATHFIND FAILED #1 target=-431,-485.5 dist=38.3 paused=false frontiers=6554 
-3985.90 :  [select_target] picked -454,-484.5 dist=15.1 frontiers=6554 bt=#30 bting=false 
-3985.90 :  [nav] new target after fail=-454,-484.5 dist=14.9 
-3986.39 :  [nav] pathfinding to=-454,-484.5 dist=12.5 custom=false 
-3986.39 :  [nav] pathfind OK, path=#21 
-3986.60 :  [NAV] mode=CUSTOM_TARGET stuck=0.8s moved=3.6 paused=false done=false 
-3987.27 :  [HR PERF] ============ 5.0s window ============ 
-3987.27 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-3987.27 :    navigate_to                           203   40.5    5.300  362.000   1076.00 
-3987.27 :    check_events                            9    1.8    0.222    1.000      2.00 
-3987.27 :    scan_remember_chests                    2    0.4    1.000    1.000      2.00 
-3987.27 :    get_all_actors                          5    1.0    0.000    0.000      0.00 
-3987.27 :    [EVENTS]  actor_cache_miss=5(1.0/s)   chest_scan_skip=7(1.4/s)   state_EXPLORE_HELLTIDE=203(40.5/s) 
-3987.49 :  [BATMOBILE PERF] === 5.1s window === 
-3987.49 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=19 
-3987.49 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-3987.49 :    total_move                 43( 8.4/s)  avg  19.233ms  max 352.000ms  total   827.0ms 
-3987.49 :    find_path                   4( 0.8/s)  avg 199.500ms  max 351.000ms  total   798.0ms 
-3987.49 :    total_update               43( 8.4/s)  avg   5.326ms  max  46.000ms  total   229.0ms 
-3987.49 :    get_nearby_travs           42( 8.2/s)  avg   0.381ms  max   1.000ms  total    16.0ms 
-3987.49 :    select_target               2( 0.4/s)  avg   1.000ms  max   2.000ms  total     2.0ms 
-3987.49 :    [EVENTS]  pathfind_fail=2(0.4/s) 
-3987.61 :  [NAV] mode=CUSTOM_TARGET stuck=1.8s moved=5.3 paused=false done=false 
-3987.90 :  [NAV] reassert fail #4/4 dist=31.5 (was 37.1, need -8m progress) 
-3987.90 :  [NAV] intermediate unreachable after 4 re-asserts (dist=31.5) — skipping explorer node 
-3987.90 :  [EXPLORER] Node 6 intermediate unreachable (attempt 1/3) — cooling down 60s 
-3987.92 :  [EXPLORER] -> Node 9 at (-331,-519) dist=136m last=never visits=0 | unvisited=12/17 
-3987.92 :  [EXPLORER] Top picks: #9(s=999999864 d=136) #10(s=999999847 d=153) #12(s=999999812 d=188) 
-3987.92 :  [EXPLORER] Intermediate: (-432,-489) -> node 9 (-331,-519) try_dist=30 walk=true 
-3988.63 :  [NAV] mode=CUSTOM_TARGET stuck=0.3s moved=2.1 paused=false done=false 
-3988.85 :  [CHECK_EVENTS] No action | cinders=57 | kill=false | trav=false | events=false | remembered=0 
-3988.94 :  [nav] no target or reached, selecting new (prev=-454,-484.5) 
-3988.94 :  [select_target] picked -466.5,-495 dist=16.5 frontiers=6606 bt=#32 bting=false 
-3988.94 :  [nav] new target=-466.5,-495 
-3988.94 :  [nav] pathfinding to=-466.5,-495 dist=16.6 custom=false 
-3988.94 :  [nav] pathfind OK, path=#29 
-3989.68 :  [NAV] mode=CUSTOM_TARGET stuck=0.3s moved=2.3 paused=false done=false 
-3989.92 :  [nav] pathfinding to=-432,-489 dist=28.5 custom=true 
-3989.92 :  [nav] PATHFIND FAILED #1 target=-432,-489 dist=28.5 paused=false frontiers=6428 
-3989.92 :  [select_target] picked -450,-501 dist=16.4 frontiers=6428 bt=#33 bting=false 
-3989.92 :  [nav] new target after fail=-450,-501 dist=16.3 
-3990.35 :  [nav] pathfinding to=-450,-501 dist=16.3 custom=false 
-3990.35 :  [nav] pathfind OK, path=#32 
-3990.68 :  [NAV] mode=CUSTOM_TARGET stuck=1.3s moved=3.7 paused=false done=false 
-3991.70 :  [NAV] mode=CUSTOM_TARGET stuck=0.0s moved=0.0 paused=false done=false 
-3991.70 :  [nav] pathfinding to=-432,-489 dist=24.8 custom=true 
-3991.70 :  [nav] PATHFIND FAILED #1 target=-432,-489 dist=24.8 paused=false frontiers=6403 
-3991.70 :  [select_target] picked -450.5,-503 dist=14.3 frontiers=6403 bt=#33 bting=false 
-3991.70 :  [nav] new target after fail=-450.5,-503 dist=14.3 
-3992.23 :  [nav] pathfinding to=-450.5,-503 dist=14.3 custom=false 
-3992.23 :  [nav] pathfind OK, path=#25 
-3992.28 :  [HR PERF] ============ 5.0s window ============ 
-3992.28 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-3992.28 :    navigate_to                           176   35.2    6.432  298.000   1132.00 
-3992.28 :    check_events                           10    2.0    2.300   10.000     23.00 
-3992.28 :    scan_remember_chests                    3    0.6    7.667   10.000     23.00 
-3992.28 :    get_all_actors                          5    1.0    0.000    0.000      0.00 
-3992.28 :    [EVENTS]  actor_cache_miss=5(1.0/s)   chest_scan_skip=7(1.4/s)   state_EXPLORE_HELLTIDE=195(39.0/s) 
-3992.32 :  [nav] STUCK target=-450.5,-503 dist=16.7 path=#23 unstuck_count=0 
-3992.53 :  [BATMOBILE PERF] === 5.0s window === 
-3992.53 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=23 
-3992.53 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-3992.53 :    total_move                 40( 8.0/s)  avg  15.350ms  max 298.000ms  total   614.0ms 
-3992.53 :    find_path                   5( 1.0/s)  avg 117.800ms  max 298.000ms  total   589.0ms 
-3992.53 :    total_update               40( 8.0/s)  avg  12.475ms  max  50.000ms  total   499.0ms 
-3992.53 :    get_nearby_travs           40( 8.0/s)  avg   0.400ms  max   2.000ms  total    16.0ms 
-3992.53 :    select_target               3( 0.6/s)  avg   1.000ms  max   2.000ms  total     3.0ms 
-3992.53 :    unstuck                     1( 0.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-3992.53 :    [EVENTS]  pathfind_fail=2(0.4/s) 
-3992.72 :  [NAV] mode=CUSTOM_TARGET stuck=1.0s moved=0.7 paused=false done=false 
-3993.53 :  [nav] pathfinding to=-432,-489 dist=24.4 custom=true 
-3993.53 :  [nav] PATHFIND FAILED #1 target=-432,-489 dist=24.4 paused=false frontiers=6370 
-3993.53 :  [select_target] picked -451,-513.5 dist=22.9 frontiers=6369 bt=#33 bting=false 
-3993.53 :  [nav] new target after fail=-451,-513.5 dist=22.7 
-3993.63 :  [NAV] mode=CUSTOM_TARGET stuck=0.3s moved=0.0 paused=false done=false 
-3994.04 :  [nav] pathfinding to=-451,-513.5 dist=25.2 custom=false 
-3994.04 :  [nav] pathfind OK, path=#49 
-3994.32 :  [CHECK_EVENTS] No action | cinders=61 | kill=false | trav=false | events=false | remembered=0 
-3994.82 :  [NAV] mode=CUSTOM_TARGET stuck=1.3s moved=3.1 paused=false done=false 
-3995.54 :  [NAV] reassert fail #1/4 dist=25.1 (was 24.6, need -8m progress) 
-3995.54 :  [nav] pathfinding to=-432,-489 dist=25.8 custom=true 
-3995.54 :  [nav] PATHFIND FAILED #1 target=-432,-489 dist=25.8 paused=false frontiers=6447 
-3995.54 :  [select_target] picked -452,-509 dist=13.0 frontiers=6447 bt=#34 bting=false 
-3995.54 :  [nav] new target after fail=-452,-509 dist=13.0 
-3995.55 :  [NAV] mode=CUSTOM_TARGET stuck=2.3s moved=4.7 paused=false done=false 
-3995.96 :  [nav] pathfinding to=-452,-509 dist=13.0 custom=false 
-3995.96 :  [nav] pathfind OK, path=#26 
-3996.83 :  [NAV] mode=CUSTOM_TARGET stuck=0.2s moved=1.9 paused=false done=false 
-3997.28 :  [HR PERF] ============ 5.0s window ============ 
-3997.28 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-3997.28 :    navigate_to                           192   38.2    6.422  286.000   1233.00 
-3997.28 :    check_events                            9    1.8    1.444   12.000     13.00 
-3997.28 :    scan_remember_chests                    2    0.4    6.500   12.000     13.00 
-3997.28 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
-3997.28 :    [EVENTS]  actor_cache_hit=3(0.6/s)   actor_cache_miss=2(0.4/s)   chest_scan_skip=7(1.4/s)   state_EXPLORE_HELLTIDE=202(40.2/s) 
+1696.98 :  Setting custom target. 
+1696.98 :  Moving to target 
+1697.08 :  Moving to boss room position. 
+1697.08 :  Setting custom target. 
+1697.08 :  Moving to target 
+1697.21 :  Moving to boss room position. 
+1697.21 :  Setting custom target. 
+1697.21 :  Moving to target 
+1697.34 :  Moving to boss room position. 
+1697.34 :  Setting custom target. 
+1697.34 :  Moving to target 
+1697.43 :  [AltClick] path fallback: 24 nodes, picked dist=8.8 
+1697.43 :  [AltClick] move -> screen (1214, 338) [nav] (-47.5, -36.0, 2.5) 
+1697.46 :  Moving to boss room position. 
+1697.46 :  Setting custom target. 
+1697.46 :  Moving to target 
+1697.49 :  [AltClick] click -> screen (1214, 338) [nav] 
+1697.56 :  Moving to boss room position. 
+1697.56 :  Setting custom target. 
+1697.56 :  Moving to target 
+1697.66 :  Moving to boss room position. 
+1697.66 :  Setting custom target. 
+1697.66 :  Moving to target 
+1697.76 :  Moving to boss room position. 
+1697.76 :  Setting custom target. 
+1697.76 :  Moving to target 
+1697.89 :  Moving to boss room position. 
+1697.89 :  Setting custom target. 
+1697.89 :  Moving to target 
+1698.00 :  Moving to boss room position. 
+1698.00 :  Setting custom target. 
+1698.00 :  Moving to target 
+1698.06 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
+1698.06 :  [AltClick] move -> screen (688, 645) [nav] (-38.5, -36.5, 3.0) 
+1698.12 :  [AltClick] click -> screen (688, 645) [nav] 
+1698.12 :  Moving to boss room position. 
+1698.12 :  Setting custom target. 
+1698.12 :  Moving to target 
+1698.25 :  Moving to boss room position. 
+1698.25 :  Setting custom target. 
+1698.25 :  Moving to target 
+1698.37 :  Moving to boss room position. 
+1698.37 :  Setting custom target. 
+1698.37 :  Moving to target 
+1698.51 :  Moving to boss room position. 
+1698.51 :  Setting custom target. 
+1698.51 :  Moving to target 
+1698.61 :  Moving to boss room position. 
+1698.61 :  Setting custom target. 
+1698.61 :  Moving to target 
+1698.69 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
+1698.69 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
+1698.73 :  Moving to boss room position. 
+1698.73 :  Setting custom target. 
+1698.73 :  Moving to target 
+1698.76 :  [AltClick] click -> screen (686, 646) [nav] 
+1698.87 :  Moving to boss room position. 
+1698.87 :  Setting custom target. 
+1698.87 :  Moving to target 
+1698.97 :  Moving to boss room position. 
+1698.97 :  Setting custom target. 
+1698.97 :  Moving to target 
+1699.10 :  Moving to boss room position. 
+1699.10 :  Setting custom target. 
+1699.10 :  Moving to target 
+1699.22 :  Moving to boss room position. 
+1699.22 :  Setting custom target. 
+1699.22 :  Moving to target 
+1699.32 :  [AltClick] path fallback: 24 nodes, picked dist=3.6 
+1699.32 :  [AltClick] move -> screen (867, 578) [nav] (-36.0, -36.5, 2.2) 
+1699.35 :  Moving to boss room position. 
+1699.35 :  Setting custom target. 
+1699.35 :  Moving to target 
+1699.39 :  [AltClick] click -> screen (867, 578) [nav] 
+1699.45 :  Moving to boss room position. 
+1699.45 :  Setting custom target. 
+1699.45 :  Moving to target 
+1699.56 :  Moving to boss room position. 
+1699.56 :  Setting custom target. 
+1699.56 :  Moving to target 
+1699.67 :  Moving to boss room position. 
+1699.67 :  Setting custom target. 
+1699.67 :  Moving to target 
+1699.78 :  Moving to boss room position. 
+1699.78 :  Setting custom target. 
+1699.78 :  Moving to target 
+1699.89 :  Moving to boss room position. 
+1699.89 :  Setting custom target. 
+1699.89 :  Moving to target 
+1699.93 :  [AltClick] path fallback: 24 nodes, picked dist=8.6 
+1699.93 :  [AltClick] move -> screen (1211, 341) [nav] (-47.5, -36.0, 2.5) 
+1700.00 :  [AltClick] click -> screen (1211, 341) [nav] 
+1700.00 :  Moving to boss room position. 
+1700.00 :  Setting custom target. 
+1700.00 :  Moving to target 
+1700.11 :  Moving to boss room position. 
+1700.11 :  Setting custom target. 
+1700.11 :  Moving to target 
+1700.22 :  Moving to boss room position. 
+1700.22 :  Setting custom target. 
+1700.22 :  Moving to target 
+1700.33 :  Moving to boss room position. 
+1700.33 :  Setting custom target. 
+1700.33 :  Moving to target 
+1700.45 :  Moving to boss room position. 
+1700.45 :  Setting custom target. 
+1700.45 :  Moving to target 
+1700.55 :  [AltClick] path fallback: 24 nodes, picked dist=8.1 
+1700.55 :  [AltClick] move -> screen (691, 644) [nav] (-38.5, -36.5, 3.0) 
+1700.58 :  Moving to boss room position. 
+1700.58 :  Setting custom target. 
+1700.58 :  Moving to target 
+1700.62 :  [AltClick] click -> screen (691, 644) [nav] 
+1700.70 :  Moving to boss room position. 
+1700.70 :  Setting custom target. 
+1700.70 :  Moving to target 
+1700.81 :  Moving to boss room position. 
+1700.81 :  Setting custom target. 
+1700.81 :  Moving to target 
+1700.91 :  Moving to boss room position. 
+1700.91 :  Setting custom target. 
+1700.91 :  Moving to target 
+1701.03 :  Moving to boss room position. 
+1701.03 :  Setting custom target. 
+1701.03 :  Moving to target 
+1701.14 :  Moving to boss room position. 
+1701.14 :  Setting custom target. 
+1701.14 :  Moving to target 
+1701.16 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
+1701.16 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
+1701.21 :  [AltClick] click -> screen (686, 646) [nav] 
+1701.24 :  Moving to boss room position. 
+1701.24 :  Setting custom target. 
+1701.24 :  Moving to target 
+1701.35 :  Moving to boss room position. 
+1701.35 :  Setting custom target. 
+1701.35 :  Moving to target 
+1701.45 :  Moving to boss room position. 
+1701.45 :  Setting custom target. 
+1701.45 :  Moving to target 
+1701.56 :  Moving to boss room position. 
+1701.56 :  Setting custom target. 
+1701.56 :  Moving to target 
+1701.67 :  Moving to boss room position. 
+1701.67 :  Setting custom target. 
+1701.67 :  Moving to target 
+1701.78 :  [AltClick] path fallback: 24 nodes, picked dist=8.6 
+1701.78 :  [AltClick] move -> screen (1209, 342) [nav] (-47.5, -36.0, 2.5) 
+1701.78 :  Moving to boss room position. 
+1701.78 :  Setting custom target. 
+1701.78 :  Moving to target 
+1701.83 :  [AltClick] click -> screen (1209, 342) [nav] 
+1701.89 :  Moving to boss room position. 
+1701.89 :  Setting custom target. 
+1701.89 :  Moving to target 
+1702.00 :  Moving to boss room position. 
+1702.00 :  Setting custom target. 
+1702.00 :  Moving to target 
+1702.10 :  Moving to boss room position. 
+1702.10 :  Setting custom target. 
+1702.10 :  Moving to target 
+1702.22 :  Moving to boss room position. 
+1702.22 :  Setting custom target. 
+1702.22 :  Moving to target 
+1702.33 :  Moving to boss room position. 
+1702.33 :  Setting custom target. 
+1702.33 :  Moving to target 
+1702.39 :  [AltClick] path fallback: 24 nodes, picked dist=8.8 
+1702.39 :  [AltClick] move -> screen (1214, 339) [nav] (-47.5, -36.0, 2.5) 
+1702.45 :  [AltClick] click -> screen (1214, 339) [nav] 
+1702.45 :  Moving to boss room position. 
+1702.45 :  Setting custom target. 
+1702.45 :  Moving to target 
+1702.56 :  Moving to boss room position. 
+1702.56 :  Setting custom target. 
+1702.56 :  Moving to target 
+1702.68 :  Moving to boss room position. 
+1702.68 :  Setting custom target. 
+1702.68 :  Moving to target 
+1702.76 :  Moving to boss room position. 
+1702.76 :  Setting custom target. 
+1702.76 :  Moving to target 
+1702.89 :  Moving to boss room position. 
+1702.89 :  Setting custom target. 
+1702.89 :  Moving to target 
+1703.00 :  Moving to boss room position. 
+1703.00 :  Setting custom target. 
+1703.00 :  Moving to target 
+1703.03 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
+1703.03 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
+1703.08 :  [AltClick] click -> screen (686, 646) [nav] 
+1703.11 :  Moving to boss room position. 
+1703.11 :  Setting custom target. 
+1703.11 :  Moving to target 
+1703.22 :  Moving to boss room position. 
+1703.22 :  Setting custom target. 
+1703.22 :  Moving to target 
+1703.34 :  Moving to boss room position. 
+1703.34 :  Setting custom target. 
+1703.34 :  Moving to target 

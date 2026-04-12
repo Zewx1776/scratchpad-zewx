@@ -76,6 +76,14 @@ on_update(function()
         end
     end
 
+    if InfernalHordesPlugin then
+        local state = InfernalHordesPlugin.getState()
+        if state ~= "IDLE" then
+            console.print('[AltClick] suppressed — Horde state: ' .. state)
+            return
+        end
+    end
+
     local now = get_time_since_inject()
 
     -- Fire pending click once delay has elapsed

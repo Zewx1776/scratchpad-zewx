@@ -13,6 +13,7 @@ local settings = {
     prioritize_traversals = false,
     kill_monsters = true,
     experimental_explorer = false,
+    farm_cinder_threshold = 50,
 }
 
 function settings:update_settings()
@@ -29,6 +30,7 @@ function settings:update_settings()
     settings.prioritize_traversals = gui.elements.prioritize_traversals_toggle:get()
     settings.kill_monsters = gui.elements.kill_monsters_toggle:get()
     settings.experimental_explorer = gui.elements.experimental_explorer_toggle:get()
+    settings.farm_cinder_threshold = gui.elements.farm_cinder_threshold:get()
 end
 
 return settings

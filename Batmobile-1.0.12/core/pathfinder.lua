@@ -236,10 +236,9 @@ pathfinder.find_path_debug = function(start, goal)
     local start_node = utils.normalize_node(start)
     local goal_node  = utils.normalize_node(goal)
     local start_str  = utils.vec_to_string(start_node)
-    local open_set   = {[start_str] = start_node}
+    local heap       = new_heap()
     local closed_set = {}
     local g_score    = {[start_str] = 0}
-    local f_score    = {[start_str] = heuristic(start_node, goal_node)}
     local prev_nodes = {}
     local counter    = 0
     local evaluated  = {}
@@ -255,41 +254,47 @@ pathfinder.find_path_debug = function(start, goal)
         {-dist, dist}, {-dist, -dist}, {dist, dist}, {dist, -dist},
     }
 
-    while true do
-        local cur_str, cur_node = get_lowest_f_score(open_set, f_score)
-        if cur_str == nil then
-            return nil, counter, os.clock() - t0, "no_path"
-        end
+    local start_h = heuristic(start_node, goal_node)
+    heap:push(start_h, start_str, start_node)
+
+    while not heap:empty() do
         if counter >= HARD_ITER_LIMIT then
             return nil, counter, os.clock() - t0, "iter_limit"
         end
         if (os.clock() - t0) >= HARD_TIME_LIMIT then
             return nil, counter, os.clock() - t0, "time_limit"
         end
+
+        local _, cur_str, cur_node = heap:pop()
+
+        -- Lazy deletion: skip if already closed (stale heap entry)
+        if closed_set[cur_str] then goto continue end
+
         counter = counter + 1
         if utils.distance(cur_node, goal_node) == 0 then
             return reconstruct_path(closed_set, prev_nodes, cur_node), counter, os.clock() - t0, "found"
         end
-        open_set[cur_str] = nil
         closed_set[cur_str] = cur_node
 
         local neighbours
         neighbours, evaluated = get_neighbors(cur_node, goal_node, evaluated, true, directions)
         for _, neighbor in ipairs(neighbours) do
             local neigh_str = utils.vec_to_string(neighbor)
-            if closed_set[neigh_str] == nil then
+            if not closed_set[neigh_str] then
                 local t_g = g_score[cur_str] + utils.distance(cur_node, neighbor)
-                if open_set[neigh_str] == nil or t_g < g_score[neigh_str] then
+                if g_score[neigh_str] == nil or t_g < g_score[neigh_str] then
                     prev_nodes[neigh_str] = cur_str
                     g_score[neigh_str]    = t_g
-                    f_score[neigh_str]    = t_g + heuristic(neighbor, goal_node)
-                end
-                if open_set[neigh_str] == nil then
-                    open_set[neigh_str] = neighbor
+                    local f = t_g + heuristic(neighbor, goal_node)
+                    heap:push(f, neigh_str, neighbor)
                 end
             end
         end
+
+        ::continue::
     end
+
+    return nil, counter, os.clock() - t0, "no_path"
 end
 
 return pathfinder

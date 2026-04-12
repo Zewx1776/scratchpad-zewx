@@ -6,6 +6,22 @@ local tracker = require "core.tracker"
 local explorer = require "core.explorer"
 local pylons = require "data.pylons"
 tracker.horde_opened = false  -- For start_dungeon again, after dying and exit horde
+
+-- Batmobile integration: used when aggressive movement is off
+-- Follows HelltideRevamped pause-mode pattern for precise target navigation
+local plugin_label = "infernal_horde"
+local bm_pulse_time = -math.huge
+local BM_PULSE_INTERVAL = 0.1
+
+local function bm_pulse(force)
+    if not BatmobilePlugin then return end
+    local now = get_time_since_inject()
+    if not force and (now - bm_pulse_time) < BM_PULSE_INTERVAL then return end
+    bm_pulse_time = now
+    BatmobilePlugin.update(plugin_label)
+    BatmobilePlugin.move(plugin_label)
+end
+
 local bartuc_pylon_attempt_start = nil
 local bartuc_pylon_give_up_time = 6 -- seconds
 local bartuc_failed = false
@@ -38,8 +54,14 @@ local circle_data = {
 }
 
 function bomber:bomb_to(pos)
-    explorer:set_custom_target(pos)
-    explorer:move_to_target()
+    if not settings.aggresive_movement and BatmobilePlugin then
+        BatmobilePlugin.pause(plugin_label)
+        BatmobilePlugin.set_target(plugin_label, pos, false)
+        bm_pulse(true)
+    else
+        explorer:set_custom_target(pos)
+        explorer:move_to_target()
+    end
 end
 
 -- Function to get the current time since the script was injected
@@ -130,7 +152,8 @@ function bomber:shoot_in_circle()
         local z = center_z + circle_data.height_offset * math.sin(angle)
         
         local new_position = vec3:new(x, y, z)
-        bomber:bomb_to(new_position)
+        -- force_move_raw directly: this is a facing direction, not actual navigation
+        pathfinder.force_move_raw(new_position)
         
         circle_data.last_action_time = current_time
         circle_data.current_step = circle_data.current_step + 1
@@ -318,8 +341,7 @@ function bomber:move_in_pattern(move_positions, run_victory_lap)
     if not reached_target then
         if distance_to_target > 2 then
             console.print("Moving to position " .. position_to_string(target_position))
-            explorer:set_custom_target(target_position)
-            explorer:move_to_target()
+            bomber:bomb_to(target_position)
             console.print("Move command issued")
             target_reach_time = 0
         else
@@ -344,11 +366,12 @@ end
 
 local last_enemy_check_time = 0
 local enemy_check_interval = 0.000001 -- Interval in seconds to check for enemies
-local interacting_pylon = false
-local interacting_boss_pylon = false
+local pylon_interact_time = nil
 
 -- Main function to handle the bomber's actions based on the current game state
 function bomber:main_pulse()
+    tracker.interacting_pylon = false
+
     if get_local_player():is_dead() then
         console.print("Player is dead. Reviving at checkpoint.")
         revive_at_checkpoint()
@@ -358,33 +381,26 @@ function bomber:main_pulse()
     local current_time = get_current_time()
     local world_name = get_current_world():get_name()
 
-    local pylon = bomber:get_pylons()    
+    local pylon = bomber:get_pylons()
     if pylon then
+        tracker.interacting_pylon = true
         tracker.victory_lap = false
         if not settings.party_mode then
             console.print("settings.party_mode:" .. tostring(settings.party_mode))
             console.print("Targeting Pylon and interacting with it.")
             if utils.distance_to(pylon) > 2 then
-                interacting_pylon = false
+                pylon_interact_time = nil
                 bomber:bomb_to(pylon:get_position())
             else
                 if not tracker.check_time("wait_for_pylon", settings.pick_pylon_delay) then
                     console.print("Waiting for pylon to be interactable.")
                     return
                 end
-                console.print("interacting with pylon")
-                if interacting_pylon then
-                    console.print("Already interacting with pylon. Waiting for interaction to finish.")
-                    return
-                end
-                if interact_object(pylon) then
+                -- Retry interact every 2 seconds (matching Bartuc pattern)
+                if not pylon_interact_time or get_current_time() - pylon_interact_time >= 2 then
                     console.print("Interacting with pylon.")
-                    interacting_pylon = true
-                    tracker.clear_key("wait_for_pylon")
-                else
-                    console.print("Failed to interact with pylon. Retrying.")
-                    interacting_pylon = false
-                    tracker.clear_key("wait_for_pylon")
+                    interact_object(pylon)
+                    pylon_interact_time = get_current_time()
                 end
                 -- reset move index on new wave
                 move_index = 1
@@ -399,7 +415,7 @@ function bomber:main_pulse()
         end
     end
 
-    interacting_pylon = false
+    pylon_interact_time = nil
     local target = bomber:get_target()
     if target then
         local name = target:get_skin_name()
@@ -469,6 +485,7 @@ function bomber:main_pulse()
             if settings.do_bartuc and not bartuc_failed then
                 boss_pylon = utils.get_bartuc_pylon()
                 if boss_pylon then
+                    tracker.interacting_pylon = true
                     if utils.distance_to(boss_pylon) > 2 then
                         bomber:bomb_to(boss_pylon:get_position())
                         return
@@ -507,6 +524,7 @@ function bomber:main_pulse()
             -- Council logic
             boss_pylon = utils.get_boss_pylon()
             if boss_pylon then
+                tracker.interacting_pylon = true
                 if utils.distance_to(boss_pylon) > 2 then
                     bomber:bomb_to(boss_pylon:get_position())
                     return
@@ -563,9 +581,15 @@ local task = {
     end,
     
     Execute = function()
+        -- When using Batmobile, prevent explorer's on_update from interfering
+        explorer.is_task_running = not settings.aggresive_movement and BatmobilePlugin ~= nil
         if not has_printed_execution_message then
             console.print("Infernal Horde task executing.")
             has_printed_execution_message = true
+        end
+        -- Keep Batmobile movement ticking between target changes
+        if not settings.aggresive_movement then
+            bm_pulse()
         end
         bomber:main_pulse()
     end

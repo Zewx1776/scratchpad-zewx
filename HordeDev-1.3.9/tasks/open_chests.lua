@@ -8,6 +8,31 @@ local town_salvage_task = require "tasks.town_salvage"
 -- Reference the position from horde.lua
 local horde_boss_room_position = vec3:new(-36.17675, -36.3222, 2.200)
 
+-- Batmobile pause-mode movement for chest navigation
+local plugin_label = "infernal_horde"
+local bm_pulse_time = -math.huge
+local BM_PULSE_INTERVAL = 0.1
+
+local function bm_pulse(force)
+    if not BatmobilePlugin then return end
+    local now = get_time_since_inject()
+    if not force and (now - bm_pulse_time) < BM_PULSE_INTERVAL then return end
+    bm_pulse_time = now
+    BatmobilePlugin.update(plugin_label)
+    BatmobilePlugin.move(plugin_label)
+end
+
+local function move_to(pos)
+    if not settings.aggresive_movement and BatmobilePlugin then
+        BatmobilePlugin.pause(plugin_label)
+        BatmobilePlugin.set_target(plugin_label, pos, false)
+        bm_pulse(true)
+    else
+        explorer:set_custom_target(pos)
+        explorer:move_to_target()
+    end
+end
+
 local chest_state = {
     INIT = "INIT",
     MOVING_TO_AETHER = "MOVING_TO_AETHER",
@@ -50,6 +75,7 @@ local open_chests_task = {
     end,
     
     Execute = function(self)
+
         local current_time = get_time_since_inject()
         console.print("Current state: " .. self.current_state)
     
@@ -137,8 +163,7 @@ local open_chests_task = {
         local aether_bomb = utils.get_aether_actor()
         if aether_bomb then
             if utils.distance_to(aether_bomb) > 2 then
-                explorer:set_custom_target(aether_bomb:get_position())
-                explorer:move_to_target()
+                move_to(aether_bomb:get_position())
             else
                 self.current_state = chest_state.COLLECTING_AETHER
             end
@@ -162,8 +187,7 @@ local open_chests_task = {
     move_to_center = function(self)
         if utils.distance_to(horde_boss_room_position) > 2 then
             console.print("Moving to center position.")
-            explorer:set_custom_target(horde_boss_room_position)
-            explorer:move_to_target()
+            move_to(horde_boss_room_position)
         else
             self.current_state = chest_state.SELECTING_CHEST
             console.print("Reached Central Room Position.")
@@ -201,8 +225,7 @@ local open_chests_task = {
             if utils.distance_to(chest) > 2 then
                 if tracker.check_time("request_move_to_chest", 0.15) then
                     console.print(string.format("Moving to %s chest", self.current_chest_type))
-                    explorer:set_custom_target(chest:get_position())
-                    explorer:move_to_target()
+                    move_to(chest:get_position())
 
                     self.move_attempts = (self.move_attempts or 0) + 1
                     if self.move_attempts >= settings.chest_move_attempts then
@@ -371,6 +394,7 @@ local open_chests_task = {
         end
     
         tracker.finished_chest_looting = true
+
         console.print("Set tracker.finished_chest_looting to true in finish_chest_opening")
         console.print("Chest opening task finished")
     end,
@@ -381,6 +405,7 @@ local open_chests_task = {
         self.failed_attempts = 0
         self.current_chest_index = 1
         tracker.finished_chest_looting = false
+
         tracker.ga_chest_opened = false
         tracker.selected_chest_opened = false
         tracker.gold_chest_opened = false
