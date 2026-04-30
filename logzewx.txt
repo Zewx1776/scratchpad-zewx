@@ -1,200 +1,200 @@
-1696.98 :  Setting custom target. 
-1696.98 :  Moving to target 
-1697.08 :  Moving to boss room position. 
-1697.08 :  Setting custom target. 
-1697.08 :  Moving to target 
-1697.21 :  Moving to boss room position. 
-1697.21 :  Setting custom target. 
-1697.21 :  Moving to target 
-1697.34 :  Moving to boss room position. 
-1697.34 :  Setting custom target. 
-1697.34 :  Moving to target 
-1697.43 :  [AltClick] path fallback: 24 nodes, picked dist=8.8 
-1697.43 :  [AltClick] move -> screen (1214, 338) [nav] (-47.5, -36.0, 2.5) 
-1697.46 :  Moving to boss room position. 
-1697.46 :  Setting custom target. 
-1697.46 :  Moving to target 
-1697.49 :  [AltClick] click -> screen (1214, 338) [nav] 
-1697.56 :  Moving to boss room position. 
-1697.56 :  Setting custom target. 
-1697.56 :  Moving to target 
-1697.66 :  Moving to boss room position. 
-1697.66 :  Setting custom target. 
-1697.66 :  Moving to target 
-1697.76 :  Moving to boss room position. 
-1697.76 :  Setting custom target. 
-1697.76 :  Moving to target 
-1697.89 :  Moving to boss room position. 
-1697.89 :  Setting custom target. 
-1697.89 :  Moving to target 
-1698.00 :  Moving to boss room position. 
-1698.00 :  Setting custom target. 
-1698.00 :  Moving to target 
-1698.06 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
-1698.06 :  [AltClick] move -> screen (688, 645) [nav] (-38.5, -36.5, 3.0) 
-1698.12 :  [AltClick] click -> screen (688, 645) [nav] 
-1698.12 :  Moving to boss room position. 
-1698.12 :  Setting custom target. 
-1698.12 :  Moving to target 
-1698.25 :  Moving to boss room position. 
-1698.25 :  Setting custom target. 
-1698.25 :  Moving to target 
-1698.37 :  Moving to boss room position. 
-1698.37 :  Setting custom target. 
-1698.37 :  Moving to target 
-1698.51 :  Moving to boss room position. 
-1698.51 :  Setting custom target. 
-1698.51 :  Moving to target 
-1698.61 :  Moving to boss room position. 
-1698.61 :  Setting custom target. 
-1698.61 :  Moving to target 
-1698.69 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
-1698.69 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
-1698.73 :  Moving to boss room position. 
-1698.73 :  Setting custom target. 
-1698.73 :  Moving to target 
-1698.76 :  [AltClick] click -> screen (686, 646) [nav] 
-1698.87 :  Moving to boss room position. 
-1698.87 :  Setting custom target. 
-1698.87 :  Moving to target 
-1698.97 :  Moving to boss room position. 
-1698.97 :  Setting custom target. 
-1698.97 :  Moving to target 
-1699.10 :  Moving to boss room position. 
-1699.10 :  Setting custom target. 
-1699.10 :  Moving to target 
-1699.22 :  Moving to boss room position. 
-1699.22 :  Setting custom target. 
-1699.22 :  Moving to target 
-1699.32 :  [AltClick] path fallback: 24 nodes, picked dist=3.6 
-1699.32 :  [AltClick] move -> screen (867, 578) [nav] (-36.0, -36.5, 2.2) 
-1699.35 :  Moving to boss room position. 
-1699.35 :  Setting custom target. 
-1699.35 :  Moving to target 
-1699.39 :  [AltClick] click -> screen (867, 578) [nav] 
-1699.45 :  Moving to boss room position. 
-1699.45 :  Setting custom target. 
-1699.45 :  Moving to target 
-1699.56 :  Moving to boss room position. 
-1699.56 :  Setting custom target. 
-1699.56 :  Moving to target 
-1699.67 :  Moving to boss room position. 
-1699.67 :  Setting custom target. 
-1699.67 :  Moving to target 
-1699.78 :  Moving to boss room position. 
-1699.78 :  Setting custom target. 
-1699.78 :  Moving to target 
-1699.89 :  Moving to boss room position. 
-1699.89 :  Setting custom target. 
-1699.89 :  Moving to target 
-1699.93 :  [AltClick] path fallback: 24 nodes, picked dist=8.6 
-1699.93 :  [AltClick] move -> screen (1211, 341) [nav] (-47.5, -36.0, 2.5) 
-1700.00 :  [AltClick] click -> screen (1211, 341) [nav] 
-1700.00 :  Moving to boss room position. 
-1700.00 :  Setting custom target. 
-1700.00 :  Moving to target 
-1700.11 :  Moving to boss room position. 
-1700.11 :  Setting custom target. 
-1700.11 :  Moving to target 
-1700.22 :  Moving to boss room position. 
-1700.22 :  Setting custom target. 
-1700.22 :  Moving to target 
-1700.33 :  Moving to boss room position. 
-1700.33 :  Setting custom target. 
-1700.33 :  Moving to target 
-1700.45 :  Moving to boss room position. 
-1700.45 :  Setting custom target. 
-1700.45 :  Moving to target 
-1700.55 :  [AltClick] path fallback: 24 nodes, picked dist=8.1 
-1700.55 :  [AltClick] move -> screen (691, 644) [nav] (-38.5, -36.5, 3.0) 
-1700.58 :  Moving to boss room position. 
-1700.58 :  Setting custom target. 
-1700.58 :  Moving to target 
-1700.62 :  [AltClick] click -> screen (691, 644) [nav] 
-1700.70 :  Moving to boss room position. 
-1700.70 :  Setting custom target. 
-1700.70 :  Moving to target 
-1700.81 :  Moving to boss room position. 
-1700.81 :  Setting custom target. 
-1700.81 :  Moving to target 
-1700.91 :  Moving to boss room position. 
-1700.91 :  Setting custom target. 
-1700.91 :  Moving to target 
-1701.03 :  Moving to boss room position. 
-1701.03 :  Setting custom target. 
-1701.03 :  Moving to target 
-1701.14 :  Moving to boss room position. 
-1701.14 :  Setting custom target. 
-1701.14 :  Moving to target 
-1701.16 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
-1701.16 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
-1701.21 :  [AltClick] click -> screen (686, 646) [nav] 
-1701.24 :  Moving to boss room position. 
-1701.24 :  Setting custom target. 
-1701.24 :  Moving to target 
-1701.35 :  Moving to boss room position. 
-1701.35 :  Setting custom target. 
-1701.35 :  Moving to target 
-1701.45 :  Moving to boss room position. 
-1701.45 :  Setting custom target. 
-1701.45 :  Moving to target 
-1701.56 :  Moving to boss room position. 
-1701.56 :  Setting custom target. 
-1701.56 :  Moving to target 
-1701.67 :  Moving to boss room position. 
-1701.67 :  Setting custom target. 
-1701.67 :  Moving to target 
-1701.78 :  [AltClick] path fallback: 24 nodes, picked dist=8.6 
-1701.78 :  [AltClick] move -> screen (1209, 342) [nav] (-47.5, -36.0, 2.5) 
-1701.78 :  Moving to boss room position. 
-1701.78 :  Setting custom target. 
-1701.78 :  Moving to target 
-1701.83 :  [AltClick] click -> screen (1209, 342) [nav] 
-1701.89 :  Moving to boss room position. 
-1701.89 :  Setting custom target. 
-1701.89 :  Moving to target 
-1702.00 :  Moving to boss room position. 
-1702.00 :  Setting custom target. 
-1702.00 :  Moving to target 
-1702.10 :  Moving to boss room position. 
-1702.10 :  Setting custom target. 
-1702.10 :  Moving to target 
-1702.22 :  Moving to boss room position. 
-1702.22 :  Setting custom target. 
-1702.22 :  Moving to target 
-1702.33 :  Moving to boss room position. 
-1702.33 :  Setting custom target. 
-1702.33 :  Moving to target 
-1702.39 :  [AltClick] path fallback: 24 nodes, picked dist=8.8 
-1702.39 :  [AltClick] move -> screen (1214, 339) [nav] (-47.5, -36.0, 2.5) 
-1702.45 :  [AltClick] click -> screen (1214, 339) [nav] 
-1702.45 :  Moving to boss room position. 
-1702.45 :  Setting custom target. 
-1702.45 :  Moving to target 
-1702.56 :  Moving to boss room position. 
-1702.56 :  Setting custom target. 
-1702.56 :  Moving to target 
-1702.68 :  Moving to boss room position. 
-1702.68 :  Setting custom target. 
-1702.68 :  Moving to target 
-1702.76 :  Moving to boss room position. 
-1702.76 :  Setting custom target. 
-1702.76 :  Moving to target 
-1702.89 :  Moving to boss room position. 
-1702.89 :  Setting custom target. 
-1702.89 :  Moving to target 
-1703.00 :  Moving to boss room position. 
-1703.00 :  Setting custom target. 
-1703.00 :  Moving to target 
-1703.03 :  [AltClick] path fallback: 24 nodes, picked dist=8.2 
-1703.03 :  [AltClick] move -> screen (686, 646) [nav] (-38.5, -36.5, 3.0) 
-1703.08 :  [AltClick] click -> screen (686, 646) [nav] 
-1703.11 :  Moving to boss room position. 
-1703.11 :  Setting custom target. 
-1703.11 :  Moving to target 
-1703.22 :  Moving to boss room position. 
-1703.22 :  Setting custom target. 
-1703.22 :  Moving to target 
-1703.34 :  Moving to boss room position. 
-1703.34 :  Setting custom target. 
-1703.34 :  Moving to target 
+1827.58 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.3 
+1827.58 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1827.58 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=308.0ms 
+1827.58 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1827.67 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1827.67 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1827.67 :  [AltClick] no path point and no nav target 
+1827.83 :  [LONG PATH] Navigation complete 
+1828.07 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1828.17 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.0 
+1828.17 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1828.17 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=309.0ms 
+1828.17 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1828.44 :  [AltClick] path fallback: 196 nodes, picked dist=8.2 
+1828.44 :  [AltClick] move -> screen (1152, 333) [nav] (76.0, 49.5, 3.0) 
+1828.72 :  [AltClick] click -> screen (1152, 333) [nav] 
+1829.26 :  [AltClick] path fallback: 196 nodes, picked dist=8.3 
+1829.26 :  [AltClick] move -> screen (1130, 309) [nav] (76.0, 49.5, 3.0) 
+1829.31 :  [AltClick] click -> screen (1130, 309) [nav] 
+1829.43 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1829.43 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1829.46 :  [LONG PATH] Navigation complete 
+1829.48 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1829.60 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.1, 49.0)  dist=102.9 
+1829.60 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1829.60 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=338.0ms 
+1829.60 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1829.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1829.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1829.69 :  [AltClick] no path point and no nav target 
+1829.85 :  [LONG PATH] Navigation complete 
+1830.11 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1830.23 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.7)  dist=103.2 
+1830.23 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.7) ... 
+1830.23 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=369.0ms 
+1830.23 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1830.33 :  [AltClick] path fallback: 196 nodes, picked dist=8.1 
+1830.33 :  [AltClick] move -> screen (1205, 510) [nav] (76.5, 51.0, 3.0) 
+1830.50 :  [AltClick] click -> screen (1205, 510) [nav] 
+1830.96 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1830.96 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1830.99 :  [LONG PATH] Navigation complete 
+1831.02 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1831.12 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.4)  dist=103.0 
+1831.12 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.6) ... 
+1831.12 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=349.0ms 
+1831.12 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1831.21 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1831.21 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1831.21 :  [AltClick] no path point and no nav target 
+1831.37 :  [LONG PATH] Navigation complete 
+1831.63 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1831.74 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.0 
+1831.74 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1831.74 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=305.0ms 
+1831.74 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1832.01 :  [AltClick] path fallback: 196 nodes, picked dist=8.2 
+1832.01 :  [AltClick] move -> screen (1151, 332) [nav] (76.0, 49.5, 3.0) 
+1832.28 :  [AltClick] click -> screen (1151, 332) [nav] 
+1832.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1832.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1832.72 :  [LONG PATH] Navigation complete 
+1832.74 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1832.83 :  [AltClick] no path point and no nav target 
+1832.86 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=102.9 
+1832.86 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1832.86 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=319.0ms 
+1832.86 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1832.96 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1832.96 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1833.12 :  [LONG PATH] Navigation complete 
+1833.35 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1833.44 :  [AltClick] no path point and no nav target 
+1833.48 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.0, 48.8)  dist=103.0 
+1833.48 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.6) ... 
+1833.48 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=330.0ms 
+1833.48 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1834.07 :  [AltClick] path fallback: 195 nodes, picked dist=8.2 
+1834.07 :  [AltClick] move -> screen (1160, 466) [nav] (75.0, 48.5, 3.0) 
+1834.21 :  [AltClick] click -> screen (1160, 466) [nav] 
+1834.56 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1834.56 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1834.59 :  [LONG PATH] Navigation complete 
+1834.62 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1834.69 :  [AltClick] no path point and no nav target 
+1834.72 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.3 
+1834.72 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1834.72 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=287.0ms 
+1834.72 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1834.82 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1834.82 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1834.98 :  [LONG PATH] Navigation complete 
+1835.15 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1835.27 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.0 
+1835.27 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1835.27 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=285.0ms 
+1835.27 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1835.37 :  [AltClick] path fallback: 196 nodes, picked dist=8.2 
+1835.37 :  [AltClick] move -> screen (1167, 364) [nav] (76.0, 49.5, 3.0) 
+1835.54 :  [AltClick] click -> screen (1167, 364) [nav] 
+1835.90 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1835.90 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1835.94 :  [LONG PATH] Navigation complete 
+1836.02 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1836.15 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.9)  dist=103.0 
+1836.15 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1836.15 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=312.0ms 
+1836.15 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1836.24 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1836.24 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1836.24 :  [AltClick] no path point and no nav target 
+1836.42 :  [LONG PATH] Navigation complete 
+1836.60 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1836.71 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.7)  dist=103.1 
+1836.71 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.7) ... 
+1836.71 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=334.0ms 
+1836.71 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1836.98 :  [AltClick] path fallback: 196 nodes, picked dist=8.1 
+1836.98 :  [AltClick] move -> screen (1212, 516) [nav] (76.5, 51.0, 3.0) 
+1837.14 :  [AltClick] click -> screen (1212, 516) [nav] 
+1837.60 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1837.60 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1837.63 :  [LONG PATH] Navigation complete 
+1837.66 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1837.78 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.5)  dist=103.1 
+1837.78 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.6) ... 
+1837.78 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=431.0ms 
+1837.78 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1837.88 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1837.88 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1837.88 :  [AltClick] no path point and no nav target 
+1838.04 :  [LONG PATH] Navigation complete 
+1838.21 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1838.48 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 49.1)  dist=103.0 
+1838.48 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.9) ... 
+1838.48 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=494.0ms 
+1838.48 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1838.58 :  [AltClick] path fallback: 196 nodes, picked dist=8.2 
+1838.58 :  [AltClick] move -> screen (1163, 353) [nav] (76.0, 49.5, 3.0) 
+1838.75 :  [AltClick] click -> screen (1163, 353) [nav] 
+1839.08 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1839.08 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1839.24 :  [LONG PATH] Navigation complete 
+1839.47 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1839.60 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(83.0, 51.1)  dist=103.0 
+1839.60 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.6) ... 
+1839.60 :  [LONG PATH] navigate_to: found  nodes=196  iters=1846  time=351.0ms 
+1839.60 :  [LONG PATH] Navigation started | nodes=196 | target=(-3.5, -4.0) 
+1839.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1839.69 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1839.69 :  [AltClick] no path point and no nav target 
+1839.86 :  [LONG PATH] Navigation complete 
+1840.10 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1840.20 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 48.7)  dist=103.1 
+1840.20 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.7) ... 
+1840.20 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=351.0ms 
+1840.20 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1840.33 :  [AltClick] path fallback: 196 nodes, picked dist=8.1 
+1840.33 :  [AltClick] move -> screen (1207, 510) [nav] (76.5, 51.0, 3.0) 
+1840.49 :  [AltClick] click -> screen (1207, 510) [nav] 
+1840.98 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1840.98 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1841.02 :  [LONG PATH] Navigation complete 
+1841.08 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1841.19 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(83.9, 48.5)  dist=102.9 
+1841.19 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.4) ... 
+1841.19 :  [LONG PATH] navigate_to: found  nodes=198  iters=2084  time=401.0ms 
+1841.19 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1841.29 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Down 
+1841.29 :  [nav] blacklisting landing traversal Traversal_Gizmo_FreeClimb_Up 
+1841.29 :  [AltClick] no path point and no nav target 
+1841.45 :  [LONG PATH] Navigation complete 
+1841.75 :  [Reaper] Long path ended, no altar — returning to PATHWALKING. 
+1841.87 :  [Reaper] navigate_long_path #1 → path endpoint  target=(-3.7, -4.1)  player=(84.2, 49.0)  dist=103.0 
+1841.87 :  [LONG PATH] navigate_to: finding uncapped path (dist=109.8) ... 
+1841.87 :  [LONG PATH] navigate_to: found  nodes=198  iters=1822  time=328.0ms 
+1841.87 :  [LONG PATH] Navigation started | nodes=198 | target=(-3.5, -4.0) 
+1842.14 :  [AltClick] path fallback: 196 nodes, picked dist=8.1 
+1842.14 :  [AltClick] move -> screen (1100, 308) [nav] (75.0, 48.5, 3.0) 
+1842.31 :  [AltClick] click -> screen (1100, 308) [nav] 
+1842.97 :  [AltClick] path fallback: 196 nodes, picked dist=8.3 
+1842.97 :  [AltClick] move -> screen (1076, 288) [nav] (75.0, 48.5, 3.0) 
+1843.05 :  [AltClick] click -> screen (1076, 288) [nav] 
+1843.62 :  [AltClick] path fallback: 180 nodes, picked dist=8.4 
+1843.62 :  [AltClick] move -> screen (1131, 332) [nav] (67.5, 47.0, 1.5) 
+1843.70 :  [AltClick] click -> screen (1131, 332) [nav] 
+1844.22 :  [AltClick] path fallback: 166 nodes, picked dist=8.2 
+1844.22 :  [AltClick] move -> screen (1170, 354) [nav] (61.0, 47.0, 0.5) 
+1844.39 :  [AltClick] click -> screen (1170, 354) [nav] 
+1845.00 :  [AltClick] path fallback: 161 nodes, picked dist=8.5 
+1845.00 :  [AltClick] move -> screen (1180, 330) [nav] (58.0, 47.0, 0.5) 
+1845.08 :  [AltClick] click -> screen (1180, 330) [nav] 
+1845.38 :  [nav] post-trav escape complete (dist=20.6), restoring target 84,49 
+1845.38 :  [nav] restored target feasibility: dist=20.5 custom=true walkable=true 
+1845.38 :  [nav] pathfinding to=84,49 dist=20.3 custom=true 
+1845.38 :  [nav] pathfind OK, path=#40 
+1845.69 :  [nav] pathfinding to=84,49 dist=26.3 custom=true 
+1845.69 :  [nav] pathfind OK, path=#52 
+1845.69 :  [AltClick] move -> screen (1003, 383) [monster] (54.9, 44.9, -0.1) 
+1845.77 :  [AltClick] click -> screen (1003, 383) [monster] 

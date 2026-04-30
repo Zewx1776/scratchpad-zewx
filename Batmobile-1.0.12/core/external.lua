@@ -150,6 +150,20 @@ external.is_long_path_navigating = function()
     return long_path.navigating
 end
 
+-- Find a walkable, reachable approach node within max_dist of target.
+-- Used by callers that need to path to an actor whose mesh sits on a non-walkable tile
+-- (e.g. portals, gizmos). Returns vec3 of an approach node, or nil if nothing reachable.
+external.get_closeby_node = function(caller, target, max_dist)
+    if caller == nil then
+        utils.log(2, 'get_closeby_node called with no caller')
+        return nil
+    end
+    tracker.external_caller = caller
+    if target == nil then return nil end
+    if target.get_position then target = target:get_position() end
+    return navigator.get_closeby_node(target, max_dist or 3)
+end
+
 -- Stop long path navigation and clear the navigator target.
 external.stop_long_path = function(caller)
     if caller == nil then

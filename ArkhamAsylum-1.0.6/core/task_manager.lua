@@ -36,10 +36,15 @@ local task_files = {
     'upgrade_glyph',
     'alfred',
     'enter_pit',
-    'exit_pit',
+    -- portal must run before exit_pit: exit_pit fires on BatmobilePlugin.is_done(),
+    -- which can happen on intermediate floors before the bot has descended. With portal
+    -- higher priority, any visible non-back descend portal wins; on the final floor
+    -- (only the blacklisted back-portal in sight) portal returns false and exit_pit fires.
     'portal',
+    'exit_pit',
     'follower',
     'interact_shrine',
+    'push_monsters',
     'kill_monster',
     'explore_pit',
     'idle'

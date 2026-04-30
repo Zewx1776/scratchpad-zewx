@@ -1,0 +1,88 @@
+
+5830.63 :  [HR PERF] Performance logging active — summary every 5s 
+5830.63 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 35.3 | interactable: true | cinders: 20/250 
+5830.63 :  Loaded waypoints: menestad 
+5830.63 :  [MCP Trigger] Active. Watching for game state issues. 
+5830.63 :  [MCP Trigger] Events file: C:/Users/Zewx/Desktop/diablo_qqt/qqt-mcp-server/events.json 
+5831.07 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.8 | interactable: true | cinders: 20/250 
+5831.98 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5832.57 :  [HR PERF] ============ 5.3s window ============ 
+5832.57 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5832.57 :    get_all_actors                          3    0.6    0.000    0.000      0.00 
+5832.57 :    [EVENTS]  actor_cache_miss=3(0.6/s)   state_EXPLORE_HELLTIDE=8(1.5/s)   state_INIT=1(0.2/s) 
+5834.28 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5836.62 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5837.81 :  [HR PERF] ============ 5.2s window ============ 
+5837.81 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5837.81 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5837.81 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=9(1.7/s) 
+5839.06 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5841.35 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5842.98 :  [HR PERF] ============ 5.2s window ============ 
+5842.98 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5842.98 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5842.98 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=9(1.7/s) 
+5843.54 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5845.76 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5848.02 :  [HR PERF] ============ 5.0s window ============ 
+5848.02 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5848.02 :    get_all_actors                          2    0.4    0.500    1.000      1.00 
+5848.02 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=9(1.8/s) 
+5848.02 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5850.34 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5850.72 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 32.9 | interactable: true | cinders: 20/250 
+5850.80 :  [HR PERF] ============ 5.2s window ============ 
+5850.80 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5850.80 :    get_all_actors                          3    0.6    0.000    0.000      0.00 
+5850.80 :    [EVENTS]  actor_cache_miss=3(0.6/s)   state_EXPLORE_HELLTIDE=9(1.7/s) 
+5851.84 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 31.1 | interactable: true | cinders: 20/250 
+5854.15 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5854.84 :  [HR PERF] ============ 5.0s window ============ 
+5854.84 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5854.84 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5854.84 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=7(1.4/s) 
+5856.28 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5858.37 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5860.39 :  [HR PERF] ============ 5.6s window ============ 
+5860.39 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5860.39 :    get_all_actors                          2    0.4    0.500    1.000      1.00 
+5860.39 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=8(1.4/s) 
+5860.39 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5862.44 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5863.88 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 30.9 | interactable: true | cinders: 20/250 
+5863.97 :  [HR PERF] ============ 5.4s window ============ 
+5863.97 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5863.97 :    get_all_actors                          3    0.6    0.667    1.000      2.00 
+5863.97 :    [EVENTS]  actor_cache_miss=3(0.6/s)   state_EXPLORE_HELLTIDE=8(1.5/s) 
+5864.15 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 34.7 | interactable: true | cinders: 20/250 
+5864.42 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 37.9 | interactable: true | cinders: 20/250 
+5864.62 :  [HR PERF] ============ 5.0s window ============ 
+5864.62 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5864.62 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5864.62 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=7(1.4/s) 
+5864.70 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 39.3 | interactable: true | cinders: 20/250 
+5864.97 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 39.9 | interactable: true | cinders: 20/250 
+5865.25 :  [HR PERF] ============ 5.4s window ============ 
+5865.25 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5865.25 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5865.25 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=7(1.3/s) 
+5865.25 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 40.1 | interactable: true | cinders: 20/250 
+5865.52 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 39.6 | interactable: true | cinders: 20/250 
+5865.80 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 37.4 | interactable: true | cinders: 20/250 
+5865.89 :  [HR PERF] ============ 5.3s window ============ 
+5865.89 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5865.89 :    get_all_actors                          3    0.6    0.667    2.000      2.00 
+5865.89 :    [EVENTS]  actor_cache_miss=3(0.6/s)   state_EXPLORE_HELLTIDE=7(1.3/s) 
+5866.07 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 36.5 | interactable: true | cinders: 20/250 
+5866.35 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 36.1 | interactable: true | cinders: 20/250 
+5866.53 :  [HR PERF] ============ 5.2s window ============ 
+5866.53 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5866.53 :    get_all_actors                          2    0.4    0.500    1.000      1.00 
+5866.53 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=7(1.4/s) 
+5866.63 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 36.0 | interactable: true | cinders: 20/250 
+5866.90 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 35.9 | interactable: true | cinders: 20/250 
+5867.08 :  [HR PERF] ============ 5.3s window ============ 
+5867.08 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+5867.08 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
+5867.08 :    [EVENTS]  actor_cache_miss=2(0.4/s)   state_EXPLORE_HELLTIDE=7(1.3/s) 
+5867.08 :  [CHEST DEBUG] usz_rewardGizmo_Uber | dist: 35.9 | interactable: true | cinders: 20/250 

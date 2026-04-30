@@ -46,10 +46,10 @@ local get_closest_shrine = function ()
 end
 
 task.shouldExecute = function ()
+    if settings.speed_mode then return false end
     return settings.interact_shrine and
         get_closest_shrine() ~= nil and
-        (utils.player_in_zone("EGD_MSWK_World_02") or
-        utils.player_in_zone("EGD_MSWK_World_01"))
+        utils.player_in_pit()
 end
 task.Execute = function ()
     local local_player = get_local_player()

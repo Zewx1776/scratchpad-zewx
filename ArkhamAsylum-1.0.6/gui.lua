@@ -62,6 +62,14 @@ gui.elements = {
     use_magoogle_tool = create_checkbox(false, 'use_magoogle_tool'),
     follower_explore = create_checkbox(false, 'follower_explore'),
     use_long_path = create_checkbox(false, 'use_long_path'),
+    speed_mode = create_checkbox(false, 'speed_mode'),
+    push_mode = create_checkbox(false, 'push_mode'),
+    push_threshold = slider_int:new(3, 30, 10, get_hash(plugin_label .. '_' .. 'push_threshold')),
+    push_champion_weight = slider_int:new(1, 10, 3, get_hash(plugin_label .. '_' .. 'push_champion_weight')),
+    push_elite_weight = slider_int:new(1, 10, 5, get_hash(plugin_label .. '_' .. 'push_elite_weight')),
+    push_boss_weight = slider_int:new(1, 20, 10, get_hash(plugin_label .. '_' .. 'push_boss_weight')),
+    push_max_pull_dist = slider_int:new(15, 80, 40, get_hash(plugin_label .. '_' .. 'push_max_pull_dist')),
+    push_min_cluster_weight = slider_int:new(1, 20, 5, get_hash(plugin_label .. '_' .. 'push_min_cluster_weight')),
 }
 gui.render = function ()
     if not gui.elements.main_tree:push('Arkham Asylum (pit) | Leoric | v' .. gui.plugin_version) then return end
@@ -96,6 +104,16 @@ gui.render = function ()
         gui.elements.exit_mode:render('Exit mode', gui.exit_mode, 'Select reset or teleport to exit pit')
         gui.elements.return_for_loot:render('Return for loot', 'return for loot after alfred run')
         gui.elements.interact_shrine:render('Enable shrine interaction (and belial eye)', 'Enable shrine interaction (and belial eye)')
+        gui.elements.speed_mode:render('Speed Mode (beta test)', 'Never stop for monsters — path through dense packs and let AltClick + evade explosions handle kills')
+        gui.elements.push_mode:render('Push Mode (beta test)', 'Aggro small groups and pull them together before engaging — maximizes AoE value')
+        if gui.elements.push_mode:get() then
+            gui.elements.push_threshold:render('Group threshold', 'Weighted group size required before engaging (normal=1, champions/elites/bosses use weights below)')
+            gui.elements.push_champion_weight:render('Champion weight', 'How much a champion counts toward the group threshold')
+            gui.elements.push_elite_weight:render('Elite weight', 'How much an elite counts toward the group threshold')
+            gui.elements.push_boss_weight:render('Boss weight', 'How much a boss counts toward the group threshold')
+            gui.elements.push_max_pull_dist:render('Max pull distance', 'How far to travel when pulling monsters together (higher = bigger pulls, lower = tighter grouping)')
+            gui.elements.push_min_cluster_weight:render('Min cluster density', 'Minimum weighted size a distant group must have to be worth pulling toward (ignores solo monsters and tiny groups)')
+        end
         gui.elements.use_long_path:render('Use long path for monster targeting', 'Use uncapped A* to find paths to monsters (better for long-range or complex terrain)')
         gui.elements.upgrade_toggle:render('Enable Glyph Upgrade', 'Toggle glyph upgrade on/off')
         if gui.elements.upgrade_toggle:get() then

@@ -1,0 +1,200 @@
+5925.13 :    select_target              23( 4.6/s)  avg   0.957ms  max   5.000ms  total    22.0ms 
+5925.13 :    get_nearby_travs           79(15.7/s)  avg   0.152ms  max   1.000ms  total    12.0ms 
+5925.13 :    unstuck                     1( 0.2/s)  avg   1.000ms  max   1.000ms  total     1.0ms 
+5925.13 :    [EVENTS]  pathfind_fail=4(0.8/s) 
+5925.95 :  [nav] pathfinding to=-66.5,-11.5 dist=11.7 custom=true 
+5925.95 :  [nav] pathfind OK, path=#22 
+5926.13 :  [nav] no target or reached, selecting new (prev=-66.5,-11.5) 
+5926.19 :  [nav] no target or reached, selecting new (prev=-66.5,-11.5) 
+5926.25 :  [nav] no target or reached, selecting new (prev=-66.5,-11.5) 
+5926.32 :  [nav] no target or reached, selecting new (prev=-66.5,-11.5) 
+5926.38 :  [nav] no target or reached, selecting new (prev=-66.5,-11.5) 
+5926.45 :  [nav] STUCK target=-66.5,-11.5 dist=1.2 path=#20 unstuck_count=0 
+5926.45 :  [nav] pathfinding to=-66.5,-11.5 dist=1.2 custom=true 
+5926.45 :  [nav] pathfind OK, path=#3 
+5926.62 :  [nav] pathfinding to=-64,-14 dist=2.1 custom=true 
+5926.62 :  [nav] pathfind OK, path=#4 
+5928.04 :  [nav] no target or reached, selecting new (prev=nil) 
+5928.04 :  [select_target] picked -52,-9.5 dist=14.0 frontiers=1650 bt=#3 bting=false 
+5928.04 :  [nav] new target=-52,-9.5 
+5928.04 :  [nav] pathfinding to=-52,-9.5 dist=13.9 custom=false 
+5928.04 :  [nav] PATHFIND FAILED #1 target=-52,-9.5 dist=13.9 paused=false frontiers=1650 
+5928.04 :  [select_target] picked -52,-10 dist=13.7 frontiers=1650 bt=#3 bting=false 
+5928.04 :  [nav] new target after fail=-52,-10 dist=13.7 
+5928.44 :  [nav] pathfinding to=-52,-10 dist=13.7 custom=false 
+5928.44 :  [nav] PATHFIND FAILED #2 target=-52,-10 dist=13.7 paused=false frontiers=1650 
+5928.44 :  [select_target] picked -52,-10.5 dist=13.5 frontiers=1650 bt=#3 bting=false 
+5928.44 :  [nav] new target after fail=-52,-10.5 dist=13.4 
+5928.85 :  [nav] pathfinding to=-52,-10.5 dist=13.4 custom=false 
+5928.85 :  [nav] PATHFIND FAILED #3 target=-52,-10.5 dist=13.4 paused=false frontiers=1650 
+5928.85 :  [nav] BLACKLISTING 48x48 area around -52,-10.5 
+5928.85 :  [select_target] nil, frontiers=93 bt=#0 
+5928.85 :  [nav] new target after fail=nil 
+5928.95 :  [nav] no target or reached, selecting new (prev=nil) 
+5928.95 :  [select_target] nil, frontiers=93 bt=#0 
+5928.95 :  [nav] new target=nil 
+5929.00 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.00 :  [select_target] nil, frontiers=93 bt=#0 
+5929.00 :  [nav] new target=nil 
+5929.07 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.07 :  [select_target] nil, frontiers=93 bt=#0 
+5929.07 :  [nav] new target=nil 
+5929.12 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.12 :  [select_target] nil, frontiers=93 bt=#0 
+5929.12 :  [nav] new target=nil 
+5929.19 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.19 :  [select_target] nil, frontiers=93 bt=#0 
+5929.19 :  [nav] new target=nil 
+5929.23 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.23 :  [select_target] nil, frontiers=93 bt=#0 
+5929.23 :  [nav] new target=nil 
+5929.29 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.29 :  [select_target] nil, frontiers=93 bt=#0 
+5929.29 :  [nav] new target=nil 
+5929.35 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.35 :  [select_target] nil, frontiers=93 bt=#0 
+5929.35 :  [nav] new target=nil 
+5929.42 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.42 :  [select_target] nil, frontiers=93 bt=#0 
+5929.42 :  [nav] new target=nil 
+5929.47 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.47 :  [select_target] nil, frontiers=93 bt=#0 
+5929.47 :  [nav] new target=nil 
+5929.54 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.54 :  [select_target] nil, frontiers=93 bt=#0 
+5929.54 :  [nav] new target=nil 
+5929.60 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.60 :  [select_target] nil, frontiers=93 bt=#0 
+5929.60 :  [nav] new target=nil 
+5929.67 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.67 :  [select_target] nil, frontiers=93 bt=#0 
+5929.67 :  [nav] new target=nil 
+5929.72 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.72 :  [select_target] nil, frontiers=93 bt=#0 
+5929.72 :  [nav] new target=nil 
+5929.78 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.78 :  [select_target] nil, frontiers=93 bt=#0 
+5929.78 :  [nav] new target=nil 
+5929.85 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.85 :  [select_target] nil, frontiers=93 bt=#0 
+5929.85 :  [nav] new target=nil 
+5929.90 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.90 :  [select_target] nil, frontiers=93 bt=#0 
+5929.90 :  [nav] new target=nil 
+5929.97 :  [nav] no target or reached, selecting new (prev=nil) 
+5929.97 :  [select_target] nil, frontiers=93 bt=#0 
+5929.97 :  [nav] new target=nil 
+5929.97 :  [nav] not done but no more backtrack, reseting 
+5930.03 :  [nav] no target or reached, selecting new (prev=nil) 
+5930.03 :  [select_target] picked -75.5,-26 dist=16.9 frontiers=1460 bt=#1 bting=false 
+5930.03 :  [nav] new target=-75.5,-26 
+5930.03 :  [nav] pathfinding to=-75.5,-26 dist=16.8 custom=false 
+5930.03 :  [nav] PATHFIND FAILED #1 target=-75.5,-26 dist=16.8 paused=false frontiers=1460 
+5930.03 :  [select_target] picked -75,-26 dist=16.7 frontiers=1460 bt=#1 bting=false 
+5930.03 :  [nav] new target after fail=-75,-26 dist=16.6 
+5930.13 :  [BATMOBILE PERF] === 5.0s window === 
+5930.13 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=1  unstuck=0  path_len=0 
+5930.13 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+5930.13 :    total_move                 70(14.0/s)  avg   4.443ms  max  75.000ms  total   311.0ms 
+5930.13 :    find_path                   7( 1.4/s)  avg  39.429ms  max  69.000ms  total   276.0ms 
+5930.13 :    total_update               80(16.0/s)  avg   1.350ms  max  32.000ms  total   108.0ms 
+5930.13 :    select_target              24( 4.8/s)  avg   0.625ms  max   2.000ms  total    15.0ms 
+5930.13 :    get_nearby_travs           70(14.0/s)  avg   0.100ms  max   1.000ms  total     7.0ms 
+5930.13 :    unstuck                     1( 0.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+5930.13 :    [EVENTS]  pathfind_fail=4(0.8/s) 
+5930.47 :  [nav] pathfinding to=-75,-26 dist=16.6 custom=false 
+5930.47 :  [nav] PATHFIND FAILED #2 target=-75,-26 dist=16.6 paused=false frontiers=1460 
+5930.47 :  [select_target] picked -74.5,-26 dist=16.5 frontiers=1460 bt=#1 bting=false 
+5930.47 :  [nav] new target after fail=-74.5,-26 dist=16.3 
+5930.92 :  [nav] pathfinding to=-74.5,-26 dist=16.3 custom=false 
+5930.92 :  [nav] PATHFIND FAILED #3 target=-74.5,-26 dist=16.3 paused=false frontiers=1460 
+5930.92 :  [nav] BLACKLISTING 48x48 area around -74.5,-26 
+5930.92 :  [select_target] picked -44,-6.5 dist=23.2 frontiers=1459 bt=#1 bting=false 
+5930.92 :  [nav] new target after fail=-44,-6.5 dist=23.1 
+5931.07 :  [nav] STUCK target=-44,-6.5 dist=23.1 path=#0 unstuck_count=0 
+5931.32 :  [nav] pathfinding to=-44,-6.5 dist=22.3 custom=false 
+5931.32 :  [nav] PATHFIND FAILED #1 target=-44,-6.5 dist=22.3 paused=false frontiers=1460 
+5931.32 :  [select_target] picked -44,-7 dist=22.1 frontiers=1458 bt=#1 bting=false 
+5931.32 :  [nav] new target after fail=-44,-7 dist=22.1 
+5931.75 :  [nav] pathfinding to=-44,-7 dist=21.2 custom=false 
+5931.75 :  [nav] PATHFIND FAILED #2 target=-44,-7 dist=21.2 paused=false frontiers=1460 
+5931.75 :  [select_target] picked -44,-6.5 dist=21.4 frontiers=1459 bt=#1 bting=false 
+5931.75 :  [nav] new target after fail=-44,-6.5 dist=21.4 
+5932.19 :  [nav] pathfinding to=-44,-6.5 dist=21.4 custom=false 
+5932.19 :  [nav] PATHFIND FAILED #3 target=-44,-6.5 dist=21.4 paused=false frontiers=1459 
+5932.19 :  [nav] BLACKLISTING 48x48 area around -44,-6.5 
+5932.19 :  [select_target] picked -44,-31 dist=29.3 frontiers=1422 bt=#1 bting=false 
+5932.19 :  [nav] new target after fail=-44,-31 dist=29.3 
+5932.50 :  [nav] STUCK target=-44,-31 dist=29.3 path=#0 unstuck_count=0 
+5932.57 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.62 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.69 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.74 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.79 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.85 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31 
+5932.92 :  [nav] has path (#1) but no move, remaining=#0 target=-44,-31 
+5932.99 :  [nav] pathfinding to=-44,-31 dist=27.2 custom=false 
+5932.99 :  [nav] PATHFIND FAILED #1 target=-44,-31 dist=27.2 paused=false frontiers=1425 
+5932.99 :  [select_target] picked -44,-6.5 dist=23.0 frontiers=1424 bt=#1 bting=false 
+5932.99 :  [nav] new target after fail=-44,-6.5 dist=22.9 
+5933.45 :  [nav] pathfinding to=-44,-6.5 dist=22.9 custom=false 
+5933.45 :  [nav] PATHFIND FAILED #2 target=-44,-6.5 dist=22.9 paused=false frontiers=1424 
+5933.45 :  [select_target] picked -44,-7 dist=22.8 frontiers=1423 bt=#1 bting=false 
+5933.45 :  [nav] new target after fail=-44,-7 dist=22.7 
+5933.85 :  [nav] pathfinding to=-44,-7 dist=22.7 custom=false 
+5933.85 :  [nav] PATHFIND FAILED #3 target=-44,-7 dist=22.7 paused=false frontiers=1423 
+5933.85 :  [nav] BLACKLISTING 48x48 area around -44,-7 
+5933.85 :  [select_target] picked -44,-31.5 dist=27.4 frontiers=1421 bt=#1 bting=false 
+5933.85 :  [nav] new target after fail=-44,-31.5 dist=27.5 
+5933.87 :  [nav] STUCK target=-44,-31.5 dist=27.5 path=#0 unstuck_count=0 
+5934.00 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31.5 
+5934.07 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31.5 
+5934.14 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31.5 
+5934.20 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31.5 
+5934.25 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-31.5 
+5934.32 :  [nav] has path (#1) but no move, remaining=#0 target=-44,-31.5 
+5934.37 :  [nav] pathfinding to=-44,-31.5 dist=29.8 custom=false 
+5934.37 :  [nav] PATHFIND FAILED #1 target=-44,-31.5 dist=29.8 paused=false frontiers=1425 
+5934.37 :  [select_target] picked -44,-6.5 dist=21.3 frontiers=1424 bt=#1 bting=false 
+5934.37 :  [nav] new target after fail=-44,-6.5 dist=21.4 
+5934.82 :  [nav] pathfinding to=-44,-6.5 dist=21.2 custom=false 
+5934.82 :  [nav] PATHFIND FAILED #2 target=-44,-6.5 dist=21.2 paused=false frontiers=1424 
+5934.82 :  [select_target] picked -44,-7 dist=21.1 frontiers=1423 bt=#1 bting=false 
+5934.82 :  [nav] new target after fail=-44,-7 dist=21.0 
+5935.19 :  [BATMOBILE PERF] === 5.0s window === 
+5935.19 :    [NAV STATE] paused=false  custom=false  trav_routing=false  last_trav=false  pfail=2  unstuck=0  path_len=0 
+5935.19 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+5935.19 :    total_move                 79(15.7/s)  avg   9.380ms  max  82.000ms  total   741.0ms 
+5935.19 :    find_path                  10( 2.0/s)  avg  70.100ms  max  82.000ms  total   701.0ms 
+5935.19 :    total_update               79(15.7/s)  avg   0.835ms  max  13.000ms  total    66.0ms 
+5935.19 :    get_nearby_travs           79(15.7/s)  avg   0.063ms  max   1.000ms  total     5.0ms 
+5935.19 :    select_target              10( 2.0/s)  avg   0.300ms  max   1.000ms  total     3.0ms 
+5935.19 :    unstuck                     3( 0.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+5935.19 :    [EVENTS]  pathfind_fail=10(2.0/s) 
+5935.25 :  [nav] pathfinding to=-44,-7 dist=21.0 custom=false 
+5935.25 :  [nav] PATHFIND FAILED #3 target=-44,-7 dist=21.0 paused=false frontiers=1423 
+5935.25 :  [nav] BLACKLISTING 48x48 area around -44,-7 
+5935.25 :  [select_target] picked -44,-32 dist=30.5 frontiers=1420 bt=#1 bting=false 
+5935.25 :  [nav] new target after fail=-44,-32 dist=30.8 
+5935.47 :  [nav] STUCK target=-44,-32 dist=30.8 path=#0 unstuck_count=0 
+5935.54 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.60 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.67 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.72 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.79 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.85 :  [nav] has path (#1) but no move, remaining=#1 target=-44,-32 
+5935.90 :  [nav] has path (#1) but no move, remaining=#0 target=-44,-32 
+5935.97 :  [nav] pathfinding to=-44,-32 dist=27.7 custom=false 
+5935.97 :  [nav] PATHFIND FAILED #1 target=-44,-32 dist=27.7 paused=false frontiers=1424 
+5935.97 :  [select_target] picked -44,-31.5 dist=27.5 frontiers=1423 bt=#1 bting=false 
+5935.97 :  [nav] new target after fail=-44,-31.5 dist=27.5 
+5936.40 :  [nav] pathfinding to=-44,-31.5 dist=27.5 custom=false 
+5936.40 :  [nav] PATHFIND FAILED #2 target=-44,-31.5 dist=27.5 paused=false frontiers=1423 
+5936.40 :  [select_target] picked -44,-6.5 dist=22.8 frontiers=1421 bt=#1 bting=false 
+5936.40 :  [nav] new target after fail=-44,-6.5 dist=22.9 
+5936.84 :  [nav] pathfinding to=-44,-6.5 dist=22.9 custom=false 
+5936.84 :  [nav] PATHFIND FAILED #3 target=-44,-6.5 dist=22.9 paused=false frontiers=1421 
+5936.84 :  [nav] BLACKLISTING 48x48 area around -44,-6.5 
+5936.84 :  [select_target] picked -44,-32.5 dist=28.0 frontiers=1419 bt=#1 bting=false 
+5936.84 :  [nav] new target after fail=-44,-32.5 dist=27.9 
+5936.99 :  [nav] STUCK target=-44,-32.5 dist=27.9 path=#0 unstuck_count=0 

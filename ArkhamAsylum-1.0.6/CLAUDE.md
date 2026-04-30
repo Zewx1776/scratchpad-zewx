@@ -17,11 +17,14 @@ Changes to navigation/pathfinding logic almost always happen in Batmobile. Chang
 - `Batmobile-1.0.12/core/external.lua` — public API (BatmobilePlugin)
 
 ## Task priority (highest first)
-teleport_cerrigar > d4assistant > upgrade_glyph > alfred > enter_pit > exit_pit > portal > follower > interact_shrine > **kill_monster** > **explore_pit** > idle
+teleport_cerrigar > d4assistant > upgrade_glyph > alfred > enter_pit > portal > exit_pit > follower > interact_shrine > push_monsters > **kill_monster** > **explore_pit** > idle
 
-## Floor zones
-- Floor 1: `EGD_MSWK_World_01`
-- Floor 2: `EGD_MSWK_World_02` — kill_monster uses `effective_distance=50` here
+## Pit detection
+- Zone is `PIT_Subzone` on every floor; world name varies per floor and per pit, but always starts with `PIT_` (e.g. `PIT_Ancients_Sand`, `PIT_ProtoDun_Root`)
+- Use `utils.player_in_pit()` (matches world-name prefix `PIT_`) for the in-pit gate
+- Up to 5 floors per pit; no dedicated boss room — boss spawns on the final floor and a sigil NPC appears after the kill
+- Floor portal actor: `Prefab_Portal_Dungeon_Generic` (same actor descends to the next floor)
+- The `EGD_MSWK_World_02` branch in [kill_monster.lua](tasks/kill_monster.lua) (`effective_distance=50`) is dead code — kept pending boss/sigil rework
 
 ## Navigation concepts
 - `navigator.paused=true` means an external task (kill_monster) has taken control

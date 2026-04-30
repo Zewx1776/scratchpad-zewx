@@ -6,6 +6,12 @@ local utils    = {
 utils.player_in_zone = function (zname)
     return get_current_world():get_current_zone_name() == zname
 end
+utils.player_in_pit = function ()
+    local world = get_current_world()
+    if not world then return false end
+    local name = world:get_name()
+    return name ~= nil and name:match("^PIT_") ~= nil
+end
 utils.is_looting = function ()
     if LooteerPlugin then
         return LooteerPlugin.getSettings('looting')

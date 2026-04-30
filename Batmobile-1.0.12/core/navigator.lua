@@ -896,6 +896,37 @@ navigator.move = function ()
                 pathfinder.request_move(navigator.target)
                 return
             end
+            -- Intermediate nudge: on early failures for explorer targets, push the player
+            -- a few units toward the target. From a closer position the limited A* often
+            -- succeeds. Without this, the bot wastes 3 fail attempts on the same far
+            -- target then blacklists a wide area, wiping huge swaths of frontiers
+            -- (confirmed in log: 1650 -> 93 after one blacklist).
+            if not navigator.paused
+                and navigator.target ~= nil
+                and navigator.pathfind_fail_count <= 2
+                and navigator.last_trav == nil
+            then
+                local dx = navigator.target:x() - player_pos:x()
+                local dy = navigator.target:y() - player_pos:y()
+                local len = math.sqrt(dx*dx + dy*dy)
+                if len > 6 then
+                    local step_dist = 4
+                    local nudge = vec3:new(
+                        player_pos:x() + (dx/len) * step_dist,
+                        player_pos:y() + (dy/len) * step_dist,
+                        navigator.target:z()
+                    )
+                    local valid = utility.set_height_of_valid_position(nudge)
+                    if utility.is_point_walkeable(valid) then
+                        console.print(string.format(
+                            '[nav] limited A* failed (dist=%.1f); nudging %d units toward (%.1f,%.1f)',
+                            len, step_dist, valid:x(), valid:y()
+                        ))
+                        pathfinder.request_move(valid)
+                        return  -- next pathfind from new position may succeed
+                    end
+                end
+            end
             -- After N consecutive pathfind failures, handle unreachable target
             -- Custom targets (kill_monster): 3 failures (quick give-up, mark unreachable)
             -- Explorer targets: 3 failures — was 6, but with the heap-based A* each failed
@@ -909,39 +940,44 @@ navigator.move = function ()
             end
             if navigator.pathfind_fail_count >= fail_threshold then
                 navigator.pathfind_fail_count = 0
+                -- Check if a traversal is nearby — target is likely behind it.
+                -- Try routing via the traversal before giving up. Works for both
+                -- paused (custom/kill_monster) and explorer-picked frontier targets:
+                -- pit floors connect via FreeClimb gizmos that the A* pathfinder
+                -- cannot route through, so the explorer needs the same fallback.
+                local nearby_travs = get_nearby_travs(local_player)
+                local closest_trav = nil
+                local closest_trav_dist = math.huge
+                for _, trav in ipairs(nearby_travs) do
+                    local d = utils.distance(player_pos, trav:get_position())
+                    local trav_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
+                    if d <= 30 and d < closest_trav_dist and navigator.blacklisted_trav[trav_str] == nil then
+                        closest_trav = trav
+                        closest_trav_dist = d
+                    end
+                end
+                if closest_trav ~= nil then
+                    local approach_node = get_closeby_node(closest_trav:get_position(), 2)
+                    if approach_node ~= nil then
+                        console.print('[nav] routing via traversal ' .. closest_trav:get_skin_name() .. ' to reach ' .. utils.vec_to_string(navigator.target) .. ' (paused=' .. tostring(navigator.paused) .. ')')
+                        tracker.bench_count("trav_route_attempt")
+                        -- Only restore the original target after crossing for paused/custom.
+                        -- Explorer picks fresh frontiers from the new area on its own.
+                        if navigator.paused then
+                            navigator.trav_final_target = navigator.target
+                        end
+                        navigator.last_trav = closest_trav
+                        navigator.target = approach_node
+                        navigator.is_custom_target = false
+                        navigator.path = {}
+                        navigator.pathfind_fail_count = 0
+                        return  -- don't set failed_target — we will retry after crossing
+                    end
+                end
                 -- If paused (external caller like kill_monster set target), just mark
                 -- as unreachable and clear — do NOT blacklist explorer.visited since
                 -- the explorer didn't pick this target and blacklisting corrupts its state
                 if navigator.paused then
-                    -- Check if a traversal is nearby — target is likely behind it.
-                    -- Try routing via the traversal first before giving up.
-                    local nearby_travs = get_nearby_travs(local_player)
-                    local closest_trav = nil
-                    local closest_trav_dist = math.huge
-                    for _, trav in ipairs(nearby_travs) do
-                        local d = utils.distance(player_pos, trav:get_position())
-                        local trav_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
-                        if d <= 30 and d < closest_trav_dist and navigator.blacklisted_trav[trav_str] == nil then
-                            closest_trav = trav
-                            closest_trav_dist = d
-                        end
-                    end
-                    if closest_trav ~= nil then
-                        -- Find a walkable approach node beside the traversal
-                        local approach_node = get_closeby_node(closest_trav:get_position(), 2)
-                        if approach_node ~= nil then
-                            console.print('[nav] routing via traversal ' .. closest_trav:get_skin_name() .. ' to reach ' .. utils.vec_to_string(navigator.target))
-                            tracker.bench_count("trav_route_attempt")
-                            navigator.trav_final_target = navigator.target
-                            navigator.last_trav = closest_trav
-                            navigator.target = approach_node
-                            navigator.is_custom_target = false
-                            navigator.path = {}
-                            navigator.pathfind_fail_count = 0
-                            return  -- don't set failed_target — we will retry after crossing
-                        end
-                    end
-                    -- No traversal route available — mark area as unreachable
                     local block_radius = closest_trav ~= nil and 50 or 15
                     console.print('[nav] clearing unreachable custom target ' .. utils.vec_to_string(navigator.target) .. ', cooldown=' .. navigator.failed_target_cooldown .. 's radius=' .. block_radius .. (closest_trav ~= nil and ' (no traversal route)' or ''))
                     navigator.failed_target = navigator.target
@@ -967,14 +1003,17 @@ navigator.move = function ()
                     navigator.path      = {}
                     return  -- let explorer pick fresh target next tick
                 end
-                -- Use 48x48 radius (vs old 24x24) to cover adjacent 0.5-unit frontier
-                -- nodes that fell just outside the old box and were immediately re-selected.
-                console.print('[nav] BLACKLISTING 48x48 area around ' .. utils.vec_to_string(navigator.target))
+                -- Blacklist a TIGHT 16x16 area around the failed target. The previous 48x48
+                -- was so wide it deleted ~1500 distant frontiers in one shot (log: 1650 -> 93),
+                -- emptying backtrack and triggering full explorer resets. The intermediate-
+                -- nudge above already breaks "stuck retrying same far target" cycles, so we
+                -- can afford a smaller wipe here.
+                console.print('[nav] BLACKLISTING 16x16 area around ' .. utils.vec_to_string(navigator.target))
                 local failed_pos = navigator.target
                 if failed_pos then
                     local step = settings.step or 2
-                    for i = -24, 24, step do
-                        for j = -24, 24, step do
+                    for i = -8, 8, step do
+                        for j = -8, 8, step do
                             local node_str = tostring(utils.normalize_value(failed_pos:x() + i)) .. ',' .. tostring(utils.normalize_value(failed_pos:y() + j))
                             explorer.visited[node_str] = node_str
                         end
@@ -1034,5 +1073,9 @@ navigator.move = function ()
     navigator.path = new_path
 end
 
+-- Expose get_closeby_node for plugins that need to path to actors sitting on
+-- non-walkable tiles (e.g. portals, glyph gizmos). Read-only utility — finds
+-- a walkable, reachable approach node within max_dist of the target.
+navigator.get_closeby_node = get_closeby_node
 
 return navigator

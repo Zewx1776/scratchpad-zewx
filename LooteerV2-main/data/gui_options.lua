@@ -7,6 +7,7 @@ local gui_options = {
         "Rare_2",
         "Legendary",
         "Unique",
+        "Set",
     },
     behaviors = {
         "Always",

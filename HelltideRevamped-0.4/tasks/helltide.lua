@@ -86,6 +86,13 @@ local patrol_free_explore_start = nil -- time when we entered free-explore mode
 local CHEST_INTERACT_COOLDOWN  = 4.0   -- seconds between interact_object calls on the same chest
 local last_chest_interact_time = -math.huge -- ensures first interact fires immediately
 
+-- After a chest opens, hold position briefly so the player stays on top of the
+-- drops while Looteer / pickup logic runs.  Without this, the state machine
+-- transitions back to EXPLORE_HELLTIDE on the next tick and Batmobile drags
+-- the player off the loot pile.
+local CHEST_POST_OPEN_PAUSE = 3.0
+local last_chest_open_time  = -math.huge
+
 -- Zone-exit recovery: when the player walks out of the helltide boundary
 -- we navigate back instead of letting search_helltide teleport away.
 local returning_to_helltide = false  -- true while navigating back to zone
@@ -94,6 +101,24 @@ local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as
 local TRAVERSAL_RECOVERY_TIMEOUT  = 5  -- seconds in free-explore before clearing traversal blacklist
 local TRAVERSAL_RECOVERY_COOLDOWN = 12 -- minimum seconds between recovery attempts
 local traversal_recovery_time = nil    -- wall-clock of last triggered recovery
+
+-- Descent lock: when stranded on a platform with a down-traversal nearby, recovery
+-- drives the player straight to that traversal. Batmobile's select_target() rejects
+-- traversals more than 3m off the player's Z, so we must target it ourselves and
+-- call interact_object once close — Batmobile's last_trav stays nil under a custom
+-- target, so its built-in interaction at line 539 of navigator.lua never fires.
+local TRAVERSAL_DESCENT_TIMEOUT   = 15 -- seconds before giving up on a descent
+local TRAVERSAL_DESCENT_Z_DELTA   = 2  -- min Z drop to consider a traversal "down"
+local TRAVERSAL_DESCENT_DONE_DROP = 3  -- player Z drop that confirms descent succeeded
+local TRAVERSAL_DESCENT_MAX_DIST  = 30 -- max XY dist to consider a down-traversal
+local TRAVERSAL_INTERACT_RANGE    = 3  -- distance at which to interact_object the gizmo
+local TRAVERSAL_INTERACT_COOLDOWN = 1  -- min seconds between interact_object calls
+local descent_actor      = nil         -- traversal gizmo we're descending through
+local descent_start_z    = nil         -- player Z when descent started
+local descent_until      = nil         -- wall-clock safety timeout
+local descent_approach   = nil         -- vec3 walkable approach node
+local descent_last_set   = -math.huge  -- last time we (re-)asserted approach as target
+local descent_last_inter = -math.huge  -- last interact_object call time
 
 -- ============================================================
 -- Movement helpers: BatmobilePlugin with pathfinder fallback
@@ -131,6 +156,11 @@ end
 local navigate_to_stuck_time = nil
 local navigate_to_free_explore = false -- when true, don't set custom target
 local navigate_to_free_explore_start = nil -- time when we entered free-explore
+local navigate_to_free_explore_target = nil -- caller's target when we entered free-explore;
+                                             -- if it shifts >FREE_EXPLORE_RETARGET_DIST while we're stuck
+                                             -- (helltide_explorer skipped a node), exit free-explore so
+                                             -- the new target is actually attempted
+local FREE_EXPLORE_RETARGET_DIST = 10
 
 local try_traversal_recovery  -- forward declaration; defined after reset_navigate_state
 
@@ -172,6 +202,86 @@ local function navigate_to(target)
                 navigate_to_free_explore_start = now
             end
 
+            -- Caller-target-changed exit: if helltide_explorer skipped its stuck node and
+            -- is now asking for a different intermediate, the old free-explore session is
+            -- chasing the wrong goal. Drop free-explore so the next normal-mode tick
+            -- routes to the new target. Without this, navigate_to ignores caller updates
+            -- until the player physically moves >15m, leaving Batmobile thrashing on its
+            -- own (unreachable) frontier picks.
+            if not (descent_actor ~= nil) and navigate_to_free_explore_target ~= nil then
+                local target_pos_check = target
+                if type(target) == "userdata" and target.get_position then
+                    target_pos_check = target:get_position()
+                end
+                if target_pos_check and target_pos_check.dist_to then
+                    local shift = navigate_to_free_explore_target:dist_to(target_pos_check)
+                    if shift > FREE_EXPLORE_RETARGET_DIST then
+                        console.print(string.format(
+                            "[NAV] FREE_EXPLORE: caller target shifted %.1fm — exiting to retry new target",
+                            shift))
+                        navigate_to_free_explore         = false
+                        navigate_to_free_explore_start   = nil
+                        navigate_to_free_explore_target  = nil
+                        navigate_to_stuck_time           = nil
+                        navigate_to_start_pos            = nil
+                        descent_actor    = nil
+                        descent_start_z  = nil
+                        descent_until    = nil
+                        descent_approach = nil
+                        -- Fall through to normal mode below
+                        goto free_explore_exited
+                    end
+                end
+            end
+
+            -- Active descent: drive the player to a known down-traversal and interact
+            -- with it directly. Lock prevents re-entry into try_traversal_recovery and
+            -- keeps the approach-node target re-asserted if Batmobile drifts.
+            if descent_actor ~= nil then
+                local zdrop = (descent_start_z or player_pos:z()) - player_pos:z()
+                if zdrop >= TRAVERSAL_DESCENT_DONE_DROP then
+                    console.print(string.format(
+                        "[TRAVERSAL RECOVERY] Descent confirmed (z drop %.1fm) — exiting free-explore",
+                        zdrop))
+                    descent_actor    = nil
+                    descent_start_z  = nil
+                    descent_until    = nil
+                    descent_approach = nil
+                    navigate_to_free_explore        = false
+                    navigate_to_stuck_time          = nil
+                    navigate_to_start_pos           = nil
+                    navigate_to_free_explore_start  = nil
+                    navigate_to_free_explore_target = nil
+                    perf.stop("navigate_to")
+                    return
+                elseif descent_until ~= nil and now > descent_until then
+                    console.print("[TRAVERSAL RECOVERY] Descent timed out — releasing lock")
+                    descent_actor    = nil
+                    descent_start_z  = nil
+                    descent_until    = nil
+                    descent_approach = nil
+                else
+                    local trav_pos = descent_actor:get_position()
+                    if trav_pos and player_pos:dist_to(trav_pos) <= TRAVERSAL_INTERACT_RANGE
+                        and (now - descent_last_inter) >= TRAVERSAL_INTERACT_COOLDOWN
+                    then
+                        descent_last_inter = now
+                        console.print(string.format(
+                            "[TRAVERSAL RECOVERY] Interacting with down-traversal %s",
+                            descent_actor:get_skin_name()))
+                        interact_object(descent_actor)
+                    elseif descent_approach ~= nil then
+                        local bm_current = BatmobilePlugin.get_target and BatmobilePlugin.get_target()
+                        local diverged = bm_current == nil
+                            or bm_current:dist_to(descent_approach) > 2
+                        if diverged and (now - descent_last_set) >= 1.0 then
+                            descent_last_set = now
+                            BatmobilePlugin.set_target(plugin_label, descent_approach, false)
+                        end
+                    end
+                end
+            end
+
             bm_pulse()
 
             -- If stuck in free-explore too long, clear traversal blacklist so Batmobile
@@ -189,10 +299,16 @@ local function navigate_to(target)
                 navigate_to_stuck_time = nil
                 navigate_to_start_pos = nil
                 navigate_to_free_explore_start = nil
+                navigate_to_free_explore_target = nil
+                descent_actor    = nil
+                descent_start_z  = nil
+                descent_until    = nil
+                descent_approach = nil
             end
             perf.stop("navigate_to")
             return
         end
+        ::free_explore_exited::
 
         -- Normal mode: set custom target only when it changes to avoid clearing Batmobile's
         -- active path on every frame (which forces a costly find_path call each time).
@@ -274,6 +390,7 @@ local function navigate_to(target)
                 console.print(string.format("[NAV] Stuck 4s (moved only %.1f), switching to FREE_EXPLORE", dist_moved))
                 BatmobilePlugin.clear_target(plugin_label)
                 navigate_to_free_explore = true
+                navigate_to_free_explore_target = navigate_to_last_target -- capture before clearing
                 navigate_to_stuck_time = nil
                 navigate_to_last_target = nil
                 -- Keep navigate_to_start_pos so free explore can detect when we've moved away
@@ -295,17 +412,30 @@ local function reset_navigate_state()
     navigate_to_start_pos = nil
     navigate_to_free_explore = false
     navigate_to_free_explore_start = nil
+    navigate_to_free_explore_target = nil
     navigate_to_last_target = nil
     navigate_to_last_set_time = -math.huge
     navigate_to_reassert_fails = 0
     navigate_to_reassert_last_dist = nil
+    descent_actor    = nil
+    descent_start_z  = nil
+    descent_until    = nil
+    descent_approach = nil
 end
 
 -- Traversal recovery: called when the player has been stuck in free-explore mode
 -- for TRAVERSAL_RECOVERY_TIMEOUT seconds without moving.  Clears Batmobile's
--- traversal blacklist + failed-target so a nearby traversal can be selected,
--- then navigates to it explicitly.  Returns true if recovery was triggered.
+-- traversal blacklist + failed-target so a nearby traversal can be selected.
+-- If a DOWN-traversal exists nearby, engages a descent lock that drives the
+-- player to it directly (Batmobile's select_target rejects traversals more
+-- than 3m off the player's Z, so we have to do it ourselves).  Otherwise falls
+-- back to clearing the target and letting Batmobile pick.  Returns true if
+-- recovery was triggered.
 try_traversal_recovery = function(now)
+    -- Already locked into a descent — let the free-explore branch keep driving it
+    if descent_actor ~= nil then
+        return false
+    end
     if traversal_recovery_time and now - traversal_recovery_time < TRAVERSAL_RECOVERY_COOLDOWN then
         return false
     end
@@ -320,26 +450,59 @@ try_traversal_recovery = function(now)
     end
     trav_blacklist = {}  -- also clear helltide's own traversal blacklist
 
-    -- Find nearest Traversal_Gizmo actor and navigate to it so Batmobile
-    -- can interact with it and carry the player to the other side.
-    -- Use actors_manager directly: get_cached_actors is a local defined later in the file.
+    -- Classify nearby traversals by Z-delta to player. A DOWN-traversal (more
+    -- than TRAVERSAL_DESCENT_Z_DELTA below player) is the escape route from an
+    -- isolated platform; track the nearest one separately so we can drive to
+    -- it even when select_target's ±3m Z filter would reject it.
     local actors = actors_manager:get_all_actors()
-    local nearest_trav = nil
-    local nearest_dist = math.huge
+    local player_pos = get_player_position()
+    local player_z = player_pos:z()
+    local nearest_down      = nil
+    local nearest_down_dist = math.huge
+    local nearest_any       = nil
+    local nearest_any_dist  = math.huge
     for _, actor in pairs(actors) do
         if actor:get_skin_name():match('[Tt]raversal_Gizmo') then
-            local d = utils.distance_to(actor:get_position())
-            if d < nearest_dist then
-                nearest_trav = actor
-                nearest_dist = d
+            local tpos = actor:get_position()
+            local d = utils.distance_to(tpos)
+            if d < nearest_any_dist then
+                nearest_any = actor
+                nearest_any_dist = d
+            end
+            if (player_z - tpos:z()) > TRAVERSAL_DESCENT_Z_DELTA
+                and d < TRAVERSAL_DESCENT_MAX_DIST
+                and d < nearest_down_dist
+            then
+                nearest_down = actor
+                nearest_down_dist = d
             end
         end
     end
 
     BatmobilePlugin.resume(plugin_label)
-    if nearest_trav and nearest_dist < 50 then
-        console.print(string.format("[TRAVERSAL RECOVERY] Nearest traversal %s dist=%.1f — clearing target, letting Batmobile self-route via select_target",
-            nearest_trav:get_skin_name(), nearest_dist))
+
+    if nearest_down ~= nil then
+        local tpos = nearest_down:get_position()
+        local approach = BatmobilePlugin.get_closeby_node
+            and BatmobilePlugin.get_closeby_node(plugin_label, tpos, 3)
+            or nil
+        console.print(string.format(
+            "[TRAVERSAL RECOVERY] Down-traversal %s dist=%.1f drop=%.1fm — engaging descent lock%s",
+            nearest_down:get_skin_name(),
+            nearest_down_dist,
+            player_z - tpos:z(),
+            approach and "" or " (no walkable approach found, targeting gizmo pos)"))
+        descent_actor      = nearest_down
+        descent_start_z    = player_z
+        descent_until      = now + TRAVERSAL_DESCENT_TIMEOUT
+        descent_approach   = approach or tpos
+        descent_last_set   = now
+        descent_last_inter = -math.huge
+        BatmobilePlugin.set_target(plugin_label, descent_approach, false)
+    elseif nearest_any ~= nil and nearest_any_dist < 50 then
+        console.print(string.format(
+            "[TRAVERSAL RECOVERY] Nearest traversal %s dist=%.1f (no down-traversal in range) — clearing target, letting Batmobile self-route via select_target",
+            nearest_any:get_skin_name(), nearest_any_dist))
         -- Do NOT set_target to the raw gizmo position: it is a non-walkable cell, so
         -- pathfinding fails, the traversal area gets blacklisted in explorer.visited,
         -- and failed_target is set — undoing the recovery.
@@ -360,6 +523,18 @@ local function clear_movement()
     if BatmobilePlugin then
         BatmobilePlugin.clear_target(plugin_label)
     end
+end
+
+-- Mark a chest as just-opened: stamps the post-open pause timer and pauses
+-- Batmobile so the player doesn't drift off the drops.  Execute() honors the
+-- timer at the top of its tick and short-circuits movement until it expires.
+local function mark_chest_opened()
+    last_chest_open_time = get_time_since_inject()
+    if BatmobilePlugin then
+        BatmobilePlugin.pause(plugin_label)
+        BatmobilePlugin.clear_target(plugin_label)
+    end
+    reset_navigate_state()
 end
 
 -- ============================================================
@@ -921,6 +1096,16 @@ local helltide_task = {
             end
         end
 
+        -- Post-chest-open hold: keep the player parked on the loot for
+        -- CHEST_POST_OPEN_PAUSE seconds so Looteer can pick everything up
+        -- before Batmobile heads off to the next waypoint.
+        if get_time_since_inject() - last_chest_open_time < CHEST_POST_OPEN_PAUSE then
+            if BatmobilePlugin then
+                BatmobilePlugin.pause(plugin_label)
+            end
+            return
+        end
+
         -- Track last confirmed in-zone position
         if utils.is_in_helltide() then
             last_in_zone_pos = lp and lp:get_position() or last_in_zone_pos
@@ -1366,6 +1551,7 @@ local helltide_task = {
 
             if chest_dist <= 2 then
                 interact_object(chest)
+                mark_chest_opened()
                 found_silent_chest_position = nil
                 clear_movement()
                 return
@@ -1462,6 +1648,7 @@ local helltide_task = {
                     last_chest_interact_time = now
                     console.print(string.format("[HELLTIDE CHEST] Interacting with %s", found_chest))
                     interact_object(chest)
+                    mark_chest_opened()
                 end
                 return
             elseif chest_dist <= 6 then
@@ -1569,6 +1756,7 @@ local helltide_task = {
                 if chest_dist <= 2 then
                     console.print(string.format("[CHEST RECALL] Opening remembered %s", entry.name))
                     interact_object(chest)
+                    mark_chest_opened()
                     if settings.experimental_explorer then
                         helltide_explorer.mark_chest_opened(chest:get_position())
                     end

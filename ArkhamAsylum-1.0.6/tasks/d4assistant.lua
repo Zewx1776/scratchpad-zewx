@@ -14,8 +14,7 @@ local task = {
 }
 task.shouldExecute = function ()
     return utils.get_glyph_upgrade_gizmo() and
-        (utils.player_in_zone("EGD_MSWK_World_02") or
-        utils.player_in_zone("EGD_MSWK_World_01")) and
+        utils.player_in_pit() and
         tracker.boss_kill_time == nil and
         settings.party_enabled and
         settings.party_mode == 0 and

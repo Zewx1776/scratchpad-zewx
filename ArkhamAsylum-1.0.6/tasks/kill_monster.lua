@@ -94,12 +94,15 @@ local get_closest_enemies = function ()
 end
 
 task.shouldExecute = function ()
+    if settings.speed_mode then return false end
+    -- Glyphstone present = boss already dead. Player is invulnerable within ~8 of it,
+    -- so don't peel off to chase trash and risk drifting out of range / losing the gizmo.
+    -- upgrade_glyph keeps us pinned during upgrades; exit_pit takes over after.
+    if utils.get_glyph_upgrade_gizmo() then return false end
     local enemy, elite, champion, boss = get_closest_enemies()
-    return settings.interact_shrine and
-        (enemy ~= nil or elite ~= nil or
+    return (enemy ~= nil or elite ~= nil or
         champion ~= nil or boss ~= nil) and
-        (utils.player_in_zone("EGD_MSWK_World_02") or
-        utils.player_in_zone("EGD_MSWK_World_01"))
+        utils.player_in_pit()
 end
 task.Execute = function ()
     local local_player = get_local_player()

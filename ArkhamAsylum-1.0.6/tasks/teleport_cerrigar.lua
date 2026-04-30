@@ -30,8 +30,7 @@ local function teleport_with_debounce()
 end
 task.shouldExecute = function ()
     return not utils.player_in_zone('Scos_Cerrigar') and
-        not utils.player_in_zone('EGD_MSWK_World_02') and
-        not utils.player_in_zone('EGD_MSWK_World_01') and
+        not utils.player_in_pit() and
         not utils.player_in_zone('[sno none]')
 end
 task.Execute = function ()

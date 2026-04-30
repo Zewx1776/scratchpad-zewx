@@ -55,8 +55,6 @@ local function start_navigation(path, goal)
     navigator.failed_target          = nil
     navigator.failed_target_time     = -1
     navigator.failed_target_radius   = 15
-    navigator.blacklisted_trav       = {}
-    navigator.blacklisted_spell_node = {}
     navigator.target           = utils.normalize_node(goal)
     navigator.is_custom_target = true
     navigator.path             = path

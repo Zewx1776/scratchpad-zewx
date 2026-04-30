@@ -105,9 +105,28 @@ gui.elements = {
       gemstone_toggle = checkbox:new(false, get_hash(plugin_label .. "_gemstone_toggle")),
    },
 
+   charm_settings = {
+      tree = tree_node:new(1),
+      charm_toggle = checkbox:new(false, get_hash(plugin_label .. "_charm_toggle")),
+      charm_rarity_combo = combo_box:new(0, get_hash(plugin_label .. "_charm_rarity_combo")),
+   },
+
+   cube_settings = {
+      tree = tree_node:new(1),
+      cube_toggle = checkbox:new(false, get_hash(plugin_label .. "_cube_toggle")),
+      cube_rarity_combo = combo_box:new(0, get_hash(plugin_label .. "_cube_rarity_combo")),
+   },
+
+   seal_settings = {
+      tree = tree_node:new(1),
+      seal_toggle = checkbox:new(false, get_hash(plugin_label .. "_seal_toggle")),
+      seal_rarity_combo = combo_box:new(0, get_hash(plugin_label .. "_seal_rarity_combo")),
+   },
+
    debug = {
       tree = tree_node:new(1),
       draw_wanted_toggle = checkbox:new(false, get_hash(plugin_label .. "_draw_wanted_toggle")),
+      scan_items_toggle = checkbox:new(false, get_hash(plugin_label .. "_scan_items_toggle")),
    },
 }
 function gui.render()
@@ -282,9 +301,35 @@ function gui.render()
       gui.elements.item_types.tree:pop()
    end
  
+   if gui.elements.charm_settings.tree:push("Charm Settings") then
+      gui.elements.charm_settings.charm_toggle:render("Pickup Charms",
+         "Enable pickup of charms (Generic_Charm_*).")
+      gui.elements.charm_settings.charm_rarity_combo:render("Charm Rarity", options.rarities,
+         "Minimum rarity for charms. Independent of the General → Rarity setting.")
+      gui.elements.charm_settings.tree:pop()
+   end
+
+   if gui.elements.cube_settings.tree:push("Cube Items Settings") then
+      gui.elements.cube_settings.cube_toggle:render("Pickup Cube Items",
+         "Enable pickup of Horadric Cube items (HoradricCube_*, e.g. Tuning Stones).")
+      gui.elements.cube_settings.cube_rarity_combo:render("Cube Rarity", options.rarities,
+         "Minimum rarity for cube items. Independent of the General → Rarity setting.")
+      gui.elements.cube_settings.tree:pop()
+   end
+
+   if gui.elements.seal_settings.tree:push("Seal Settings") then
+      gui.elements.seal_settings.seal_toggle:render("Pickup Seals",
+         "Enable pickup of seals (Talisman_Seal_*).")
+      gui.elements.seal_settings.seal_rarity_combo:render("Seal Rarity", options.rarities,
+         "Minimum rarity for seals. Independent of the General → Rarity setting.")
+      gui.elements.seal_settings.tree:pop()
+   end
+
    if gui.elements.debug.tree:push("Debug") then
       gui.elements.debug.draw_wanted_toggle:render("Draw Wanted",
          "Do you want to draw the items that the bot considers picking up? (Debug)")
+      gui.elements.debug.scan_items_toggle:render("Scan Items",
+         "Print rarity / skin / sno_id of nearby items (Charm / Set / Flippy highlighted) to console and on-screen.")
       gui.elements.debug.tree:pop()
    end
  

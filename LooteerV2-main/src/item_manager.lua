@@ -13,7 +13,12 @@ local item_type_patterns = {
    equipment = { "Base", "Amulet", "Ring" },
    item_cache = { "Item_Cache", "Treasure_Reward_Cache_GoblinEvent" },
    quest = { "Global", "Glyph", "QST", "DGN", "pvp_currency", "S07_Witch_Bonus", "GamblingCurrency_Key", "Experience_PowerUp_Actor", "S09_Arcana", "S11_MemoryFragment" },
-   crafting = { "CraftingMaterial", "Crafting_Legendary" },
+   crafting = { "CraftingMaterial", "Crafting_Legendary", "Horadric_", "Ore_" },
+   keys = { "Flippy_[Kk]eys" },
+   misc_trinkets = { "Flippy_Misc" },
+   charm = { "Generic_Charm_" },
+   cube = { "HoradricCube_" },
+   seal = { "Talisman_Seal" },
    recipe = { "Tempering_Recipe", "Item_Book_Generic", "Item_Book_Horadrim", "Test_Mount", "mnt_amor", "MountReins" },
    cinders = { "Test_BloodMoon_Currency" },
    heavenly_sigil = { "S11_Heavenly_Sigil" },
@@ -123,6 +128,26 @@ function ItemManager.check_is_gemstone(item)
    return ItemManager.check_item_type(item, "gemstone")
 end
 
+function ItemManager.check_is_keys(item)
+   return ItemManager.check_item_type(item, "keys")
+end
+
+function ItemManager.check_is_charm(item)
+   return ItemManager.check_item_type(item, "charm")
+end
+
+function ItemManager.check_is_cube(item)
+   return ItemManager.check_item_type(item, "cube")
+end
+
+function ItemManager.check_is_seal(item)
+   return ItemManager.check_item_type(item, "seal")
+end
+
+function ItemManager.check_is_misc_trinkets(item)
+   return ItemManager.check_item_type(item, "misc_trinkets")
+end
+
 ---@param item game.object Item to check
 ---@param ignore_distance boolean If we want to ignore the distance check
 function ItemManager.check_want_item(item, ignore_distance)
@@ -138,6 +163,9 @@ function ItemManager.check_want_item(item, ignore_distance)
    if not ignore_distance and Utils.distance_to(item) >= settings.distance then return false end
    if settings.skip_dropped and #affixes > 0 then return false end
    if loot_manager.is_gold(item) or loot_manager.is_potion(item) then return false end
+   -- Always pick up keys / misc quest trinkets, regardless of any toggle / rarity setting
+   if ItemManager.check_is_keys(item) then return true end
+   if ItemManager.check_is_misc_trinkets(item) then return true end
    -- Hard block disabled categories
    if ItemManager.check_is_sigil(item) and not settings.sigils then return false end
    if ItemManager.check_is_tribute(item) and not settings.tribute then return false end
@@ -156,6 +184,9 @@ function ItemManager.check_want_item(item, ignore_distance)
    if ItemManager.check_is_recipe(item) and not settings.crafting_items then return false end
    if ItemManager.check_is_item_cache(item) and not settings.item_cache then return false end
    if ItemManager.check_is_quest_item(item) and not settings.quest_items then return false end
+   if ItemManager.check_is_charm(item) and not settings.charm then return false end
+   if ItemManager.check_is_cube(item) and not settings.cube then return false end
+   if ItemManager.check_is_seal(item) and not settings.seal then return false end
    
    local is_consumable_item = 
       (settings.boss_items and CustomItems.boss_items[id]) or
@@ -180,6 +211,9 @@ function ItemManager.check_want_item(item, ignore_distance)
       
    local is_recipe = settings.crafting_items and ItemManager.check_is_recipe(item)
    local is_item_cache = ItemManager.check_is_item_cache(item)
+   local is_charm = settings.charm and ItemManager.check_is_charm(item)
+   local is_cube = settings.cube and ItemManager.check_is_cube(item)
+   local is_seal = settings.seal and ItemManager.check_is_seal(item)
 
    if is_event_item then
       -- If the item is crafting material or cinders, skip inventory and consumable checks
@@ -250,6 +284,21 @@ function ItemManager.check_want_item(item, ignore_distance)
       end
    elseif is_quest_item then
       -- Loot them all quest items
+      return true
+   elseif is_charm then
+      -- Charm-specific rarity threshold, ignore the general rarity setting
+      if rarity < settings.charm_rarity then return false end
+      if Utils.is_inventory_full() then return false end
+      return true
+   elseif is_cube then
+      -- Cube-item-specific rarity threshold, ignore the general rarity setting
+      if rarity < settings.cube_rarity then return false end
+      if Utils.is_inventory_full() then return false end
+      return true
+   elseif is_seal then
+      -- Seal-specific rarity threshold, ignore the general rarity setting
+      if rarity < settings.seal_rarity then return false end
+      if Utils.is_inventory_full() then return false end
       return true
    end
 
@@ -421,6 +470,8 @@ function ItemManager.check_want_item(item, ignore_distance)
             required_ga_count = settings.ga_count
          elseif (rarity == 6 and Settings.get().custom_toggle == false) then --and Settings.get().custom_toggle == false
             required_ga_count = settings.unique_ga_count
+         elseif(rarity == 7) then
+            required_ga_count = 0
          elseif(rarity == 8) then
             required_ga_count = CustomItems.ubers[id] and settings.uber_unique_ga_count or settings.unique_ga_count
          else required_ga_count = 4

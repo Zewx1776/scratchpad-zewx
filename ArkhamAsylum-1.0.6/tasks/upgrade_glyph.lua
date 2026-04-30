@@ -87,8 +87,7 @@ task.shouldExecute = function ()
     local should_execute = not utils.is_looting() and
         settings.upgrade_toggle and
         utils.get_glyph_upgrade_gizmo() and
-        (utils.player_in_zone("EGD_MSWK_World_02") or
-        utils.player_in_zone("EGD_MSWK_World_01"))
+        utils.player_in_pit()
     if should_execute then
         local glyphs = get_glyphs()
         if glyphs ~= nil then

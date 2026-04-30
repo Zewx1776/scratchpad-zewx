@@ -35,6 +35,24 @@ function Renderer.draw_stuff()
         graphics.text_3d("Sigil Inventory Full", new_ppos3, 20, color_red(255))
     end
 
+    if Settings.get().scan_items then
+        for _, item in pairs(actors_manager:get_all_items()) do
+            local info = item:get_item_info()
+            if info then
+                local skin = info:get_skin_name() or ""
+                local highlight = skin:find("Charm") or skin:find("Flippy") or skin:find("Set") or skin:find("Horadric") or skin:find("[Kk]ey") or skin:find("[Oo]re") or skin:find("Trinket") or skin:find("Seal") or skin:find("Talisman")
+                local want = ItemManager.check_want_item(item, true)
+                local txt = string.format("%s | r=%d | id=%d | want=%s",
+                    skin, info:get_rarity(), info:get_sno_id(), tostring(want))
+                local col = highlight and color_yellow(255) or color_white(200)
+                graphics.text_3d(txt, item:get_position(), 14, col)
+                if highlight then
+                    console.print("[Looter Scan] " .. txt)
+                end
+            end
+        end
+    end
+
     if not Settings.get().draw_wanted_items then return end
 
     local items = actors_manager:get_all_items()

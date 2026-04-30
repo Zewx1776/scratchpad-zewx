@@ -45,7 +45,13 @@ local search_helltide_task = {
     Execute = function(self)
         -- console.print("Current state: " .. self.current_state)
 
-        if tracker.helltide_end then 
+        local lp = get_local_player()
+        if lp and lp:is_dead() then
+            revive_at_checkpoint()
+            return
+        end
+
+        if tracker.helltide_end then
             self:reset()
         elseif self.current_state == search_helltide_state.SEARCHING_HELLTIDE then
             self:searching_helltide()

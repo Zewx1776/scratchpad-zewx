@@ -39,7 +39,7 @@ end
 
 task.shouldExecute = function ()
     return not utils.is_looting() and
-        (utils.player_in_zone("EGD_MSWK_World_02") or utils.player_in_zone("EGD_MSWK_World_01")) and
+        utils.player_in_pit() and
         (tracker.pit_start_time + settings.reset_timeout < get_time_since_inject() or
         utils.get_glyph_upgrade_gizmo() ~= nil or BatmobilePlugin.is_done())
 

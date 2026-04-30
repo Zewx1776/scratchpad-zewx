@@ -24,6 +24,14 @@ local settings = {
     follower_explore = false,
     batmobile_priority = 'distance',
     use_long_path = false,
+    speed_mode = false,
+    push_mode = false,
+    push_threshold = 10,
+    push_champion_weight = 3,
+    push_elite_weight = 5,
+    push_boss_weight = 10,
+    push_max_pull_dist = 40,
+    push_min_cluster_weight = 5,
 }
 
 settings.get_keybind_state = function ()
@@ -62,6 +70,14 @@ settings.update_settings = function ()
     settings.follower_explore = gui.elements.follower_explore:get()
     settings.batmobile_priority = gui.batmobile_priority[gui.elements.batmobile_priority:get()+1]
     settings.use_long_path = gui.elements.use_long_path:get()
+    settings.speed_mode = gui.elements.speed_mode:get()
+    settings.push_mode = gui.elements.push_mode:get()
+    settings.push_threshold = gui.elements.push_threshold:get()
+    settings.push_champion_weight = gui.elements.push_champion_weight:get()
+    settings.push_elite_weight = gui.elements.push_elite_weight:get()
+    settings.push_boss_weight = gui.elements.push_boss_weight:get()
+    settings.push_max_pull_dist = gui.elements.push_max_pull_dist:get()
+    settings.push_min_cluster_weight = gui.elements.push_min_cluster_weight:get()
 
 end
 
