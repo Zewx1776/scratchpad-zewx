@@ -203,7 +203,7 @@ function rotation_engine.tick(equipped_ids, settings)
     local player_pos = lp:get_position()
     local range      = settings.scan_range or _scan_range
 
-    local targets = target_selector.get_targets(player_pos, range)
+    local targets = target_selector.get_targets(player_pos, range, settings.elite_only_global)
 
     local spell_list = {}
     for _, spell_id in ipairs(equipped_ids) do

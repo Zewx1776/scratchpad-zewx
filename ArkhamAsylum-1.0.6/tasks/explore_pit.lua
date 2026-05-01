@@ -23,12 +23,15 @@ local speed_target = nil              -- vec3 through-point we're heading toward
 local speed_reject_time = -math.huge  -- timestamp of last rejection
 local speed_stuck_pos = nil           -- last known position for stuck detection
 local speed_stuck_time = 0            -- when we last moved
+local speed_charge_best_dist = math.huge  -- best (closest) distance achieved while charging
+local speed_charge_progress_time = -1     -- last time best_dist improved
 local SPEED_MIN_ENEMIES = 3           -- minimum pack size to trigger a charge
 local SPEED_SCAN_RANGE = 40           -- how far to scan for enemies
 local SPEED_THROUGH_DIST = 15         -- how far past the centroid to target
 local SPEED_MIN_CENTROID_DIST = 8     -- ignore packs that are already on top of us
 local SPEED_ARRIVAL_DIST = 5          -- how close before we consider through-point reached
 local SPEED_REJECT_COOLDOWN = 5       -- seconds to wait before retrying pack targeting after rejection
+local SPEED_CHARGE_NO_PROGRESS = 4    -- abandon through-point after this many seconds without getting closer
 
 local function find_pack_through_point(player_pos)
     local enemies = target_selector.get_near_target_list(player_pos, SPEED_SCAN_RANGE)
@@ -79,6 +82,16 @@ task.Execute = function ()
     orbwalker.set_clear_toggle(true)
     orbwalker.set_block_movement(true)
 
+    -- Freeze movement after boss kill while glyphstone spawns.
+    -- Still allow orbwalker to cast spells on nearby trash.
+    if tracker.boss_kill_time and
+        (get_time_since_inject() - tracker.boss_kill_time) < 10
+    then
+        BatmobilePlugin.pause(plugin_label)
+        task.status = 'waiting for glyphstone'
+        return
+    end
+
     if settings.speed_mode then
         local player_pos = get_player_position()
         local now = get_time_since_inject()
@@ -89,13 +102,39 @@ task.Execute = function ()
             if dist < SPEED_ARRIVAL_DIST then
                 console.print(string.format("[speed] reached through-point (dist=%.1f)", dist))
                 speed_target = nil
+                speed_charge_best_dist = math.huge
+                speed_charge_progress_time = -1
                 -- fall through to scan for next pack or explore
-            else
+            elseif dist < speed_charge_best_dist - 1 then
+                -- Made real progress (>1 unit closer): bump the no-progress timer
+                speed_charge_best_dist = dist
+                speed_charge_progress_time = now
+            elseif speed_charge_progress_time > 0
+                and now - speed_charge_progress_time > SPEED_CHARGE_NO_PROGRESS
+            then
+                -- Through-points sit 15 units past the pack centroid and frequently
+                -- land in unwalkable terrain. Without this guard the bot stays in
+                -- "charging (N)" forever because set_target keeps being accepted
+                -- and the navigator's partial-path retries make tiny oscillations
+                -- that never close the gap.
+                console.print(string.format(
+                    "[speed] charge stalled (best=%.1f cur=%.1f), abandoning through-point",
+                    speed_charge_best_dist, dist))
+                speed_target = nil
+                speed_reject_time = now
+                speed_charge_best_dist = math.huge
+                speed_charge_progress_time = -1
+                BatmobilePlugin.resume(plugin_label)
+                -- fall through to normal exploration
+            end
+            if speed_target then
                 local accepted = BatmobilePlugin.set_target(plugin_label, speed_target, false)
                 if accepted == false then
                     console.print("[speed] through-point rejected, resuming exploration")
                     speed_target = nil
                     speed_reject_time = now
+                    speed_charge_best_dist = math.huge
+                    speed_charge_progress_time = -1
                     BatmobilePlugin.resume(plugin_label)
                     -- fall through to normal exploration
                 else
@@ -115,6 +154,8 @@ task.Execute = function ()
                 local accepted = BatmobilePlugin.set_target(plugin_label, through_point, false)
                 if accepted ~= false then
                     speed_target = through_point
+                    speed_charge_best_dist = player_pos:dist_to(through_point)
+                    speed_charge_progress_time = now
                     console.print(string.format("[speed] charging through %d enemies -> (%.1f, %.1f)",
                         count, through_point:x(), through_point:y()))
                     BatmobilePlugin.update(plugin_label)

@@ -1,5 +1,6 @@
 local gui = require 'gui'
 local utils = require 'core.utils'
+local town = require 'core.town'
 local affix_types = utils.get_item_affixes()
 local item_aspects = utils.get_item_aspects()
 local unique_items = utils.get_unique_items()
@@ -46,7 +47,8 @@ local settings = {
     skip_cache = false,
     gamble_enabled = false,
     gamble_threshold = 1000,
-    gamble_category = 'UNKNOWN'
+    gamble_category = 'UNKNOWN',
+    town_choice = town.default,
 }
 
 function settings.get_keybind_state()
@@ -81,6 +83,7 @@ end
 
 function settings:update_settings()
     settings.enabled = gui.elements.main_toggle:get()
+    settings.town_choice = town.option_to_id[gui.elements.town_choice:get()] or town.default
     settings.use_keybind = gui.elements.use_keybind:get()
     settings.item_legendary_or_lower = gui.elements.item_legendary_or_lower:get()
     settings.item_unique = gui.elements.item_unique:get()

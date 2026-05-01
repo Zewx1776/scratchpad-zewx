@@ -106,6 +106,10 @@ function long_path.test_path()
         console.print(string.format("[LONG PATH] RESULT: SUCCESS | nodes=%d | iters=%d | time=%.1fms",
             #path, iters, ms))
         start_navigation(path, goal)
+    elseif status == "no_path_partial" or status == "iter_limit_partial" or status == "time_limit_partial" then
+        console.print(string.format("[LONG PATH] RESULT: PARTIAL PATH (%s) | nodes=%d | iters=%d | time=%.1fms",
+            status, #path, iters, ms))
+        start_navigation(path, goal)
     elseif status == "no_path" then
         console.print(string.format("[LONG PATH] RESULT: NO PATH (open-set exhausted) | iters=%d | time=%.1fms",
             iters, ms))
@@ -148,10 +152,21 @@ function long_path.navigate_to(goal)
     console.print(string.format("[LONG PATH] navigate_to: finding uncapped path (dist=%.1f) ...", dist))
     local path, iters, elapsed, status = pathfinder.find_path_debug(start, goal)
     local ms = elapsed * 1000
-    if status == "found" then
-        console.print(string.format("[LONG PATH] navigate_to: found  nodes=%d  iters=%d  time=%.1fms",
-            #path, iters, ms))
+    local is_partial = status == "no_path_partial" or status == "iter_limit_partial" or status == "time_limit_partial"
+    if status == "found" or (is_partial and path ~= nil and #path > 0) then
+        console.print(string.format("[LONG PATH] navigate_to: %s  nodes=%d  iters=%d  time=%.1fms",
+            status, #path, iters, ms))
         start_navigation(path, goal)
+        -- Mark partial so the navigator's stall-escape can engage traversal
+        -- routing if the player can't make progress (e.g. portal across a
+        -- climb gizmo). Without this, long_path's partial paths look like
+        -- normal navigation to the navigator and traversal logic never fires.
+        if is_partial then
+            navigator.is_partial_path = true
+            navigator.partial_target_ref = navigator.target
+            navigator.partial_target_best_dist = utils.distance(start, goal)
+            navigator.partial_target_last_progress_time = get_time_since_inject()
+        end
         return true
     else
         console.print(string.format("[LONG PATH] navigate_to: %s  iters=%d  time=%.1fms",

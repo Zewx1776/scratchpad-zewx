@@ -565,9 +565,9 @@ on_update(function()
         if world_name:match("Sanctuary") or world_name:match("Limbo") then
             return
         end
-        -- Check if the player is not in Cerrigar
-        if not utils.player_in_zone("Scos_Cerrigar") then
-            return -- Exit the function if not in Cerrigar
+        -- Skip when not in the active home town
+        if not utils.is_in_town() then
+            return
         end
     end
 

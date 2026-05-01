@@ -201,6 +201,12 @@ task.shouldExecute = function()
     end
     -- Glyphstone present = post-boss-kill safe zone. No need to pull anything.
     if utils.get_glyph_upgrade_gizmo() then return false end
+    -- Freeze movement after boss kill while glyphstone spawns
+    if tracker.boss_kill_time and
+        (get_time_since_inject() - tracker.boss_kill_time) < 10
+    then
+        return false
+    end
 
     local player_pos = get_player_position()
     if not player_pos then return false end

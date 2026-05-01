@@ -1,10 +1,18 @@
-local json = require 'core.json'
+﻿local json = require 'core.json'
 local tracker = require 'core.tracker'
+local town = require 'core.town'
 
 local utils    = {
     settings = {},
     last_dump_time = 0,
 }
+
+function utils.get_town()
+    return town.get(utils.settings.town_choice)
+end
+function utils.is_in_town()
+    return get_current_world():get_current_zone_name() == utils.get_town().zone_name
+end
 local item_types = {
     'helm',
     'chest',
@@ -51,26 +59,24 @@ local item_restock_by_id = {}
 for _,item in pairs(item_restock) do
     item_restock_by_id[item.sno_id] = item
 end
-utils.npc_enum = {
-    BLACKSMITH = 'TWN_Scos_Cerrigar_Crafter_Blacksmith',
-    SILVERSMITH = 'TWN_Scos_Cerrigar_Vendor_Silversmith',
-    WEAPON = 'TWN_Scos_Cerrigar_Vendor_Weapons',
-    STASH = 'Stash',
-    GAMBLER = 'TWN_Scos_Cerrigar_Vendor_Gambler',
-    ALCHEMIST = 'TWN_Scos_Cerrigar_Crafter_Alchemist',
-    HEALER = 'TWN_Scos_Cerrigar_Service_Healer',
-    PORTAL = 'TownPortal',
-}
-utils.npc_loc_enum = {
-    BLACKSMITH = vec3:new(-1685.359375, -596.5830078125, 37.8603515625),
-    SILVERSMITH = vec3:new(-1676.4697265625, -581.1435546875, 37.861328125),
-    WEAPON = vec3:new(-1658.69921875, -620.0205078125, 37.888671875),
-    STASH = vec3:new(-1684.1199951172, -592.11602783203, 37.606800079346),
-    GAMBLER = vec3:new(-1675.5791015625, -599.30859375, 36.9267578125),
-    ALCHEMIST = vec3:new(-1671.6494140625, -607.0947265625, 37.7255859375),
-    HEALER = vec3:new(-1671.0791015625, -600.92578125, 36.9130859375),
-    PORTAL = vec3:new(-1656.7141113281, -598.21716308594, 36.28515625)
-}
+-- npc_enum / npc_loc_enum / npc_via_loc_enum / walls are sourced from the
+-- active town config (see core/town.lua). __index delegates per-key reads to
+-- whichever town is selected so existing call sites like
+-- `utils.npc_enum['GAMBLER']` keep working without changes.
+utils.npc_enum = setmetatable({}, {
+    __index = function(_, key) return utils.get_town().npc_enum[key] end,
+})
+utils.npc_loc_enum = setmetatable({}, {
+    __index = function(_, key) return utils.get_town().npc_loc_enum[key] end,
+})
+utils.npc_via_loc_enum = setmetatable({}, {
+    __index = function(_, key) return utils.get_town().npc_via_loc_enum[key] end,
+})
+-- Subzones where a wall forces routing through a middleman waypoint.
+-- Player must pass through `via` to enter or leave the area within `radius` of `inside_anchor`.
+function utils.get_walls()
+    return utils.get_town().walls or {}
+end
 utils.item_enum = {
     KEEP = 0,
     SALVAGE = 1,
@@ -190,7 +196,7 @@ function utils.get_restock_items()
 end
 
 function utils.log(msg)
-    console.print(utils.settings.plugin_label .. ': ' .. tostring(msg))
+    -- console.print(utils.settings.plugin_label .. ': ' .. tostring(msg))
 end
 
 function utils.get_character_class()
@@ -295,6 +301,36 @@ function utils.distance_to(target)
 end
 function utils.is_same_position(pos1, pos2)
     return pos1:x() == pos2:x() and pos1:y() == pos2:y() and pos1:z() == pos2:z()
+end
+
+local move_state = { last_target_key = nil, via_passed = false }
+function utils.compute_move_target(target_pos)
+    if not target_pos then return target_pos end
+    local player_pos = get_player_position()
+    if not player_pos then return target_pos end
+
+    local target_key = string.format('%.4f,%.4f,%.4f', target_pos:x(), target_pos:y(), target_pos:z())
+    if move_state.last_target_key ~= target_key then
+        move_state.last_target_key = target_key
+        move_state.via_passed = false
+    end
+
+    for _, wall in ipairs(utils.get_walls()) do
+        local player_inside = player_pos:dist_to(wall.inside_anchor) < wall.radius
+        local target_inside = target_pos:dist_to(wall.inside_anchor) < wall.radius
+        if player_inside ~= target_inside then
+            if move_state.via_passed then
+                return target_pos
+            end
+            if player_pos:dist_to(wall.via) < 2.5 then
+                move_state.via_passed = true
+                return target_pos
+            end
+            return wall.via
+        end
+    end
+
+    return target_pos
 end
 
 function utils.get_greater_affix_count(display_name)

@@ -11,6 +11,13 @@ local nav_viz_last     = -1
 local NAV_VIZ_INTERVAL = 0.3  -- seconds between rescans
 local NAV_VIZ_RADIUS   = 5.0  -- half-extent in game units around player
 
+-- Frontier marker cache: rebuilt only when the player moves >1 unit or the
+-- frontier table size changes. Avoids iterating frontier_node every render
+-- frame at 60Hz × ~100 frontiers = 6000+ distance checks/sec.
+local frontier_draw_cache = {}    -- array of vec3 (already z-fixed)
+local frontier_draw_pos = nil     -- last player pos at cache build
+local frontier_draw_count = -1    -- last frontier_count at cache build
+
 local function refresh_nav_viz(player_pos, valid_z)
     local step = settings.step
     local cx   = utils.normalize_value(player_pos:x())
@@ -55,11 +62,26 @@ drawing.draw_nodes = function (local_player)
     local path = navigator.path
     local counter = 0
 
-    -- for node_str,_ in pairs(explorer.frontier) do
-    --     local node = utils.string_to_vec(node_str)
-    --     local valid = vec3:new(node:x(), node:y(), valid_z)
-    --     graphics.circle_3d(valid, 0.05, color_blue(255))
-    -- end
+    -- Frontier markers: green dots at every active frontier within draw range.
+    -- Same toggle as the yellow backtrack line (settings.draw, gated in main.lua).
+    -- Cached: rebuild only when player moves >1 unit or frontier count changes.
+    if frontier_draw_pos == nil
+        or utils.distance(cur_node, frontier_draw_pos) > 1
+        or frontier_draw_count ~= frontier_count
+    then
+        frontier_draw_cache = {}
+        for _, fnode in pairs(explorer.frontier_node) do
+            if utils.distance(cur_node, fnode) <= max_dist then
+                frontier_draw_cache[#frontier_draw_cache + 1] =
+                    vec3:new(fnode:x(), fnode:y(), valid_z)
+            end
+        end
+        frontier_draw_pos = cur_node
+        frontier_draw_count = frontier_count
+    end
+    for _, v in ipairs(frontier_draw_cache) do
+        graphics.circle_3d(v, 0.15, color_green(255))
+    end
     -- local perimeter = explorer.get_perimeter(cur_node)
     -- for _, node in pairs(perimeter) do
     --     local valid = vec3:new(node:x(), node:y(), valid_z)

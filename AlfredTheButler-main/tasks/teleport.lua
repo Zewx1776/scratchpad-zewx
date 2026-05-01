@@ -29,7 +29,7 @@ local function teleport_with_debounce()
     end
     if debounce_time + debounce_timeout > get_time_since_inject() then return end
     debounce_time = get_time_since_inject()
-    teleport_to_waypoint(0x76D58)
+    teleport_to_waypoint(utils.get_town().waypoint_sno)
     task.set_status(status_enum['EXECUTE'])
 end
 local extension = {}
@@ -38,7 +38,7 @@ function extension.get_npc()
 end
 function extension.move()
     if utils.player_in_zone('[sno none]') then return end
-    local npc_location = utils.get_npc_location('PORTAL')
+    local npc_location = utils.compute_move_target(utils.get_npc_location('PORTAL'))
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, npc_location)
         BatmobilePlugin.move(plugin_label)
@@ -59,16 +59,17 @@ end
 function extension.reset()
     local local_player = get_local_player()
     if not local_player then return end
-    local new_position = vec3:new(-1661.931640625, -596.4111328125, 36.90625)
+    local resets = utils.get_town().reset_positions
+    local new_position = resets.default
     if tracker.last_task == 'stash' or
         tracker.last_task == 'restock' or
         tracker.last_task == 'stocktake'
     then
-        new_position = vec3:new(-1684.3427734375, -595.40625, 37.6484375)
+        new_position = resets.stash_restock_stocktake
     elseif tracker.last_task == 'salvage' then
-        new_position = vec3:new(-1680.57421875, -597.4794921875, 37.572265625)
+        new_position = resets.salvage
     elseif tracker.last_task ==  'sell' or tracker.last_task == 'gamble' then
-        new_position = vec3:new(-1670.6953125, -598.2548828125, 36.8857421875)
+        new_position = resets.sell_gamble
     end
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, new_position)
@@ -81,8 +82,8 @@ end
 function extension.is_done()
     local npc = extension.get_npc()
     local npc_location = utils.get_npc_location('PORTAL')
-    return not (utils.player_in_zone('Scos_Cerrigar') or utils.player_in_zone('[sno none]')) or
-        (utils.player_in_zone('Scos_Cerrigar') and npc == nil and utils.distance_to(npc_location) < 5)
+    return not (utils.is_in_town() or utils.player_in_zone('[sno none]')) or
+        (utils.is_in_town() and npc == nil and utils.distance_to(npc_location) < 5)
 end
 function extension.done()
     if BatmobilePlugin then
@@ -109,10 +110,10 @@ task.shouldExecute = function ()
         task.retry = 0
     end
     if tracker.teleport and
-        not utils.player_in_zone('Scos_Cerrigar')
+        not utils.is_in_town()
     then
         return true
-    elseif utils.player_in_zone('Scos_Cerrigar') and
+    elseif utils.is_in_town() and
         tracker.trigger_tasks and
         not tracker.teleport_failed and
         not tracker.teleport_done and
@@ -134,7 +135,7 @@ end
 task.baseExecute = task.Execute
 task.Execute = function ()
     if tracker.teleport and
-        not utils.player_in_zone('Scos_Cerrigar') and
+        not utils.is_in_town() and
         not (tracker.gamble_done or tracker.gamble_failed) and
         not (tracker.sell_done or tracker.sell_failed) and
         not (tracker.salvage_done or tracker.salvage_failed) and

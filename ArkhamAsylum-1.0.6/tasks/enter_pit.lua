@@ -65,6 +65,7 @@ local enter_portal = function (portal)
     tracker.glyph_trigger_time = nil
     tracker.glyph_done = false
     tracker.boss_kill_time = nil
+    tracker.boss_seen = false
     task.status = status_enum['ENTERING'] .. tostring(settings.pit_level)
 end
 local walk_to_activator = function (activator)

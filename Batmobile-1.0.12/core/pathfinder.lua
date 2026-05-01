@@ -139,7 +139,7 @@ local get_neighbors = function (node, goal, evaluated, ignore_walls, directions)
     end
     return neighbors, evaluated
 end
-pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated)
+pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated, time_cap_override)
     tracker.bench_start("find_path")
     utils.log(2, 'start find path')
     local start_node = utils.normalize_node(start)
@@ -156,13 +156,26 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     local evaluated = shared_evaluated or {}
     local path_start_time = os.clock()
 
+    -- Track the best (closest-to-goal) node seen during search so we can
+    -- return a partial path on failure instead of an empty table.
+    local best_node     = start_node
+    local best_node_h   = heuristic(start_node, goal_node)
+    local best_node_str = start_str
+
     -- Scale limits by distance: far targets need more A* iterations.
-    -- Custom targets (kill_monster) get the full 600ms budget; explorer targets are
-    -- capped at 300ms so a single unreachable frontier can't freeze the game for half a second.
+    -- Single 150ms cap for both custom and explorer targets — was 350ms for
+    -- custom but speed-mode through-points and other task targets all flag
+    -- as is_custom_target=true, hitting the longer cap and stalling the main
+    -- thread. Partial paths keep progress working when the cap is hit; if
+    -- kill_monster ever needs the longer budget for a specific call site we
+    -- can plumb a per-call override.
     local goal_dist   = heuristic(start_node, goal_node)
     local iter_limit  = math.max(3000, math.min(10000, math.floor(goal_dist * 300)))
-    local time_cap    = is_custom_target and 0.350 or 0.300
-    local time_limit  = math.max(0.100, math.min(time_cap, goal_dist * 0.024))
+    local time_cap    = time_cap_override or 0.150
+    -- For tight per-call overrides (e.g. get_closeby_node feasibility checks),
+    -- skip the 0.100 lower bound so 8 attempts can stay under ~300ms total.
+    local time_lb     = time_cap_override and 0 or 0.100
+    local time_limit  = math.max(time_lb, math.min(time_cap, goal_dist * 0.024))
 
     -- Pre-compute directions once per find_path call
     local dist = settings.step
@@ -184,8 +197,15 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     while not heap:empty() do
         if counter > iter_limit or (os.clock() - path_start_time) > time_limit then
             utils.log(1, 'no path (over limit) ' .. utils.vec_to_string(start) .. '>' .. utils.vec_to_string(goal))
+            -- Return partial path to the closest node we reached
+            if best_node_str ~= start_str then
+                local partial = reconstruct_path(closed_set, prev_nodes, best_node)
+                utils.log(1, 'returning partial path #' .. #partial .. ' best_h=' .. string.format('%.1f', best_node_h))
+                tracker.bench_stop("find_path")
+                return partial, true
+            end
             tracker.bench_stop("find_path")
-            return {}
+            return {}, true
         end
 
         local _, cur_str, cur_node = heap:pop()
@@ -198,10 +218,18 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
         if utils.distance(cur_node, goal_node) == 0 then
             utils.log(2, 'path found')
             tracker.bench_stop("find_path")
-            return reconstruct_path(closed_set, prev_nodes, cur_node)
+            return reconstruct_path(closed_set, prev_nodes, cur_node), false
         end
 
         closed_set[cur_str] = cur_node
+
+        -- Track closest-to-goal node for partial path
+        local cur_h = heuristic(cur_node, goal_node)
+        if cur_h < best_node_h then
+            best_node     = cur_node
+            best_node_h   = cur_h
+            best_node_str = cur_str
+        end
 
         local ignore_walls = is_custom_target or utils.distance(start_node, cur_node) < 1
         local neighbours
@@ -225,8 +253,15 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     end
 
     utils.log(1, 'no path (no openset) ' .. utils.vec_to_string(start) .. '>' .. utils.vec_to_string(goal))
+    -- Return partial path to the closest node we reached
+    if best_node_str ~= start_str then
+        local partial = reconstruct_path(closed_set, prev_nodes, best_node)
+        utils.log(1, 'returning partial path #' .. #partial .. ' best_h=' .. string.format('%.1f', best_node_h))
+        tracker.bench_stop("find_path")
+        return partial, true
+    end
     tracker.bench_stop("find_path")
-    return {}
+    return {}, true
 end
 
 -- Debug variant: no distance-scaled limits — runs until path found, open-set exhausted,
@@ -244,6 +279,11 @@ pathfinder.find_path_debug = function(start, goal)
     local evaluated  = {}
     local t0         = os.clock()
 
+    -- Track closest-to-goal node for partial path on failure
+    local best_node     = start_node
+    local best_node_h   = heuristic(start_node, goal_node)
+    local best_node_str = start_str
+
     -- Safety ceiling — prevents total game freeze; still far above normal 5000/0.3s limits
     local HARD_ITER_LIMIT = 100000
     local HARD_TIME_LIMIT = 15.0
@@ -259,9 +299,15 @@ pathfinder.find_path_debug = function(start, goal)
 
     while not heap:empty() do
         if counter >= HARD_ITER_LIMIT then
+            if best_node_str ~= start_str then
+                return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "iter_limit_partial"
+            end
             return nil, counter, os.clock() - t0, "iter_limit"
         end
         if (os.clock() - t0) >= HARD_TIME_LIMIT then
+            if best_node_str ~= start_str then
+                return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "time_limit_partial"
+            end
             return nil, counter, os.clock() - t0, "time_limit"
         end
 
@@ -275,6 +321,14 @@ pathfinder.find_path_debug = function(start, goal)
             return reconstruct_path(closed_set, prev_nodes, cur_node), counter, os.clock() - t0, "found"
         end
         closed_set[cur_str] = cur_node
+
+        -- Track closest-to-goal node for partial path
+        local cur_h = heuristic(cur_node, goal_node)
+        if cur_h < best_node_h then
+            best_node     = cur_node
+            best_node_h   = cur_h
+            best_node_str = cur_str
+        end
 
         local neighbours
         neighbours, evaluated = get_neighbors(cur_node, goal_node, evaluated, true, directions)
@@ -294,6 +348,9 @@ pathfinder.find_path_debug = function(start, goal)
         ::continue::
     end
 
+    if best_node_str ~= start_str then
+        return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "no_path_partial"
+    end
     return nil, counter, os.clock() - t0, "no_path"
 end
 

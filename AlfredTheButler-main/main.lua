@@ -40,7 +40,7 @@ local function main_pulse()
         utils.reset_restock_stash_count()
         utils.reset_all_task()
         tracker.manual_trigger = true
-        if not utils.player_in_zone('Scos_Cerrigar') then
+        if not utils.is_in_town() then
             tracker.teleport = true
         end
     end

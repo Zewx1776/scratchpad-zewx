@@ -1,9 +1,12 @@
-local plugin_label = 'alfred_the_butler'
+﻿local plugin_label = 'alfred_the_butler'
 local plugin_version = '1.7.9'
-console.print("Lua Plugin - Alfred the Butler - Leoric - v" .. plugin_version)
+-- console.print("Lua Plugin - Alfred the Butler - Leoric - v" .. plugin_version)
 
 local utils = require 'core.utils'
+local town = require 'core.town'
 local gui = {}
+
+gui.town_options = town.options
 
 local affix_types = utils.get_item_affixes()
 local item_aspects = utils.get_item_aspects()
@@ -105,13 +108,13 @@ gui.gamble_categories = {
 }
 
 gui.gamble_categories_chinese = {
-    ['sorcerer'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "剑", "钉锤", "匕首", "杖", "魔杖", "聚能器"},
-    ['barbarian'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "斧", "剑", "钉锤", "双手斧", "双手剑", "双手钉锤", "长柄武器"},
-    ['rogue'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "剑", "匕首", "弓", "弩"},
-    ['druid'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "斧", "剑", "钉锤", "双手斧", "双手钉锤", "长柄武器", "匕首", "杖", "图腾"},
-    ['necromancer'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "斧", "剑", "钉锤", "双手斧", "双手剑", "镰刀", "双手钉锤", "双手镰刀", "匕首", "盾牌", "魔杖", "聚能器"},
-    ['spiritborn'] = {"长杖", "软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "长柄武器", "剑刃戟"},
-    ['paladin'] = {"软帽", "低语钥匙", "短衣", "手套", "靴子", "裤子", "护符", "戒指", "斧", "剑", "钉锤", "盾", "连枷", "双手斧", "双手剑", "双手钉锤"},
+    ['sorcerer'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "å‰‘", "é’‰é”¤", "åŒ•é¦–", "æ–", "é­”æ–", "èšèƒ½å™¨"},
+    ['barbarian'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "æ–§", "å‰‘", "é’‰é”¤", "åŒæ‰‹æ–§", "åŒæ‰‹å‰‘", "åŒæ‰‹é’‰é”¤", "é•¿æŸ„æ­¦å™¨"},
+    ['rogue'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "å‰‘", "åŒ•é¦–", "å¼“", "å¼©"},
+    ['druid'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "æ–§", "å‰‘", "é’‰é”¤", "åŒæ‰‹æ–§", "åŒæ‰‹é’‰é”¤", "é•¿æŸ„æ­¦å™¨", "åŒ•é¦–", "æ–", "å›¾è…¾"},
+    ['necromancer'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "æ–§", "å‰‘", "é’‰é”¤", "åŒæ‰‹æ–§", "åŒæ‰‹å‰‘", "é•°åˆ€", "åŒæ‰‹é’‰é”¤", "åŒæ‰‹é•°åˆ€", "åŒ•é¦–", "ç›¾ç‰Œ", "é­”æ–", "èšèƒ½å™¨"},
+    ['spiritborn'] = {"é•¿æ–", "è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "é•¿æŸ„æ­¦å™¨", "å‰‘åˆƒæˆŸ"},
+    ['paladin'] = {"è½¯å¸½", "ä½Žè¯­é’¥åŒ™", "çŸ­è¡£", "æ‰‹å¥—", "é´å­", "è£¤å­", "æŠ¤ç¬¦", "æˆ’æŒ‡", "æ–§", "å‰‘", "é’‰é”¤", "ç›¾", "è¿žæž·", "åŒæ‰‹æ–§", "åŒæ‰‹å‰‘", "åŒæ‰‹é’‰é”¤"},
     ['default'] = {"CLASS NOT LOADED"}
 }
 
@@ -179,6 +182,7 @@ gui.elements = {
     },
 
     general_tree = tree_node:new(1),
+    town_choice = combo_box:new(0, get_hash(plugin_label .. '_town_choice')),
     explorer_path_angle_slider = slider_int:new(0, 360, 10, get_hash(plugin_label .. '_explorer_path_angle_slider')),
     max_inventory = slider_int:new(20,33, 25, get_hash(plugin_label .. '_max_inventory')),
     failed_action = combo_box:new(0, get_hash(plugin_label .. '_failed_action')),
@@ -225,6 +229,7 @@ function gui.render()
     if not gui.elements.main_tree:push('Alfred the Butler | Leoric | v' .. gui.plugin_version) then return end
     gui.elements.main_toggle:render('Enable', 'Enable alfred')
     if gui.elements.general_tree:push('General settings') then
+        gui.elements.town_choice:render('Home town', gui.town_options, 'Which town Alfred runs his errands in')
         gui.elements.use_keybind:render('Use keybind', 'Keybind to quick toggle the bot')
         if gui.elements.use_keybind:get() then
             gui.elements.keybind_toggle:render('Toggle Keybind', 'Toggle the bot for quick enable')

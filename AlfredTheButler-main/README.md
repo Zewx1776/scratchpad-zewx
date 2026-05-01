@@ -6,11 +6,11 @@ Alfred is a plugin that CAN read and write files. In this repo, I have specifica
 Alfred also does near-instant sell and near-instant salvage, it will likely sell/salvage before you even see the inventory page open. It will still obey your filter settings (both GA count and affix/unique/mythic filters)
 
 ## Description
-Alfred is your personal butler in Cerrigar. He is capable of stashing, salvaging and selling items based on your settings. He is also capable of restock boss summon materials as well as infernal horde compasses. Additionally, he will also display status of your inventory on top left of your screen and you can see how many items alfred will stash/keep, salvage or sell as well as count/max boss summon materials and infernal horde compasses that you instruct alfred to restock.
+Alfred is your personal butler in Skov_Temis. He is capable of stashing, salvaging and selling items based on your settings. He is also capable of restock boss summon materials as well as infernal horde compasses. Additionally, he will also display status of your inventory on top left of your screen and you can see how many items alfred will stash/keep, salvage or sell as well as count/max boss summon materials and infernal horde compasses that you instruct alfred to restock.
 
 there are 4 trigger conditions that can get alfred to do tasks:
 - called by an external plugin
-- inventory (or obol) is full and you went back to cerrigar
+- inventory (or obol) is full and you went back to Skov_Temis
 - a manual trigger via keybind
 - restock mode is set to active and you have less than the hardcoded minimum (for boss item, it is set to the minimum required to summon boss, for compass it is 1)
 
@@ -24,7 +24,7 @@ For aspect/unique/mythic/affix filters, if you are using a build guide from moba
 - Keybinds
   - toggle keybind -- for quick enable/disable
   - dump tracker info -- debug usage
-  - manual trigger -- make alfred do task now (will teleport to cerrigar if not there)
+  - manual trigger -- make alfred do task now (will teleport to Skov_Temis if not there)
 - explorer path angle (lower is better)
 - max inventory items -- No. of items to count as inventory full. usefull for bossing when you dont pick all items up
 - failed action -- In event that alfred is unable to complete all task, alfred can stand there and dump tracker info to log, or alfred can just force retry and may be stuck in a loop (but atleast inactivity timer wont kick in)

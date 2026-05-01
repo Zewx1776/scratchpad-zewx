@@ -1,1 +1,1 @@
-{"spells":[],"version":1,"global":{"overlay_x":12,"overlay_y":59,"scan_range":13.89999961853,"debug_mode":false,"anim_delay":0.050000000745058,"overlay_enabled":true},"class":"unknown"}
+{"spells":[],"version":1,"global":{"scan_range":13.89999961853,"anim_delay":0.050000000745058,"overlay_enabled":true,"overlay_x":12,"overlay_y":59,"elite_only_global":false,"debug_mode":false},"class":"unknown"}

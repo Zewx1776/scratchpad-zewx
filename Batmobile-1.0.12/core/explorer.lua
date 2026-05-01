@@ -26,6 +26,12 @@ local explorer = {
     backtrack_timeout = 5,
     priority = 'direction',
     wrong_dir_count = 0,
+    -- Cells (walkable or not) ever examined by an update() scan. A frontier is
+    -- a walkable cell with at least one neighbor NOT in `scanned` — i.e. the
+    -- only frontiers are walkable cells adjacent to unknown territory. Without
+    -- this set the frontier table accumulates every walkable cell the player
+    -- passed near but >12 units from, growing without bound.
+    scanned = {},
 }
 local add_frontier = function (node_str, node)
     explorer.frontier[node_str] = explorer.frontier_index
@@ -67,6 +73,19 @@ local remove_retry = function (node_str)
         explorer.retry_count = explorer.retry_count - 1
     end
 end
+local NEIGHBOR_OFFSETS = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} }
+-- True iff at least one of the 4 cardinal step-neighbors hasn't been scanned.
+-- Used to prune frontiers that are now interior (all neighbors known).
+local has_unscanned_neighbor = function (node_x, node_y, step)
+    for _, off in ipairs(NEIGHBOR_OFFSETS) do
+        local nx = utils.normalize_value(node_x + off[1] * step)
+        local ny = utils.normalize_value(node_y + off[2] * step)
+        if explorer.scanned[tostring(nx) .. ',' .. tostring(ny)] == nil then
+            return true
+        end
+    end
+    return false
+end
 local check_perimeter_node = function (perimeter, cx, cy, node_x, node_y, z)
     if cx == node_x and cy == node_y then return end
     local norm_x = utils.normalize_value(cx)
@@ -105,6 +124,40 @@ local get_perimeter = function (node)
         check_perimeter_node(perimeter, max_x, j, x, y, z)
     end
     return perimeter
+end
+-- Fallback when no perimeter, no in-range frontier, and no usable backtrack.
+-- Picks the closest remaining frontier on the same Z level regardless of
+-- frontier_max_dist. Without this the selector returns nil, four nil returns
+-- in a row trigger navigator.reset() which wipes the entire frontier table —
+-- even though valid waypoints existed, just farther than the 40-unit cap.
+local pick_closest_frontier = function ()
+    local closest_node = nil
+    local closest_node_str = nil
+    local closest_dist = nil
+    for node_str, fnode in pairs(explorer.frontier_node) do
+        if explorer.visited[node_str] ~= nil then
+            remove_frontier(node_str)
+        elseif math.abs(fnode:z() - explorer.cur_pos:z()) <= 3 then
+            local d = utils.distance(fnode, explorer.cur_pos)
+            if closest_dist == nil or d < closest_dist then
+                closest_dist = d
+                closest_node = fnode
+                closest_node_str = node_str
+            end
+        end
+    end
+    if closest_node ~= nil then
+        remove_frontier(closest_node_str)
+        explorer.backtracking = false
+        explorer.last_dir = {
+            closest_node:x() - explorer.cur_pos:x(),
+            closest_node:y() - explorer.cur_pos:y(),
+        }
+        utils.log(1, 'far-frontier fallback: picking ' ..
+            utils.vec_to_string(closest_node) ..
+            ' dist=' .. string.format('%.1f', closest_dist))
+    end
+    return closest_node
 end
 local restore_backtrack = function ()
     -- restore secondary backtrack, incase other frontier needs it
@@ -223,17 +276,28 @@ local select_node_distance = function ()
     end
     -- Backtrack to discover new frontiers — moving back triggers update() which
     -- scans the surrounding area and may find unexplored walkable nodes
+    local deferred_bt = {}
     while #explorer.backtrack > 0 do
         -- simulating pop()
         local last_index = #explorer.backtrack
         local last_pos = explorer.backtrack[last_index]
         explorer.backtrack[last_index] = nil
         -- Skip backtrack points that were blacklisted by the navigator (added to visited
-        -- as a 48x48 area after repeated pathfind failures).  Without this check the
+        -- after repeated pathfind failures).  Without this check the
         -- same blacklisted point is re-returned every call, creating an infinite loop.
         local last_pos_str = utils.vec_to_string(last_pos)
         if explorer.visited[last_pos_str] ~= nil then goto continue_bt_distance end
+        -- Skip backtrack nodes on a different Z-level (e.g. after traversal crossing).
+        -- Defer them so they can be tried later if we cross back.
+        if math.abs(last_pos:z() - explorer.cur_pos:z()) > 3 then
+            deferred_bt[#deferred_bt+1] = last_pos
+            goto continue_bt_distance
+        end
         if utils.distance(last_pos, explorer.cur_pos) ~= 0 then
+            -- Re-insert deferred nodes back into the backtrack stack
+            for _, d in ipairs(deferred_bt) do
+                explorer.backtrack[#explorer.backtrack+1] = d
+            end
             explorer.backtracking = true
             -- store backrack to secondary so it can be restored
             explorer.backtrack_secondary[#explorer.backtrack_secondary+1] = last_pos
@@ -241,7 +305,15 @@ local select_node_distance = function ()
         end
         ::continue_bt_distance::
     end
-    -- no perimeter, no frontier, no backtracks — all explored or unreachable
+    -- Re-insert deferred (wrong-Z) nodes — they may become reachable later
+    for _, d in ipairs(deferred_bt) do
+        explorer.backtrack[#explorer.backtrack+1] = d
+    end
+    -- No perimeter / in-range frontier / usable backtrack. Before giving up,
+    -- try the closest remaining frontier on this Z level — far waypoints are
+    -- still valid targets, the pathfinder + traversal-routing can handle them.
+    local far = pick_closest_frontier()
+    if far ~= nil then return far end
     explorer.backtracking = false
     return nil
 end
@@ -312,6 +384,7 @@ local select_node_direction = function (failed)
     end
     -- Backtrack to discover new frontiers — moving back triggers update() which
     -- scans the surrounding area and may find unexplored walkable nodes
+    local deferred_bt = {}
     while #explorer.backtrack > 0 do
         -- simulating pop()
         local last_index = #explorer.backtrack
@@ -320,7 +393,16 @@ local select_node_direction = function (failed)
         -- Skip blacklisted backtrack points (see select_node_distance comment)
         local last_pos_str = utils.vec_to_string(last_pos)
         if explorer.visited[last_pos_str] ~= nil then goto continue_bt_direction end
+        -- Skip backtrack nodes on a different Z-level; defer for later
+        if math.abs(last_pos:z() - explorer.cur_pos:z()) > 3 then
+            deferred_bt[#deferred_bt+1] = last_pos
+            goto continue_bt_direction
+        end
         if utils.distance(last_pos, explorer.cur_pos) ~= 0 then
+            -- Re-insert deferred nodes back into the backtrack stack
+            for _, d in ipairs(deferred_bt) do
+                explorer.backtrack[#explorer.backtrack+1] = d
+            end
             explorer.backtracking = true
             local dx = last_pos:x() - explorer.cur_pos:x()
             local dy = last_pos:y() - explorer.cur_pos:y()
@@ -329,13 +411,25 @@ local select_node_direction = function (failed)
         end
         ::continue_bt_direction::
     end
-    -- no perimeter, no frontier, no backtracks — all explored or unreachable
+    -- Re-insert deferred (wrong-Z) nodes — they may become reachable later
+    for _, d in ipairs(deferred_bt) do
+        explorer.backtrack[#explorer.backtrack+1] = d
+    end
+    -- No perimeter / in-range frontier / usable backtrack. Try the closest
+    -- remaining frontier on this Z before triggering a full explorer reset.
+    local far = pick_closest_frontier()
+    if far ~= nil then return far end
     explorer.backtracking = false
     return nil
 end
 explorer.get_perimeter = get_perimeter
 -- Track last full-scan position to throttle expensive grid rescans
 local _last_scan_pos = nil
+-- Eviction pass runs every 2nd update to cut the pairs() iteration cost in
+-- half. Frontiers stay at most 1 extra scan past becoming interior — the
+-- selectors already lazy-evict visited frontiers, so the only effect is
+-- slightly stale frontier_count display.
+local _evict_counter = 0
 
 explorer.reset = function ()
     explorer.visited = {}
@@ -356,6 +450,7 @@ explorer.reset = function ()
     explorer.backtrack_failed_time = -1
     explorer.last_dir = nil
     explorer.wrong_dir_count = 0
+    explorer.scanned = {}
     _last_scan_pos = nil
 end
 explorer.set_priority = function (priority)
@@ -422,6 +517,10 @@ explorer.update = function (local_player)
             -- Skips vec3 allocation for already-visited nodes (~70% of grid in explored areas)
             local node_str = str_x .. ',' .. tostring(norm_y)
 
+            -- Mark every cell as scanned (walkable or not). Frontier eviction
+            -- below uses this to detect cells that are now interior.
+            explorer.scanned[node_str] = true
+
             if explorer.visited[node_str] == nil or
                 explorer.retry[node_str] ~= nil
             then
@@ -442,6 +541,37 @@ explorer.update = function (local_player)
                         add_frontier(node_str, valid)
                     end
                 end
+            end
+        end
+    end
+
+    -- Eviction pass: drop frontiers that just became interior. A frontier is
+    -- a walkable cell adjacent to *unknown* (unscanned) territory. After a
+    -- scan, cells in the f_radius box (plus 1-step margin) may have had their
+    -- last unscanned neighbor filled in — those are no longer frontiers.
+    -- Cells outside that box can't have changed status from this scan.
+    -- Throttled to every other update; 1-scan staleness is harmless.
+    _evict_counter = _evict_counter + 1
+    if _evict_counter % 2 == 0 then
+        local evict_min_x = f_min_x - step
+        local evict_max_x = f_max_x + step
+        local evict_min_y = f_min_y - step
+        local evict_max_y = f_max_y + step
+        local to_evict = nil
+        for node_str, fnode in pairs(explorer.frontier_node) do
+            local fx = fnode:x()
+            local fy = fnode:y()
+            if fx >= evict_min_x and fx <= evict_max_x
+                and fy >= evict_min_y and fy <= evict_max_y
+                and not has_unscanned_neighbor(fx, fy, step)
+            then
+                if to_evict == nil then to_evict = {} end
+                to_evict[#to_evict + 1] = node_str
+            end
+        end
+        if to_evict ~= nil then
+            for _, ns in ipairs(to_evict) do
+                remove_frontier(ns)
             end
         end
     end

@@ -93,6 +93,8 @@ local get_closest_enemies = function ()
     return closest_enemy, closest_elite, closest_champ, closest_boss
 end
 
+local BOSS_KILL_FREEZE = 10 -- seconds to freeze movement after boss dies (wait for glyphstone)
+
 task.shouldExecute = function ()
     if settings.speed_mode then return false end
     -- Glyphstone present = boss already dead. Player is invulnerable within ~8 of it,
@@ -100,6 +102,21 @@ task.shouldExecute = function ()
     -- upgrade_glyph keeps us pinned during upgrades; exit_pit takes over after.
     if utils.get_glyph_upgrade_gizmo() then return false end
     local enemy, elite, champion, boss = get_closest_enemies()
+    -- Track boss presence so we can detect when it dies
+    if boss then
+        tracker.boss_seen = true
+    elseif tracker.boss_seen and tracker.boss_kill_time == nil then
+        -- Boss was alive last frame but is gone now = just died
+        tracker.boss_kill_time = get_time_since_inject()
+        tracker.boss_seen = false
+        console.print('[kill_monster] boss killed — freezing movement for ' .. BOSS_KILL_FREEZE .. 's while glyphstone spawns')
+    end
+    -- Don't chase trash for N seconds after boss kill (glyphstone needs time to spawn)
+    if tracker.boss_kill_time and
+        (get_time_since_inject() - tracker.boss_kill_time) < BOSS_KILL_FREEZE
+    then
+        return false
+    end
     return (enemy ~= nil or elite ~= nil or
         champion ~= nil or boss ~= nil) and
         utils.player_in_pit()

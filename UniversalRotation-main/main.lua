@@ -24,6 +24,7 @@ local settings = {
     overlay_x        = 20,
     overlay_y        = 12,
     overlay_show_buffs = false,
+    elite_only_global  = false,
 }
 
 local function is_enabled()
@@ -65,6 +66,7 @@ local function update_settings()
     settings.overlay_x       = gui.elements.overlay_x:get()
     settings.overlay_y       = gui.elements.overlay_y:get()
     settings.overlay_show_buffs = gui.elements.overlay_show_buffs and gui.elements.overlay_show_buffs:get() or false
+    settings.elite_only_global  = gui.elements.elite_only_global and gui.elements.elite_only_global:get() or false
     rotation_engine.set_scan_range(settings.scan_range)
 end
 
@@ -131,6 +133,7 @@ local function _export_profile(class_key)
             overlay_enabled = gui.elements.overlay_enabled:get(),
             overlay_x       = gui.elements.overlay_x:get(),
             overlay_y       = gui.elements.overlay_y:get(),
+            elite_only_global = gui.elements.elite_only_global:get(),
         },
         spells = {},
     }
@@ -178,6 +181,7 @@ local function _import_profile(class_key, silent)
         _set_element(gui.elements.overlay_enabled, data.global.overlay_enabled)
         _set_element(gui.elements.overlay_x,       data.global.overlay_x)
         _set_element(gui.elements.overlay_y,       data.global.overlay_y)
+        _set_element(gui.elements.elite_only_global, data.global.elite_only_global)
     end
 
     if type(data.spells) == 'table' then

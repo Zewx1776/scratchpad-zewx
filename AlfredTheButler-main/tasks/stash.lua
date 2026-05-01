@@ -22,6 +22,17 @@ local stash_item_count = -1
 local failed_interaction_count = -1
 local last_interaction_item_count = -1
 
+-- ===== debug logging =====
+local DEBUG = true
+local function dbg(msg)
+    if DEBUG then console.print('[alfred:stash] ' .. tostring(msg)) end
+end
+local last_should_block_reason = nil
+local last_is_done_signature = nil
+local last_vendor_screen_state = nil
+local last_logged_inv_count = -1
+-- ==========================
+
 local function update_last_interaction_time()
     local local_player = get_local_player()
     local item_count = #local_player:get_inventory_items() +
@@ -45,7 +56,10 @@ function extension.get_npc()
     return utils.get_npc(utils.npc_enum['STASH'])
 end
 function extension.move()
-    local npc_location = utils.get_npc_location('STASH')
+    local npc_location = utils.compute_move_target(utils.get_npc_location('STASH'))
+    dbg(string.format('move() -> target=(%.1f,%.1f,%.1f) batmobile=%s',
+        npc_location:x(), npc_location:y(), npc_location:z(),
+        tostring(BatmobilePlugin ~= nil)))
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, npc_location)
         BatmobilePlugin.move(plugin_label)
@@ -56,78 +70,139 @@ function extension.move()
 end
 function extension.interact()
     local npc = extension.get_npc()
-    if npc then interact_vendor(npc) end
+    if npc then
+        dbg(string.format('interact() npc=%s dist=%.2f', tostring(npc:get_skin_name()), utils.distance_to(npc)))
+        interact_vendor(npc)
+    else
+        dbg('interact() no NPC found in actors_manager')
+    end
 end
 function extension.execute()
     local local_player = get_local_player()
-    if not local_player then return end
+    if not local_player then dbg('execute() no local_player'); return end
     if debounce_time ~= nil and debounce_time + debounce_timeout > get_time_since_inject() then return end
     debounce_time = get_time_since_inject()
     tracker.last_task = task.name
+
+    local moved = 0
+    local skipped_sell = 0
+    local skipped_salvage = 0
+    local skipped_cache = 0
     local items = local_player:get_inventory_items()
+    local total_inv = #items
+    if total_inv ~= last_logged_inv_count then
+        dbg(string.format('execute() entered — inv=%d stash_count=%d flags{boss=%s keys=%s sigils=%s socket=%s} skip_cache=%s',
+            total_inv, tracker.stash_count,
+            tostring(tracker.stash_boss_materials), tostring(tracker.stash_keys),
+            tostring(tracker.stash_sigils), tostring(tracker.stash_socketables),
+            tostring(settings.skip_cache)))
+        last_logged_inv_count = total_inv
+    end
+
     for _,item in pairs(items) do
-        if item and not utils.is_salvage_or_sell(item,utils.item_enum['SELL']) and
-            not utils.is_salvage_or_sell(item,utils.item_enum['SALVAGE']) and
-            not (settings.skip_cache and utils.get_item_type(item) == 'cache')
-        then
-            loot_manager.move_item_to_stash(item)
-            update_last_interaction_time()
+        if item then
+            local is_sell = utils.is_salvage_or_sell(item,utils.item_enum['SELL'])
+            local is_salvage = utils.is_salvage_or_sell(item,utils.item_enum['SALVAGE'])
+            local is_cache = utils.get_item_type(item) == 'cache'
+            local skip_cache_now = settings.skip_cache and is_cache
+            if not is_sell and not is_salvage and not skip_cache_now then
+                local name = (item.get_display_name and item:get_display_name()) or '?'
+                local locked = (item.is_locked and item:is_locked()) or false
+                local real_vendor_open = false
+                if loot_manager and loot_manager.is_in_vendor_screen then
+                    local ok, val = pcall(function() return loot_manager:is_in_vendor_screen() end)
+                    real_vendor_open = ok and val or false
+                end
+                local move_ret = loot_manager.move_item_to_stash(item)
+                dbg(string.format('move_item_to_stash: sno=%s name=%s locked=%s real_vendor_open=%s ret=%s',
+                    tostring(item:get_sno_id()), tostring(name), tostring(locked),
+                    tostring(real_vendor_open), tostring(move_ret)))
+                update_last_interaction_time()
+                moved = moved + 1
+            else
+                if is_sell then skipped_sell = skipped_sell + 1
+                elseif is_salvage then skipped_salvage = skipped_salvage + 1
+                elseif skip_cache_now then skipped_cache = skipped_cache + 1 end
+            end
         end
         debounce_time = get_time_since_inject()
     end
+    if total_inv > 0 then
+        dbg(string.format('inventory pass: moved=%d skip_sell=%d skip_salvage=%d skip_cache=%d', moved, skipped_sell, skipped_salvage, skipped_cache))
+    end
+
     local restock_items = utils.get_restock_items_from_tracker()
     if tracker.stash_boss_materials then
         local consumeable_items = local_player:get_consumable_items()
+        local boss_moved, boss_seen = 0, 0
         for _,item in pairs(consumeable_items) do
             if restock_items[item:get_sno_id()] ~= nil then
+                boss_seen = boss_seen + 1
                 local current = restock_items[item:get_sno_id()]
                 if current.count - item:get_stack_count() >= current.max or current.max < current.min then
+                    dbg(string.format('moving boss-mat: sno=%s count=%d stack=%d max=%d min=%d',
+                        tostring(item:get_sno_id()), current.count, item:get_stack_count(), current.max, current.min))
                     loot_manager.move_item_to_stash(item)
                     update_last_interaction_time()
+                    boss_moved = boss_moved + 1
                 end
             end
             debounce_time = get_time_since_inject()
         end
+        if boss_seen > 0 then dbg(string.format('boss-mats pass: moved=%d/%d tracked', boss_moved, boss_seen)) end
     end
     if tracker.stash_keys then
         local key_items = local_player:get_dungeon_key_items()
+        local key_moved, key_seen = 0, 0
         for _,item in pairs(key_items) do
             if restock_items[item:get_sno_id()] ~= nil then
+                key_seen = key_seen + 1
                 local current = restock_items[item:get_sno_id()]
                 if current.count - item:get_stack_count() >= current.max or current.max < current.min then
+                    dbg(string.format('moving key: sno=%s count=%d stack=%d max=%d min=%d',
+                        tostring(item:get_sno_id()), current.count, item:get_stack_count(), current.max, current.min))
                     loot_manager.move_item_to_stash(item)
                     update_last_interaction_time()
+                    key_moved = key_moved + 1
                 end
             end
             debounce_time = get_time_since_inject()
         end
+        if key_seen > 0 then dbg(string.format('keys pass: moved=%d/%d tracked', key_moved, key_seen)) end
         if tracker.stash_sigils then
             local items = local_player:get_dungeon_key_items()
+            local sig_moved = 0
             for _, item in pairs(items) do
                 local name = item:get_display_name()
                 if item:is_locked() and string.lower(name):match('sigil') then
+                    dbg(string.format('moving sigil: name=%s', tostring(name)))
                     loot_manager.move_item_to_stash(item)
                     update_last_interaction_time()
+                    sig_moved = sig_moved + 1
                 end
             end
+            if sig_moved > 0 then dbg(string.format('sigils pass: moved=%d', sig_moved)) end
         end
     end
     if tracker.stash_socketables then
         local socket_items = local_player:get_socketable_items()
+        local sock_moved = 0
         for _,item in pairs(socket_items) do
             loot_manager.move_item_to_stash(item)
             update_last_interaction_time()
+            sock_moved = sock_moved + 1
         end
+        if sock_moved > 0 then dbg(string.format('socketables pass: moved=%d', sock_moved)) end
         debounce_time = get_time_since_inject()
     end
-    
+
 end
 function extension.reset()
     local local_player = get_local_player()
     if not local_player then return end
-    local new_position = vec3:new(-1680.7470703125, -592.1953125, 37.6484375)
+    local new_position = vec3:new(2574.0361328125, -486.248046875, 31.5029296875)
     if task.reset_state == status_enum['MOVING'] then
-        new_position = vec3:new(-1651.9208984375, -598.6142578125, 36.3134765625)
+        new_position = vec3:new(2578.1103515625, -482.2646484375, 31.5029296875)
     end
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, new_position)
@@ -141,6 +216,7 @@ function extension.is_done()
     if task.check_status(status_enum['EXECUTE']) and
         #get_local_player():get_stash_items() == 300
     then
+        dbg('is_done() -> true (stash full at 300 while EXECUTE)')
         return true
     end
     local material_stashed = true
@@ -187,13 +263,24 @@ function extension.is_done()
             end
         end
     end
-    return (tracker.stash_count == 0) and
+    local result = (tracker.stash_count == 0) and
         (not tracker.stash_socketables or socketable_stashed) and
         (not tracker.stash_boss_materials or material_stashed) and
         (not tracker.stash_keys or material_stashed) and
         (not tracker.stash_sigils or sigils_stashed)
+    local sig = string.format('done=%s sc=%d sock=%s mat=%s sig=%s flags{sock=%s boss=%s keys=%s sig=%s}',
+        tostring(result), tracker.stash_count,
+        tostring(socketable_stashed), tostring(material_stashed), tostring(sigils_stashed),
+        tostring(tracker.stash_socketables), tostring(tracker.stash_boss_materials),
+        tostring(tracker.stash_keys), tostring(tracker.stash_sigils))
+    if sig ~= last_is_done_signature then
+        dbg('is_done() ' .. sig)
+        last_is_done_signature = sig
+    end
+    return result
 end
 function extension.done()
+    dbg('done() called — marking stash_done=true')
     if BatmobilePlugin then
         BatmobilePlugin.clear_target(plugin_label)
     end
@@ -204,6 +291,8 @@ function extension.done()
     last_interaction_item_count = -1
 end
 function extension.failed()
+    dbg(string.format('failed() called — retry=%d max=%d failed_interactions=%d',
+        task.retry or -1, task.max_retries or -1, failed_interaction_count))
     if BatmobilePlugin then
         BatmobilePlugin.clear_target(plugin_label)
     end
@@ -219,6 +308,11 @@ function extension.is_in_vendor_screen()
     if stash_count > 0 and stash_item_count == stash_count then
         is_in_vendor_screen = true
     end
+    if is_in_vendor_screen ~= last_vendor_screen_state then
+        dbg(string.format('is_in_vendor_screen() -> %s (stash_items=%d prev_seen=%d)',
+            tostring(is_in_vendor_screen), stash_count, stash_item_count))
+        last_vendor_screen_state = is_in_vendor_screen
+    end
     stash_item_count = stash_count
     return is_in_vendor_screen
 end
@@ -231,7 +325,7 @@ task.shouldExecute = function ()
     if tracker.trigger_tasks == false then
         task.retry = 0
     end
-    if utils.player_in_zone('Scos_Cerrigar') and
+    if utils.is_in_town() and
         tracker.trigger_tasks and
         not tracker.stash_failed and
         not tracker.stash_done and
@@ -239,10 +333,28 @@ task.shouldExecute = function ()
         (tracker.gamble_done or tracker.gamble_failed or tracker.gamble_paused) and
         (tracker.salvage_done or tracker.salvage_failed)
     then
+        if last_should_block_reason ~= 'OK' then
+            dbg('shouldExecute() -> true (gates passed, running stash task)')
+            last_should_block_reason = 'OK'
+        end
         if task.check_status(task.status_enum['FAILED']) then
             task.set_status(task.status_enum['IDLE'])
         end
         return true
+    end
+    -- Determine which gate blocked, log only on change so we don't spam
+    local reason
+    if not utils.is_in_town() then reason = 'not_in_town'
+    elseif not tracker.trigger_tasks then reason = 'trigger_tasks=false'
+    elseif tracker.stash_failed then reason = 'stash_failed=true'
+    elseif tracker.stash_done then reason = 'stash_done=true'
+    elseif not (tracker.sell_done or tracker.sell_failed) then reason = 'sell not done/failed'
+    elseif not (tracker.gamble_done or tracker.gamble_failed or tracker.gamble_paused) then reason = 'gamble not done/failed/paused'
+    elseif not (tracker.salvage_done or tracker.salvage_failed) then reason = 'salvage not done/failed'
+    else reason = 'unknown' end
+    if reason ~= last_should_block_reason then
+        dbg('shouldExecute() -> false, blocked by: ' .. reason)
+        last_should_block_reason = reason
     end
     return false
 end

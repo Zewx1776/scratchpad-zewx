@@ -98,8 +98,8 @@ local last_chest_open_time  = -math.huge
 local returning_to_helltide = false  -- true while navigating back to zone
 local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as return target)
 
-local TRAVERSAL_RECOVERY_TIMEOUT  = 5  -- seconds in free-explore before clearing traversal blacklist
-local TRAVERSAL_RECOVERY_COOLDOWN = 12 -- minimum seconds between recovery attempts
+local TRAVERSAL_RECOVERY_TIMEOUT  = 10 -- seconds in free-explore before clearing traversal blacklist (increased: Batmobile now handles traversals via partial paths + destination-aware selection)
+local TRAVERSAL_RECOVERY_COOLDOWN = 20 -- minimum seconds between recovery attempts
 local traversal_recovery_time = nil    -- wall-clock of last triggered recovery
 
 -- Descent lock: when stranded on a platform with a down-traversal nearby, recovery
@@ -824,7 +824,7 @@ local function get_kill_target()
 
     for _, enemy in pairs(enemies) do
         local enemy_pos = enemy:get_position()
-        if math.abs(player_pos:z() - enemy_pos:z()) > 5 then goto continue end
+        if math.abs(player_pos:z() - enemy_pos:z()) > 12 then goto continue end
         if km_is_unreachable(enemy_pos) then goto continue end
         local health = enemy:get_current_health()
         if health <= 1 then goto continue end

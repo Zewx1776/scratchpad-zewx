@@ -95,7 +95,7 @@ local function _count_nearby(all_enemies, center_pos, radius)
     return c
 end
 
-function target_selector.get_targets(player_pos, range)
+function target_selector.get_targets(player_pos, range, elite_only_global)
     range = range or SCAN_RANGE
     local r2 = range * range
 
@@ -126,6 +126,10 @@ function target_selector.get_targets(player_pos, range)
 
         local d2 = _dist2(epos, player_pos)
         if d2 > r2 then goto continue end
+
+        if elite_only_global and not (_is_boss(enemy) or _is_elite(enemy) or _is_champion(enemy)) then
+            goto continue
+        end
 
         result.is_valid = true
         result.enemy_count = result.enemy_count + 1

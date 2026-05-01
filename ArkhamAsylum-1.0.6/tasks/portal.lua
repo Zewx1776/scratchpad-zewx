@@ -15,7 +15,11 @@ local task = {
     name = 'portal', -- change to your choice of task name
     status = status_enum['IDLE'],
     portal_found = false,
-    portal_exit = -1
+    portal_exit = -1,
+    -- Last time long_path or get_closeby_node failed to reach the portal.
+    -- The cross_traversal task reads this to decide when to engage a
+    -- traversal gizmo (portal across a cliff/climb).
+    long_path_failed_time = -math.huge,
 }
 -- Cache portal scan to avoid double actor iteration per frame (shouldExecute + Execute)
 local _portal_cache = nil
@@ -154,6 +158,7 @@ end
 -- the long-path navigation ended without reaching the portal.
 local _long_path_target = nil
 local _last_path_issue = -math.huge
+local _approach_fail_time = -math.huge -- cooldown after get_closeby_node failure
 local PATH_RETRY_INTERVAL = 2  -- seconds; if long-path stops navigating, retry no more often than this
 
 task.Execute = function ()
@@ -171,11 +176,25 @@ task.Execute = function ()
             BatmobilePlugin.reset(plugin_label)
             return
         end
-    elseif utils.distance(local_player, portal) > 2 then
+    elseif utils.distance(local_player, portal) > 3 then
         BatmobilePlugin.pause(plugin_label)
         BatmobilePlugin.update(plugin_label)
         local portal_pos = portal:get_position()
+        local portal_dist = utils.distance(local_player, portal)
         local now = get_time_since_inject()
+        -- Close range: when within 7m of the portal, use force_move_raw directly
+        -- instead of long_path. A tiny 2-3 node path gets consumed in a single
+        -- navigator.move() tick, letting select_target pick a frontier and walk
+        -- the bot away before the portal script can interact.
+        if portal_dist < 7 then
+            if BatmobilePlugin.is_long_path_navigating() then
+                BatmobilePlugin.stop_long_path(plugin_label)
+                _long_path_target = nil
+            end
+            pathfinder.force_move_raw(portal_pos)
+            task.status = status_enum['WALKING']
+            return
+        end
         -- Re-issue long-path when:
         --   1. No path target set yet
         --   2. Portal position changed (shouldn't happen, but defensive)
@@ -185,7 +204,10 @@ task.Execute = function ()
         -- Throttle (3) to PATH_RETRY_INTERVAL so we don't burn get_closeby_node CPU.
         local need_repath = false
         if _long_path_target == nil then
-            need_repath = true
+            -- Throttle: don't retry until cooldown from last approach failure expires
+            if (now - _approach_fail_time) > PATH_RETRY_INTERVAL then
+                need_repath = true
+            end
         elseif utils.distance(portal_pos, _long_path_target) > 3 then
             need_repath = true
         elseif not BatmobilePlugin.is_long_path_navigating()
@@ -194,32 +216,54 @@ task.Execute = function ()
             console.print('[portal] long-path navigation ended but still ' ..
                 string.format('%.1f', utils.distance(local_player, portal)) ..
                 ' from portal — retrying')
+            -- Long path ended without reaching the portal: signal cross_traversal
+            -- so it can engage a nearby trav even if the next attempt also returns
+            -- a partial path. Without this, the failure flag is only set on
+            -- outright no_path returns — which happen later, after the bot has
+            -- already drifted far from any nearby gizmo.
+            task.long_path_failed_time = now
             need_repath = true
         end
         if need_repath then
             local approach = BatmobilePlugin.get_closeby_node(plugin_label, portal_pos, 5)
             if approach == nil then
-                console.print('[portal] no walkable approach within 5 of portal — releasing')
-                BatmobilePlugin.stop_long_path(plugin_label)
-                _long_path_target = nil
-                task.status = status_enum['IDLE']
-                return
+                -- get_closeby_node failed (expensive standard A* timed out).
+                -- Fall back to navigate_long_path directly to portal position;
+                -- it uses uncapped iterations and can find paths around corners.
+                console.print('[portal] no walkable approach within 5 — trying long_path directly to portal')
+                local started = BatmobilePlugin.navigate_long_path(plugin_label, portal_pos)
+                if started then
+                    _long_path_target = portal_pos
+                    _last_path_issue = now
+                    _approach_fail_time = -math.huge
+                else
+                    console.print('[portal] long_path to portal also FAILED — cooldown retry')
+                    BatmobilePlugin.stop_long_path(plugin_label)
+                    _long_path_target = nil
+                    _approach_fail_time = now
+                    task.long_path_failed_time = now
+                    task.status = status_enum['IDLE']
+                    return
+                end
+            else
+                console.print(string.format(
+                    "[portal] long_path to approach (%.1f,%.1f) for portal at (%.1f,%.1f) dist=%.1f",
+                    approach:x(), approach:y(), portal_pos:x(), portal_pos:y(),
+                    portal_dist
+                ))
+                local started = BatmobilePlugin.navigate_long_path(plugin_label, approach)
+                if started == false then
+                    console.print('[portal] long_path FAILED — approach unreachable, cooldown retry')
+                    BatmobilePlugin.stop_long_path(plugin_label)
+                    _long_path_target = nil
+                    _approach_fail_time = now
+                    task.long_path_failed_time = now
+                    task.status = status_enum['IDLE']
+                    return
+                end
+                _long_path_target = portal_pos
+                _last_path_issue = now
             end
-            console.print(string.format(
-                "[portal] long_path to approach (%.1f,%.1f) for portal at (%.1f,%.1f) dist=%.1f",
-                approach:x(), approach:y(), portal_pos:x(), portal_pos:y(),
-                utils.distance(local_player, portal)
-            ))
-            local started = BatmobilePlugin.navigate_long_path(plugin_label, approach)
-            if started == false then
-                console.print('[portal] long_path FAILED — approach unreachable, releasing')
-                BatmobilePlugin.stop_long_path(plugin_label)
-                _long_path_target = nil
-                task.status = status_enum['IDLE']
-                return
-            end
-            _long_path_target = portal_pos
-            _last_path_issue = now
         end
         BatmobilePlugin.move(plugin_label)
         task.status = status_enum['WALKING']
@@ -229,6 +273,10 @@ task.Execute = function ()
         portal_used_time = get_time_since_inject()
         _long_path_target = nil
         BatmobilePlugin.stop_long_path(plugin_label)
+        -- Reset boss state so the post-kill freeze doesn't carry into the next floor
+        local tracker = require 'core.tracker'
+        tracker.boss_kill_time = nil
+        tracker.boss_seen = false
         interact_object(portal)
         task.status = status_enum['INTERACTING']
     end

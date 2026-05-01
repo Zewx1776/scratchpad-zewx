@@ -54,7 +54,7 @@ function extension.get_npc()
     return utils.get_npc(utils.npc_enum['STASH'])
 end
 function extension.move()
-    local npc_location = utils.get_npc_location('STASH')
+    local npc_location = utils.compute_move_target(utils.get_npc_location('STASH'))
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, npc_location)
         BatmobilePlugin.move(plugin_label)
@@ -98,9 +98,9 @@ end
 function extension.reset()
     local local_player = get_local_player()
     if not local_player then return end
-    local new_position = vec3:new(-1680.7470703125, -592.1953125, 37.6484375)
+    local new_position = vec3:new(2574.0361328125, -486.248046875, 31.5029296875)
     if task.reset_state == status_enum['MOVING'] then
-        new_position = vec3:new(-1651.9208984375, -598.6142578125, 36.3134765625)
+        new_position = vec3:new(2578.1103515625, -482.2646484375, 31.5029296875)
     end
     if BatmobilePlugin then
         BatmobilePlugin.set_target(plugin_label, new_position)
@@ -180,7 +180,7 @@ task.shouldExecute = function ()
     if tracker.trigger_tasks == false then
         task.retry = 0
     end
-    if utils.player_in_zone('Scos_Cerrigar') and
+    if utils.is_in_town() and
         tracker.trigger_tasks and
         not tracker.restock_failed and
         not tracker.restock_done and

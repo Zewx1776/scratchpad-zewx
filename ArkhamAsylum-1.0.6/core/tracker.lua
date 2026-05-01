@@ -8,6 +8,7 @@ local tracker = {
     glyph_done = false,
     glyph_trigger_time = nil,
     boss_kill_time = nil,
+    boss_seen = false,
 }
 
 return tracker

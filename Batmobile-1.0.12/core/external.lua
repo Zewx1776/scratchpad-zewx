@@ -164,6 +164,28 @@ external.get_closeby_node = function(caller, target, max_dist)
     return navigator.get_closeby_node(target, max_dist or 3)
 end
 
+-- Engage traversal routing if a usable Traversal_Gizmo is within 30 units.
+-- Returns true if a traversal was engaged (caller should yield to nav until
+-- crossing completes), false otherwise. Sets navigator.last_trav internally,
+-- so subsequent BatmobilePlugin.update + move calls drive the crossing.
+external.try_traversal_route = function(caller)
+    if caller == nil then
+        utils.log(2, 'try_traversal_route called with no caller')
+        return false
+    end
+    tracker.external_caller = caller
+    local local_player = get_local_player()
+    if local_player == nil then return false end
+    local routed = navigator.try_traversal_route(local_player, local_player:get_position())
+    return routed and true or false
+end
+
+-- Returns true while navigator is mid-traversal-crossing (last_trav set).
+-- cross_traversal task uses this to keep priority until the crossing finishes.
+external.is_traversal_routing = function()
+    return navigator.last_trav ~= nil
+end
+
 -- Stop long path navigation and clear the navigator target.
 external.stop_long_path = function(caller)
     if caller == nil then

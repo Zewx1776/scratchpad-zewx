@@ -36,6 +36,12 @@ local task_files = {
     'upgrade_glyph',
     'alfred',
     'enter_pit',
+    -- cross_traversal must run before portal: when the portal is across a
+    -- climb gizmo, portal task can't pathfind to it and locks the priority
+    -- chain. cross_traversal preempts when portal task signals a recent
+    -- pathfind failure AND a Traversal_Gizmo is interactable nearby, so the
+    -- bot uses the climb instead of staring at the cliff.
+    'cross_traversal',
     -- portal must run before exit_pit: exit_pit fires on BatmobilePlugin.is_done(),
     -- which can happen on intermediate floors before the bot has descended. With portal
     -- higher priority, any visible non-back descend portal wins; on the final floor

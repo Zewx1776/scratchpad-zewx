@@ -49,6 +49,7 @@ gui.elements = {
     scan_range     = sf(5.0, 30.0, 16.0, 'scan_range'),
     anim_delay     = sf(0.0, 0.5,  0.05, 'anim_delay'),
     debug_mode     = cb(false, 'debug_mode'),
+    elite_only_global = cb(false, 'elite_only_global'),
 
 
     overlay_enabled = cb(true, 'overlay_enabled'),
@@ -76,6 +77,7 @@ gui.render = function(spell_config, equipped_ids, all_known_ids)
         gui.elements.scan_range:render('Scan Range (yds)', 'How far to scan for enemies', 1)
         gui.elements.anim_delay:render('Animation Delay (s)', 'Global animation delay after each cast', 2)
         gui.elements.debug_mode:render('Debug Mode', 'Print cast info to console')
+        gui.elements.elite_only_global:render('Rares or Greater Only', 'Only target elites, champions, and bosses; ignore white/trash mobs')
 
         gui.elements.overlay_enabled:render('Overlay', 'Show/hide the on-screen overlay')
         if gui.elements.overlay_enabled:get() then
