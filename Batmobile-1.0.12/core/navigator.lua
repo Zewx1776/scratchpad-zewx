@@ -1314,6 +1314,18 @@ navigator.move = function ()
         end
         new_path[#new_path+1] = node
     end
+    -- Fallback: short partial paths (all remaining nodes < movement_step away)
+    -- otherwise produce zero movement and the bot sits there spamming
+    -- "has path but no move" until the replan cooldown expires.  Walk to the
+    -- last node so the player makes >=1u of progress per tick — next replan
+    -- from the new position can find a longer path.
+    if not moved and #new_path > 0 then
+        local last_node = new_path[#new_path]
+        if utils.distance(last_node, cur_node) > 1 then
+            pathfinder.request_move(last_node)
+            moved = true
+        end
+    end
     if not moved and #navigator.path > 0 then
         console.print('[nav] has path (#' .. #navigator.path .. ') but no move, remaining=#' .. #new_path .. ' target=' .. (navigator.target and utils.vec_to_string(navigator.target) or 'nil'))
     end
@@ -1386,7 +1398,31 @@ navigator.update_trap_state = function(local_player)
 
     local bbox_w = max_x - min_x
     local bbox_h = max_y - min_y
-    local is_trapped = bbox_w < TRAP_BBOX_THRESHOLD and bbox_h < TRAP_BBOX_THRESHOLD
+    local bbox_trapped = bbox_w < TRAP_BBOX_THRESHOLD and bbox_h < TRAP_BBOX_THRESHOLD
+
+    -- Secondary signal: traversal ping-pong.  Bbox alone misses scenarios where
+    -- the player goes down a traversal, walks to a dead-end frontier 30u away,
+    -- comes back up the same traversal pair, repeats.  X-span looks healthy
+    -- (~50u) but no real exploration progress.
+    -- Detection: count direction reversals in trav_history (down→up or up→down)
+    -- within the past 2× detect window (60s by default).  2+ reversals means
+    -- we've gone up→down→up or similar — definitionally a loop.
+    local reversals = 0
+    local trav_window = TRAP_DETECT_WINDOW * 2
+    for i = 2, #navigator.trav_history do
+        local prev = navigator.trav_history[i - 1]
+        local cur  = navigator.trav_history[i]
+        if (now - cur.t) <= trav_window then
+            if (prev.delta_z > 0.5 and cur.delta_z < -0.5)
+                or (prev.delta_z < -0.5 and cur.delta_z > 0.5)
+            then
+                reversals = reversals + 1
+            end
+        end
+    end
+    local pingpong_trapped = reversals >= 2
+
+    local is_trapped = bbox_trapped or pingpong_trapped
 
     if is_trapped then
         if not navigator.trapped then
@@ -1394,9 +1430,12 @@ navigator.update_trap_state = function(local_player)
             navigator.trapped_since = now
             navigator.trapped_escape_count = 0
             navigator.trapped_last_escape_time = -1
+            local reason = bbox_trapped
+                and string.format('bbox %.1fx%.1f over %ds', bbox_w, bbox_h, TRAP_DETECT_WINDOW)
+                or string.format('traversal ping-pong: %d reversals in %ds', reversals, trav_window)
             console.print(string.format(
-                '[TRAP] detected: bbox %.1fx%.1f at center (%.1f,%.1f) over %ds — escape engaged',
-                bbox_w, bbox_h, (min_x + max_x) / 2, (min_y + max_y) / 2, TRAP_DETECT_WINDOW))
+                '[TRAP] detected: %s at (%.1f,%.1f) — escape engaged',
+                reason, (min_x + max_x) / 2, (min_y + max_y) / 2))
         end
     else
         if navigator.trapped then
