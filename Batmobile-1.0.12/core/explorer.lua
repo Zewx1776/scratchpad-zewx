@@ -34,20 +34,48 @@ local explorer = {
     -- passed near but >12 units from, growing without bound.
     scanned = {},
 }
+-- Spatial index for fast bbox queries during eviction.  Without this, the
+-- evict pass iterates all 6000+ frontiers per call to find ~50 in the scan box.
+-- Bucket size tuned to scan box (~26 units): one query touches ~4 buckets.
+local FRONTIER_CHUNK = 16
+local frontier_chunks = {}  -- "cx,cy" -> { node_str = true, ... }
+
+local function chunk_key(x, y)
+    return tostring(math.floor(x / FRONTIER_CHUNK)) .. ',' .. tostring(math.floor(y / FRONTIER_CHUNK))
+end
+
 local add_frontier = function (node_str, node)
     explorer.frontier[node_str] = explorer.frontier_index
     explorer.frontier_node[node_str] = node
     explorer.frontier_order[explorer.frontier_index] = node_str
     explorer.frontier_index = explorer.frontier_index + 1
     explorer.frontier_count = explorer.frontier_count + 1
+    local ck = chunk_key(node:x(), node:y())
+    local bucket = frontier_chunks[ck]
+    if bucket == nil then
+        bucket = {}
+        frontier_chunks[ck] = bucket
+    end
+    bucket[node_str] = true
 end
 local remove_frontier = function (node_str)
     local index = explorer.frontier[node_str]
     if index ~= nil then
+        local fnode = explorer.frontier_node[node_str]
         explorer.frontier_order[index] = nil
         explorer.frontier[node_str] = nil
         explorer.frontier_node[node_str] = nil
         explorer.frontier_count = explorer.frontier_count - 1
+        if fnode ~= nil then
+            local ck = chunk_key(fnode:x(), fnode:y())
+            local bucket = frontier_chunks[ck]
+            if bucket ~= nil then
+                bucket[node_str] = nil
+                if next(bucket) == nil then
+                    frontier_chunks[ck] = nil
+                end
+            end
+        end
     end
 end
 local add_visited = function (node_str)
@@ -452,6 +480,7 @@ explorer.reset = function ()
     explorer.last_dir = nil
     explorer.wrong_dir_count = 0
     explorer.scanned = {}
+    frontier_chunks = {}
     _last_scan_pos = nil
 end
 explorer.set_priority = function (priority)
@@ -523,9 +552,19 @@ explorer.update = function (local_player)
             -- Skips vec3 allocation for already-visited nodes (~70% of grid in explored areas)
             local node_str = str_x .. ',' .. tostring(norm_y)
 
-            -- Mark every cell as scanned (walkable or not). Frontier eviction
-            -- below uses this to detect cells that are now interior.
-            explorer.scanned[node_str] = true
+            -- Mark every cell as scanned.  Tri-state value:
+            --   nil   = never seen
+            --   true  = seen (walkable, visited, or status-irrelevant)
+            --   false = seen and confirmed non-walkable — used to skip the
+            --           expensive engine walk check on subsequent scans.
+            -- has_unscanned_neighbor only checks for nil, so both true/false
+            -- count as scanned for eviction purposes.  Don't overwrite a
+            -- previously-recorded `false`: re-asserting `true` here would
+            -- defeat the skip and re-trigger the engine check next pass.
+            local prev_scanned = explorer.scanned[node_str]
+            if prev_scanned == nil then
+                explorer.scanned[node_str] = true
+            end
 
             if explorer.visited[node_str] == nil or
                 explorer.retry[node_str] ~= nil
@@ -534,7 +573,7 @@ explorer.update = function (local_player)
                     add_visited(node_str)
                     remove_retry(node_str)
                     remove_frontier(node_str)
-                elseif explorer.frontier[node_str] == nil then
+                elseif explorer.frontier[node_str] == nil and prev_scanned ~= false then
                     if explorer.retry[node_str] ~= nil then
                         remove_visited(node_str)
                         remove_retry(node_str)
@@ -546,6 +585,9 @@ explorer.update = function (local_player)
                     _scan_walkable_checks = _scan_walkable_checks + 1
                     if walkable then
                         add_frontier(node_str, valid)
+                    else
+                        -- Cache the negative result so the next scan skips this cell
+                        explorer.scanned[node_str] = false
                     end
                 end
             end
@@ -570,25 +612,42 @@ explorer.update = function (local_player)
         local evict_max_y = f_max_y + step
         local _evict_scanned = 0
         local to_evict = nil
-        for node_str, fnode in pairs(explorer.frontier_node) do
-            local fx = fnode:x()
-            local fy = fnode:y()
-            if fx >= evict_min_x and fx <= evict_max_x
-                and fy >= evict_min_y and fy <= evict_max_y
-                and not has_unscanned_neighbor(fx, fy, step)
-            then
-                if to_evict == nil then to_evict = {} end
-                to_evict[#to_evict + 1] = node_str
+        -- Spatial-indexed eviction: visit only the chunk buckets intersecting
+        -- the scan box (~4 buckets × handful of frontiers each) instead of
+        -- iterating all 6000+ frontiers.  Was the #2 lag source — see logzewx.
+        local cmin_x = math.floor(evict_min_x / FRONTIER_CHUNK)
+        local cmax_x = math.floor(evict_max_x / FRONTIER_CHUNK)
+        local cmin_y = math.floor(evict_min_y / FRONTIER_CHUNK)
+        local cmax_y = math.floor(evict_max_y / FRONTIER_CHUNK)
+        for cx = cmin_x, cmax_x do
+            for cy = cmin_y, cmax_y do
+                local bucket = frontier_chunks[tostring(cx) .. ',' .. tostring(cy)]
+                if bucket ~= nil then
+                    for node_str in pairs(bucket) do
+                        local fnode = explorer.frontier_node[node_str]
+                        if fnode ~= nil then
+                            local fx = fnode:x()
+                            local fy = fnode:y()
+                            if fx >= evict_min_x and fx <= evict_max_x
+                                and fy >= evict_min_y and fy <= evict_max_y
+                                and not has_unscanned_neighbor(fx, fy, step)
+                            then
+                                if to_evict == nil then to_evict = {} end
+                                to_evict[#to_evict + 1] = node_str
+                            end
+                            _evict_scanned = _evict_scanned + 1
+                        end
+                    end
+                end
             end
-            _evict_scanned = _evict_scanned + 1
         end
         if to_evict ~= nil then
             for _, ns in ipairs(to_evict) do
                 remove_frontier(ns)
             end
         end
-        tracker.bench_set_meta("explorer_evict", string.format("scanned=%d evicted=%d",
-            _evict_scanned, to_evict and #to_evict or 0))
+        tracker.bench_set_meta("explorer_evict", string.format("scanned=%d evicted=%d total_frontiers=%d",
+            _evict_scanned, to_evict and #to_evict or 0, explorer.frontier_count))
         tracker.bench_stop("explorer_evict")
     end
 end

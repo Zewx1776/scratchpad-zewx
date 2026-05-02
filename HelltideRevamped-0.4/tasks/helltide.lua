@@ -2083,8 +2083,14 @@ local helltide_task = {
                     BatmobilePlugin.clear_target(plugin_label)
                     return
                 end
+                -- Respect the 10Hz throttle: enemies don't move fast enough that
+                -- 100ms of nav staleness affects targeting, but each forced pulse
+                -- runs the full Batmobile update+move (~30ms avg, 140ms+ peak per
+                -- logzewx).  set_target above already updates the target every tick;
+                -- the throttled pulse keeps the active path running without re-doing
+                -- the heavy explorer.update + find_path on every kill_monsters tick.
                 perf.start("km_bm_pulse")
-                bm_pulse(true)
+                bm_pulse(false)
                 perf.stop("km_bm_pulse", string.format("dist=%.1f", cur_dist))
             else
                 pathfinder.request_move(target_pos)

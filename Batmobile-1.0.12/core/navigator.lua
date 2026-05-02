@@ -560,6 +560,11 @@ navigator.reset = function ()
     explorer.reset()
     navigator.reset_movement()
     navigator.exploration_resets = 0
+    -- Wall-ring penalty is cached against the static walkable grid; a full
+    -- reset implies map/zone change, so the cache may be stale.
+    if path_finder.clear_wall_penalty_cache then
+        path_finder.clear_wall_penalty_cache()
+    end
 end
 navigator.set_target = function (target, disable_spell)
     if target.get_position then

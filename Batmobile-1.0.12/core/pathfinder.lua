@@ -77,6 +77,22 @@ end
 -- corridor centers without becoming infeasible in doorways/portals.
 local WALL_PENALTY_R1 = 0.4
 
+-- Persistent across find_path calls.  The wall-ring penalty is a function of
+-- the static walkable grid for a given Z plane, so caching it avoids redoing
+-- ~8 walkability checks per neighbor on every search.  Was the #3 lag source
+-- (logzewx peak: find_path 117ms for a 35-iter / dist=16 / status=found
+-- search — almost all of it ring evaluations).
+-- Keyed by "node_str|z_floor" so floor changes don't pollute results.
+-- Cleared explicitly via pathfinder.clear_wall_penalty_cache() — call this
+-- on session/zone transitions if terrain may have changed.
+local wall_penalty_cache = {}
+local function wp_key(node_str, z)
+    return node_str .. '|' .. tostring(math.floor(z + 0.5))
+end
+pathfinder.clear_wall_penalty_cache = function()
+    wall_penalty_cache = {}
+end
+
 local get_valid_neighbor = function (cur_node, goal, x, y, evaluated, ignore_walls, directions)
     local node, node_str, result, valid
     node_str = tostring(x) .. ',' .. tostring(y)
@@ -98,31 +114,37 @@ local get_valid_neighbor = function (cur_node, goal, x, y, evaluated, ignore_wal
         return node, evaluated, 0
     end
 
-    -- Goal cell is always considered walkable for penalty purposes
-    local goal_x, goal_y = goal:x(), goal:y()
+    -- Per-cell ring-penalty cache lookup.  Skips the 8 ring walkability checks
+    -- entirely on cache hit.  Trade-off: drops the goal-adjacency special case
+    -- (where the goal cell is treated as walkable in the ring), so cells next
+    -- to a non-walkable goal get up to +0.4 over-penalty.  A* still routes
+    -- through them when needed (the over-cost doesn't change feasibility).
+    local cache_k = wp_key(node_str, node:z())
+    local cached = wall_penalty_cache[cache_k]
+    if cached ~= nil then
+        return node, evaluated, cached
+    end
+
     local penalty = 0
     for _, direction in ipairs(directions) do
         local newx = node:x() + direction[1]
         local newy = node:y() + direction[2]
+        local key = tostring(newx) .. ',' .. tostring(newy)
+        local r = evaluated[key]
         local is_walkable
-        if newx == goal_x and newy == goal_y then
-            is_walkable = true
+        if r == nil then
+            local new_node = utils.get_valid_node(vec3:new(newx, newy, cur_node:z()), goal:z())
+            evaluated[key] = {new_node ~= nil, new_node}
+            is_walkable = new_node ~= nil
         else
-            local key = tostring(newx) .. ',' .. tostring(newy)
-            local r = evaluated[key]
-            if r == nil then
-                local new_node = utils.get_valid_node(vec3:new(newx, newy, cur_node:z()), goal:z())
-                evaluated[key] = {new_node ~= nil, new_node}
-                is_walkable = new_node ~= nil
-            else
-                is_walkable = r[1]
-            end
+            is_walkable = r[1]
         end
         if not is_walkable then
             penalty = penalty + WALL_PENALTY_R1
         end
     end
 
+    wall_penalty_cache[cache_k] = penalty
     return node, evaluated, penalty
 end
 local get_neighbors = function (node, goal, evaluated, ignore_walls, directions)
