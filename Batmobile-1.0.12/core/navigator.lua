@@ -69,6 +69,14 @@ local navigator = {
     -- Each entry: { t = timestamp, delta_z = z_after - z_before }.
     trav_history              = {},
     pre_trav_z                = nil,   -- player z when last_trav was first assigned
+
+    -- Long-term traversal blacklist set by trap escape.  Keyed by name+pos so
+    -- duplicate-named gizmos at different positions are distinct.  Values are
+    -- absolute expiry timestamps (not relative ages) so each entry can have
+    -- its own duration.  Used to keep the bot from immediately descending back
+    -- into a trap zone after escaping it.  Checked alongside blacklisted_trav
+    -- in every traversal-selection site.
+    trap_blacklisted_trav     = {},   -- name+pos -> expiry timestamp
 }
 
 -- Tunables (kept as locals so they're visible in code but not part of the
@@ -81,6 +89,23 @@ local TRAP_MIN_SAMPLES      = 20    -- need this many samples before trap can fi
 local TRAP_ESCAPE_COOLDOWN  = 5     -- seconds between escape attempts
 local TRAP_GIVEUP_TIMEOUT   = 60    -- seconds in trapped state before giving_up=true
 local TRAV_HISTORY_MAX      = 5     -- recent traversals to consider for direction
+local TRAV_TRAP_BL_DURATION = 300   -- seconds to long-blacklist trap re-entry gizmos
+
+-- Combined check: returns true if a traversal is blacklisted by either the
+-- short-term (15s) post-crossing list OR the long-term trap-escape list.
+-- Always pass the full name+position string (`trav_str`).  Time arg is
+-- supplied by the caller so we don't call get_time_since_inject() twice.
+local function is_trav_blacklisted(trav_str, now)
+    local bl_time = navigator.blacklisted_trav[trav_str]
+    if bl_time ~= nil and type(bl_time) == "number" and (now - bl_time) < 15 then
+        return true
+    end
+    local trap_until = navigator.trap_blacklisted_trav[trav_str]
+    if trap_until ~= nil and type(trap_until) == "number" and now < trap_until then
+        return true
+    end
+    return false
+end
 
 -- Compute a walkable escape waypoint away from trav_pos in the direction of player_pos.
 -- Tries decreasing distances so that narrow platforms (top of a ladder, small ledge)
@@ -225,12 +250,11 @@ local function try_traversal_route(local_player, player_pos)
     local nearby_travs = get_nearby_travs(local_player)
     local closest_trav = nil
     local closest_trav_dist = math.huge
+    local now_for_bl = get_time_since_inject()
     for _, trav in ipairs(nearby_travs) do
         local d = utils.distance(player_pos, trav:get_position())
         local trav_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
-        local bl_time = navigator.blacklisted_trav[trav_str]
-        local is_bl = bl_time ~= nil and type(bl_time) == "number" and (get_time_since_inject() - bl_time) < 15
-        if d <= 30 and d < closest_trav_dist and not is_bl then
+        if d <= 30 and d < closest_trav_dist and not is_trav_blacklisted(trav_str, now_for_bl) then
             closest_trav = trav
             closest_trav_dist = d
         end
@@ -328,14 +352,16 @@ select_target = function (prev_target)
         local closest_dist = nil
         local closest_pos = nil
         local closest_str = nil
+        local now_for_bl = get_time_since_inject()
         for _, trav in ipairs(traversals) do
             local trav_pos = trav:get_position()
             local trav_name = trav:get_skin_name()
             local trav_str = trav_name .. utils.vec_to_string(trav_pos)
             local cur_dist = utils.distance_z(player_pos, trav_pos)
-            -- Check blacklist with time-based expiry (15s cooldown instead of permanent)
-            local bl_time = navigator.blacklisted_trav[trav_str]
-            local is_blacklisted = bl_time ~= nil and type(bl_time) == "number" and (get_time_since_inject() - bl_time) < 15
+            -- Combined blacklist: short-term post-crossing (15s) and long-term
+            -- trap-escape (5min) — both keyed by name+position so duplicate
+            -- gizmo names at different positions remain distinct.
+            local is_blacklisted = is_trav_blacklisted(trav_str, now_for_bl)
             if not is_blacklisted and
                 (closest_trav == nil or cur_dist < closest_dist) and
                 utils.distance(player_pos, trav_pos) <= 15
@@ -385,6 +411,13 @@ select_target = function (prev_target)
         for k, v in pairs(navigator.blacklisted_trav) do
             if type(v) == "number" and (now - v) > 15 then
                 navigator.blacklisted_trav[k] = nil
+            end
+        end
+        -- Same for the long-term trap blacklist (entries store absolute
+        -- expiry timestamps, so the comparison is `now > expiry`).
+        for k, expiry in pairs(navigator.trap_blacklisted_trav) do
+            if type(expiry) == "number" and now > expiry then
+                navigator.trap_blacklisted_trav[k] = nil
             end
         end
     end
@@ -1559,9 +1592,13 @@ navigator.attempt_escape = function(local_player)
             local score = -utils.distance(player_pos, tpos)
             if dir_match then score = score + 1000 end
             local trav_str = trav_name .. utils.vec_to_string(tpos)
+            -- Long-term trap blacklist always wins regardless of attempt count
+            -- (it was set INTENTIONALLY by an earlier escape to prevent re-entry).
+            local trap_until = navigator.trap_blacklisted_trav[trav_str]
+            local trap_blocked = trap_until ~= nil and now < trap_until
             local bl_time = navigator.blacklisted_trav[trav_str]
             local bl_age = bl_time and (now - bl_time) or math.huge
-            if bl_age >= bl_age_required then
+            if not trap_blocked and bl_age >= bl_age_required then
                 if score > best_score then
                     best_score = score
                     best_trav = trav
@@ -1580,12 +1617,42 @@ navigator.attempt_escape = function(local_player)
             approach = get_closeby_node(best_trav:get_position(), 6)
         end
         if approach ~= nil then
+            -- Long-term blacklist all opposite-direction traversals in the
+            -- trap zone.  After the escape succeeds, the bot will be on the
+            -- other side and the explorer would otherwise pick a frontier
+            -- back in the trap area, routing via these now-blacklisted gizmos.
+            -- Names are duplicated across gizmos (multiple FreeClimb_Down etc.)
+            -- so we key by name+position; only the gizmos in THIS zone get
+            -- blocked, others elsewhere stay usable.
+            local best_dir_up = best_trav:get_skin_name():match('Up') ~= nil
+            local opposite_blocked = 0
+            for _, trav2 in ipairs(traversals) do
+                if trav2 ~= best_trav then
+                    local tpos2 = trav2:get_position()
+                    if tpos2:x() >= min_x - 10 and tpos2:x() <= max_x + 10
+                        and tpos2:y() >= min_y - 10 and tpos2:y() <= max_y + 10
+                    then
+                        local n2 = trav2:get_skin_name()
+                        local n2_up = n2:match('Up') ~= nil
+                        local n2_down = n2:match('Down') ~= nil
+                        local is_opposite =
+                            (best_dir_up and n2_down and not n2_up)
+                            or (not best_dir_up and n2_up and not n2_down)
+                        if is_opposite then
+                            local key2 = n2 .. utils.vec_to_string(tpos2)
+                            navigator.trap_blacklisted_trav[key2] = now + TRAV_TRAP_BL_DURATION
+                            opposite_blocked = opposite_blocked + 1
+                        end
+                    end
+                end
+            end
+
             console.print(string.format(
-                '[TRAP] escape #%d: routing to %s (dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds) — cleared %d frontiers, %d in zone, %d bl-skipped',
+                '[TRAP] escape #%d: routing to %s (dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds) — cleared %d frontiers, %d in zone, %d bl-skipped, %d opposite-traversals long-blocked %ds',
                 navigator.trapped_escape_count, best_trav:get_skin_name(),
                 utils.distance(player_pos, best_trav:get_position()),
                 tostring(best_is_dir_match), tostring(prefer_up), bl_age_required,
-                cleared, n_in_zone, n_skipped_bl))
+                cleared, n_in_zone, n_skipped_bl, opposite_blocked, TRAV_TRAP_BL_DURATION))
             -- Wipe the recent blacklist for this traversal so we can re-cross
             local trav_str = best_trav:get_skin_name() .. utils.vec_to_string(best_trav:get_position())
             navigator.blacklisted_trav[trav_str] = nil
@@ -1616,6 +1683,9 @@ navigator.clear_trap_state = function()
     navigator.giving_up            = false
     navigator.trap_pos_history     = {}  -- fresh start so we don't re-fire instantly
     navigator.trap_pos_sample_time = -1
+    -- Long-term trap-traversal blacklist is per-zone; teleporting away
+    -- invalidates it (those gizmos may not even exist in the new zone).
+    navigator.trap_blacklisted_trav = {}
 end
 
 return navigator
