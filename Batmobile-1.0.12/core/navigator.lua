@@ -176,10 +176,16 @@ local get_closeby_node = function (trav_node, max_dist)
             cur_node, node, navigator.is_custom_target, shared_eval, CLOSEBY_TIME_CAP)
         attempts = attempts + 1
         if #result > 0 and not is_partial then
+            tracker.bench_set_meta("get_closeby_node", string.format(
+                "max_dist=%d candidates=%d attempts=%d ok",
+                max_dist, #nodes, attempts))
             tracker.bench_stop("get_closeby_node")
             return node
         end
     end
+    tracker.bench_set_meta("get_closeby_node", string.format(
+        "max_dist=%d candidates=%d attempts=%d EXHAUSTED",
+        max_dist, #nodes, attempts))
     tracker.bench_stop("get_closeby_node")
     return nil
 end
@@ -480,11 +486,18 @@ navigator.unpause = function ()
     tracker.paused = false
 end
 navigator.update = function ()
-    if navigator.update_time + navigator.update_timeout > get_time_since_inject() then return end
+    if navigator.update_time + navigator.update_timeout > get_time_since_inject() then
+        tracker.bench_count("update_skipped_throttle")
+        return
+    end
     navigator.update_time = get_time_since_inject()
+    tracker.bench_count("update_ran")
     local local_player = get_local_player()
     if not local_player then return end
-    if has_traversal_buff(local_player) then return end
+    if has_traversal_buff(local_player) then
+        tracker.bench_count("update_skipped_buff")
+        return
+    end
     -- Detect death/respawn: sudden large position jump (>50 units) that is not a traversal.
     -- After respawn the checkpoint position must NOT be appended to the backtrack path —
     -- doing so creates a spurious backtrack entry that doubles up the exploration route.
@@ -504,7 +517,9 @@ navigator.update = function ()
             navigator.failed_target = nil
         end
     end
+    tracker.bench_start("nav_explorer_update")
     explorer.update(local_player)
+    tracker.bench_stop("nav_explorer_update")
 end
 -- reset_movement: clears only movement/pathfinding state; preserves explorer's
 -- visited/backtrack/frontier so long-session exploration is not lost.
@@ -556,6 +571,7 @@ navigator.set_target = function (target, disable_spell)
         utils.distance(new_target, navigator.failed_target) < navigator.failed_target_radius and
         get_time_since_inject() - navigator.failed_target_time < navigator.failed_target_cooldown
     then
+        tracker.bench_count("set_target_rejected_failed")
         return false
     end
     -- Post-traversal escape in progress: store the caller's target for later restoration
@@ -576,6 +592,7 @@ navigator.set_target = function (target, disable_spell)
         end
     end
     local target_moved = navigator.target ~= nil and utils.distance(navigator.target, new_target) > 2
+    tracker.bench_count("set_target_call")
     if navigator.target == nil or
         target_moved or
         navigator.disable_spell ~= disable_spell
@@ -590,8 +607,12 @@ navigator.set_target = function (target, disable_spell)
             navigator.path = {}
             navigator.pathfind_fail_count = 0
             navigator.pathfind_replan_cooldown = -1  -- new target: allow immediate pathfind
+            tracker.bench_count("set_target_replan")
+        else
+            tracker.bench_count("set_target_keep_path")
         end
-        navigator.disable_spell = disable_spell
+    else
+        tracker.bench_count("set_target_drift_noise")
     end
     explorer.backtracking = false
     return true
@@ -604,8 +625,12 @@ navigator.clear_target = function ()
     navigator.pathfind_replan_cooldown = -1
 end
 navigator.move = function ()
-    if navigator.move_time + navigator.move_timeout > get_time_since_inject() then return end
+    if navigator.move_time + navigator.move_timeout > get_time_since_inject() then
+        tracker.bench_count("move_skipped_throttle")
+        return
+    end
     navigator.move_time = get_time_since_inject()
+    tracker.bench_count("move_ran")
     local local_player = get_local_player()
     if not local_player then return end
     local player_pos = local_player:get_position()
@@ -623,6 +648,7 @@ navigator.move = function ()
             #navigator.path)
     end
     local traversals = get_nearby_travs(local_player)
+    tracker.bench_start("nav_trav_block")
     if #traversals > 0 then
         local trav = navigator.last_trav
         if trav ~= nil and utils.distance(player_pos, trav:get_position()) <= 3 and
@@ -729,6 +755,7 @@ navigator.move = function ()
             end
         end
     end
+    tracker.bench_stop("nav_trav_block")
 
     -- Buff-missed fallback: some traversals (ladders, FreeClimb, etc.) have a traversal
     -- buff that is too short to be reliably caught at the 50ms poll rate.  If last_trav
@@ -800,6 +827,7 @@ navigator.move = function ()
     end
 
     -- movement spells
+    tracker.bench_start("nav_move_spell")
     if not utils.player_in_town() and #navigator.path > 0 then
         local movement_spell_id, need_raycast = get_movement_spell_id(local_player)
         if movement_spell_id ~= nil then
@@ -831,6 +859,7 @@ navigator.move = function ()
                     local success = cast_spell.position(movement_spell_id, spell_node, 0)
                     if success then
                         utils.log(2, 'movement spell to ' .. utils.vec_to_string(spell_node))
+                        tracker.bench_count("move_spell_cast")
                         if not navigator.paused then navigator.update() end
                         player_pos = local_player:get_position()
                         cur_node = utils.normalize_node(player_pos)
@@ -842,6 +871,7 @@ navigator.move = function ()
             end
         end
     end
+    tracker.bench_stop("nav_move_spell")
 
     local update_timeout = 1
     if utils.player_in_town() then update_timeout = 10 end
@@ -1189,6 +1219,7 @@ navigator.move = function ()
     -- are all passed.  The old `new_path = {}` reset dropped valid forward nodes
     -- whenever any mid-path node was near the player, leaving path[1] potentially
     -- > movement_dist away and triggering a spurious re-pathfind.
+    tracker.bench_start("nav_consume_path")
     local last_consumed = 0
     for i, node in ipairs(navigator.path) do
         if utils.distance(node, cur_node) < 1 then
@@ -1215,6 +1246,7 @@ navigator.move = function ()
         console.print('[nav] has path (#' .. #navigator.path .. ') but no move, remaining=#' .. #new_path .. ' target=' .. (navigator.target and utils.vec_to_string(navigator.target) or 'nil'))
     end
     navigator.path = new_path
+    tracker.bench_stop("nav_consume_path")
 end
 
 -- Expose get_closeby_node for plugins that need to path to actors sitting on

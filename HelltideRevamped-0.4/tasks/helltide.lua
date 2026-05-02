@@ -65,10 +65,16 @@ local BM_PULSE_INTERVAL = 0.1  -- 10fps
 local function bm_pulse(force)
     if not BatmobilePlugin then return end
     local now = get_time_since_inject()
-    if not force and (now - bm_pulse_time) < BM_PULSE_INTERVAL then return end
+    if not force and (now - bm_pulse_time) < BM_PULSE_INTERVAL then
+        perf.inc("bm_pulse_throttled")
+        return
+    end
     bm_pulse_time = now
+    perf.inc(force and "bm_pulse_forced" or "bm_pulse_normal")
+    perf.start("bm_pulse")
     BatmobilePlugin.update(plugin_label)
     BatmobilePlugin.move(plugin_label)
+    perf.stop("bm_pulse", force and "force=true" or "force=false")
 end
 
 local was_dead = false
@@ -97,6 +103,14 @@ local last_chest_open_time  = -math.huge
 -- we navigate back instead of letting search_helltide teleport away.
 local returning_to_helltide = false  -- true while navigating back to zone
 local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as return target)
+
+-- Experimental-explorer arming: don't hand control to the grid-based explorer until
+-- the player has actually engaged something in the zone.  After a teleport (search_helltide
+-- or revive) the player spawns at the town's edge where helltide_explorer's grid covers
+-- areas Batmobile can't reach, leaving the bot stuck.  Patrol the waypoints first; arm
+-- on the first kill_monsters target, disarm on every fresh zone (re-)entry and on reset.
+local experimental_armed       = false
+local was_in_helltide_for_arm  = false  -- tracks the previous-tick is_in_helltide() value
 
 local TRAVERSAL_RECOVERY_TIMEOUT  = 10 -- seconds in free-explore before clearing traversal blacklist (increased: Batmobile now handles traversals via partial paths + destination-aware selection)
 local TRAVERSAL_RECOVERY_COOLDOWN = 20 -- minimum seconds between recovery attempts
@@ -966,6 +980,15 @@ local function check_events(self)
     if settings.kill_monsters then
         local km_target = get_kill_target()
         if km_target then
+            -- Arm the experimental explorer the first time we see a monster in this zone:
+            -- means the patrol successfully walked us into populated terrain and grid
+            -- exploration is now safe to engage.
+            if settings.experimental_explorer and not experimental_armed then
+                experimental_armed = true
+                console.print(string.format(
+                    "[EXPLORER] First monster encountered (dist=%.1f) — arming experimental explorer",
+                    utils.distance_to(km_target)))
+            end
             self.current_state = helltide_state.KILL_MONSTERS
             return
         end
@@ -1071,6 +1094,7 @@ local helltide_task = {
     Execute = function(self)
         perf.report()
         perf.inc("state_" .. self.current_state)
+        perf.start("hr_tick")
         debug_chest_scan() -- DEBUG: remove when done testing
         self.name = "Explore Helltide (" .. self.current_state .. ")"
         local lp = get_local_player()
@@ -1107,9 +1131,21 @@ local helltide_task = {
         end
 
         -- Track last confirmed in-zone position
-        if utils.is_in_helltide() then
+        local in_ht_now = utils.is_in_helltide()
+        if in_ht_now then
             last_in_zone_pos = lp and lp:get_position() or last_in_zone_pos
         end
+
+        -- Experimental-explorer disarm on (re-)entry: every false→true transition of
+        -- is_in_helltide means a teleport just placed us at a fresh spawn point.  Force
+        -- waypoint patrol until the next kill_monsters target arms the grid explorer.
+        if in_ht_now and not was_in_helltide_for_arm then
+            if experimental_armed then
+                console.print("[EXPLORER] (Re-)entered helltide zone — disarming experimental explorer; resuming waypoint patrol until first monster")
+            end
+            experimental_armed = false
+        end
+        was_in_helltide_for_arm = in_ht_now
 
         -- Detect leaving the zone mid-session (buff lost but hour still active → walk back, don't teleport)
         if not utils.is_in_helltide() and utils.helltide_active()
@@ -1172,6 +1208,7 @@ local helltide_task = {
         elseif self.current_state == helltide_state.RETURN_TO_HELLTIDE then
             self:return_to_helltide()
         end
+        perf.stop("hr_tick", "state=" .. tostring(self.current_state))
     end,
 
     initiate_waypoints = function(self)
@@ -1323,8 +1360,11 @@ local helltide_task = {
             return
         end
 
-        -- EXPERIMENTAL EXPLORER: score-based grid coverage of the full zone
-        if settings.experimental_explorer then
+        -- EXPERIMENTAL EXPLORER: score-based grid coverage of the full zone.
+        -- Gated on `experimental_armed` so we don't hand control to the grid explorer
+        -- until the player has reached populated terrain (first kill_monsters target).
+        -- Until armed, fall through to the waypoint patrol below.
+        if settings.experimental_explorer and experimental_armed then
             local player_pos = get_player_position()
             helltide_explorer.init()
             local target = helltide_explorer.get_target(player_pos)
@@ -2028,22 +2068,29 @@ local helltide_task = {
         end
 
         if cur_dist > 2 then
+            perf.inc("km_target_far")
             if BatmobilePlugin then
                 -- Use pause (not resume) so the long-path navigator state is frozen
                 -- while fighting — long_path.navigating stays true, path resumes after combat.
                 BatmobilePlugin.pause(plugin_label)
+                perf.start("km_set_target")
                 local accepted = BatmobilePlugin.set_target(plugin_label, target)
+                perf.stop("km_set_target", string.format("dist=%.1f", cur_dist))
                 if accepted == false then
+                    perf.inc("km_set_target_rejected")
                     km_mark_unreachable(target_pos)
                     km_nav_map[nav_key] = nil
                     BatmobilePlugin.clear_target(plugin_label)
                     return
                 end
+                perf.start("km_bm_pulse")
                 bm_pulse(true)
+                perf.stop("km_bm_pulse", string.format("dist=%.1f", cur_dist))
             else
                 pathfinder.request_move(target_pos)
             end
         else
+            perf.inc("km_target_close")
             km_nav_map[nav_key] = nil  -- reached target, clear tracking entry
             if BatmobilePlugin then BatmobilePlugin.clear_target(plugin_label) end
         end
@@ -2145,6 +2192,8 @@ local helltide_task = {
         remembered_chest_long_path_ok = false
         returning_to_helltide = false
         last_in_zone_pos      = nil
+        experimental_armed    = false
+        was_in_helltide_for_arm = false
         farm_chest_entry    = nil
         tracker.clear_key("farm_chest_gone")
         farm_roam_points    = {}

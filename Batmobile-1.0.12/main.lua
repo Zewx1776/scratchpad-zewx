@@ -107,12 +107,7 @@ local function main_pulse()
 end
 
 local function render_pulse()
-    -- Always draw when long path is active so the route is visible even without the draw toggle
     if not local_player then return end
-    if long_path.navigating or long_path.pinned_target ~= nil then
-        drawing.draw_nodes(local_player)
-        return
-    end
     if not settings.draw then return end
     drawing.draw_nodes(local_player)
 end

@@ -10,9 +10,12 @@ local perf = {
     data     = {},   -- timed entries:  { total, count, max, min }
     counters = {},   -- event counters: integer
     starts   = {},   -- open start times
+    max_meta = {},   -- name -> meta string captured at the new-max moment
     last_report = -1,
     interval = 5,
     first    = true,
+    -- Spike threshold: any stop() above this prints inline so cause is co-located in the log
+    spike_ms = 30,
 }
 
 function perf.start(name)
@@ -20,7 +23,9 @@ function perf.start(name)
     perf.starts[name] = os.clock()
 end
 
-function perf.stop(name)
+-- stop(name [, meta]) — meta is a short string recorded only when this call sets a new max,
+-- so non-peak metas are discarded.  Spikes above spike_ms are also printed inline.
+function perf.stop(name, meta)
     if not perf.enabled then return end
     local s = perf.starts[name]
     if not s then return end
@@ -33,13 +38,27 @@ function perf.stop(name)
     end
     d.total = d.total + elapsed
     d.count = d.count + 1
-    if elapsed > d.max then d.max = elapsed end
+    if elapsed > d.max then
+        d.max = elapsed
+        if meta ~= nil then perf.max_meta[name] = meta end
+    end
     if elapsed < d.min then d.min = elapsed end
+    if elapsed * 1000 >= perf.spike_ms then
+        console.print(string.format("[HR SPIKE] %s %.1fms%s",
+            name, elapsed * 1000,
+            meta ~= nil and (' ' .. meta) or ''))
+    end
 end
 
 function perf.inc(name)
     if not perf.enabled then return end
     perf.counters[name] = (perf.counters[name] or 0) + 1
+end
+
+-- Set peak metadata directly (kept until the next report cycle resets it).
+function perf.set_meta(name, meta)
+    if not perf.enabled then return end
+    perf.max_meta[name] = meta
 end
 
 function perf.report()
@@ -70,11 +89,13 @@ function perf.report()
         console.print("  [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms)")
         for _, e in ipairs(timed) do
             local d = e.d
-            console.print(string.format("  %-34s  %5d  %5.1f  %7.3f  %7.3f  %8.2f",
+            local meta = perf.max_meta[e.k]
+            console.print(string.format("  %-34s  %5d  %5.1f  %7.3f  %7.3f  %8.2f%s",
                 e.k, d.count, d.count / win,
                 d.total / d.count * 1000,
                 d.max * 1000,
-                d.total * 1000))
+                d.total * 1000,
+                meta ~= nil and ('  peak{' .. meta .. '}') or ''))
         end
     end
 
@@ -97,6 +118,7 @@ function perf.report()
     -- Reset for next window
     perf.data     = {}
     perf.counters = {}
+    perf.max_meta = {}
 end
 
 return perf

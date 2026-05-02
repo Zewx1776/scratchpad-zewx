@@ -70,6 +70,13 @@ local reconstruct_path = function (closed_set, prev_nodes, cur_node)
     return path
 end
 
+-- Soft wall-proximity cost: instead of rejecting cells adjacent to walls
+-- (which made the path always feasible but disabled when is_custom_target=true,
+-- and only ever delivered ~0.5u clearance), every neighbor with at least one
+-- blocked cell in its 8-cell ring gets a g-score penalty.  A* drifts toward
+-- corridor centers without becoming infeasible in doorways/portals.
+local WALL_PENALTY_R1 = 0.4
+
 local get_valid_neighbor = function (cur_node, goal, x, y, evaluated, ignore_walls, directions)
     local node, node_str, result, valid
     node_str = tostring(x) .. ',' .. tostring(y)
@@ -84,43 +91,43 @@ local get_valid_neighbor = function (cur_node, goal, x, y, evaluated, ignore_wal
 
     evaluated[node_str] = {valid, node}
     if not valid then
-        return nil, evaluated
+        return nil, evaluated, 0
     end
 
     if ignore_walls then
-        return node, evaluated
+        return node, evaluated, 0
     end
 
-    -- Use pre-computed directions table instead of creating a new one each call
+    -- Goal cell is always considered walkable for penalty purposes
+    local goal_x, goal_y = goal:x(), goal:y()
+    local penalty = 0
     for _, direction in ipairs(directions) do
-        local dx = direction[1]
-        local dy = direction[2]
-        local newx = node:x() + dx
-        local newy = node:y() + dy
-        local new_node_str = tostring(newx) .. ',' .. tostring(newy)
-        result = evaluated[new_node_str]
-        if result == nil then
-            local new_node = vec3:new(newx, newy, cur_node:z())
-            if newx == goal:x() and newy == goal:y() then
-                evaluated[new_node_str] = {true, new_node}
-                return node, evaluated
-            end
-            new_node = utils.get_valid_node(new_node, goal:z())
-            evaluated[new_node_str] = {new_node ~= nil, new_node}
-            if new_node == nil then
-                return nil, evaluated
-            end
+        local newx = node:x() + direction[1]
+        local newy = node:y() + direction[2]
+        local is_walkable
+        if newx == goal_x and newy == goal_y then
+            is_walkable = true
         else
-            if not result[1] then
-                return nil, evaluated
+            local key = tostring(newx) .. ',' .. tostring(newy)
+            local r = evaluated[key]
+            if r == nil then
+                local new_node = utils.get_valid_node(vec3:new(newx, newy, cur_node:z()), goal:z())
+                evaluated[key] = {new_node ~= nil, new_node}
+                is_walkable = new_node ~= nil
+            else
+                is_walkable = r[1]
             end
+        end
+        if not is_walkable then
+            penalty = penalty + WALL_PENALTY_R1
         end
     end
 
-    return node, evaluated
+    return node, evaluated, penalty
 end
 local get_neighbors = function (node, goal, evaluated, ignore_walls, directions)
     local neighbors = {}
+    local penalties = {}
     for _, direction in ipairs(directions) do
         local dx = direction[1]
         local dy = direction[2]
@@ -128,17 +135,87 @@ local get_neighbors = function (node, goal, evaluated, ignore_walls, directions)
         local newy = node:y() + dy
         if (newx == goal:x() and newy == goal:y()) then
             neighbors = {goal}
+            penalties = {0}
             break
         end
-        local valid = nil
-        valid, evaluated = get_valid_neighbor(node, goal, newx, newy, evaluated, ignore_walls, directions)
+        local valid, p
+        valid, evaluated, p = get_valid_neighbor(node, goal, newx, newy, evaluated, ignore_walls, directions)
 
         if valid ~= nil then
             neighbors[#neighbors+1] = valid
+            penalties[#penalties+1] = p or 0
         end
     end
-    return neighbors, evaluated
+    return neighbors, evaluated, penalties
 end
+
+-- Line-of-sight walkability check between two nodes, sampled at `step` intervals.
+-- Used by string_pull to decide if two non-adjacent waypoints can be directly connected.
+local function has_los(a, b, step)
+    local dx = b:x() - a:x()
+    local dy = b:y() - a:y()
+    local dist = math.sqrt(dx * dx + dy * dy)
+    if dist <= step then return true end
+    local steps = math.ceil(dist / step)
+    local sx = dx / steps
+    local sy = dy / steps
+    local az, bz = a:z(), b:z()
+    for i = 1, steps - 1 do
+        local p = vec3:new(a:x() + sx * i, a:y() + sy * i, az)
+        if utils.get_valid_node(p, bz) == nil then
+            return false
+        end
+    end
+    return true
+end
+
+-- String-pull / funnel-style waypoint reduction.  Drops intermediate path nodes
+-- whose preceding and following waypoints have a clear line of sight, so the
+-- navigator steers along long straight segments instead of every 0.5u grid cell.
+-- Lookahead is capped (LOS_MAX_LOOKAHEAD) to bound LOS work on long paths.
+local LOS_MAX_LOOKAHEAD = 30
+local function string_pull(path, step)
+    if #path <= 2 then return path end
+    local out = {path[1]}
+    local i = 1
+    while i < #path do
+        local last_good = i + 1
+        local j_end = math.min(#path, i + LOS_MAX_LOOKAHEAD)
+        local j = i + 2
+        while j <= j_end do
+            if has_los(path[i], path[j], step) then
+                last_good = j
+                j = j + 1
+            else
+                break
+            end
+        end
+        out[#out + 1] = path[last_good]
+        i = last_good
+    end
+    return out
+end
+pathfinder.string_pull = string_pull
+
+-- Bench wrapper: lets find_path see how much A* time is post-process smoothing,
+-- and reports input/output node counts at peak.
+local function pull_bench(path, step)
+    tracker.bench_start("string_pull")
+    local out = string_pull(path, step)
+    tracker.bench_set_meta("string_pull", string.format("in=%d out=%d", #path, #out))
+    tracker.bench_stop("string_pull")
+    return out
+end
+
+-- Bucketed A* iteration histogram: reveals whether spikes come from a few rare
+-- 5000-iter searches or many smaller ones.
+local function pf_bucket(counter)
+    if counter < 100 then return "iters_lt100"
+    elseif counter < 500 then return "iters_lt500"
+    elseif counter < 2000 then return "iters_lt2000"
+    else return "iters_ge2000" end
+end
+
 pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated, time_cap_override)
     tracker.bench_start("find_path")
     utils.log(2, 'start find path')
@@ -194,18 +271,28 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     heap:push(start_h, start_str, start_node)
     in_open[start_str] = 0
 
+    -- Common return point: stamps bench meta with iter count + result classification,
+    -- bumps result/bucket counters, and stops the find_path timer.
+    local function pf_return(path, is_partial, status)
+        tracker.bench_set_meta("find_path", string.format(
+            "iters=%d dist=%.0f custom=%s status=%s plen=%d",
+            counter, goal_dist, tostring(is_custom_target), status, #path))
+        tracker.bench_count("pf_" .. pf_bucket(counter))
+        tracker.bench_count("pf_status_" .. status)
+        tracker.bench_stop("find_path")
+        return path, is_partial
+    end
+
     while not heap:empty() do
         if counter > iter_limit or (os.clock() - path_start_time) > time_limit then
             utils.log(1, 'no path (over limit) ' .. utils.vec_to_string(start) .. '>' .. utils.vec_to_string(goal))
             -- Return partial path to the closest node we reached
             if best_node_str ~= start_str then
-                local partial = reconstruct_path(closed_set, prev_nodes, best_node)
+                local partial = pull_bench(reconstruct_path(closed_set, prev_nodes, best_node), dist)
                 utils.log(1, 'returning partial path #' .. #partial .. ' best_h=' .. string.format('%.1f', best_node_h))
-                tracker.bench_stop("find_path")
-                return partial, true
+                return pf_return(partial, true, "limit_partial")
             end
-            tracker.bench_stop("find_path")
-            return {}, true
+            return pf_return({}, true, "limit_empty")
         end
 
         local _, cur_str, cur_node = heap:pop()
@@ -217,8 +304,8 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
 
         if utils.distance(cur_node, goal_node) == 0 then
             utils.log(2, 'path found')
-            tracker.bench_stop("find_path")
-            return reconstruct_path(closed_set, prev_nodes, cur_node), false
+            local pulled = pull_bench(reconstruct_path(closed_set, prev_nodes, cur_node), dist)
+            return pf_return(pulled, false, "found")
         end
 
         closed_set[cur_str] = cur_node
@@ -231,14 +318,17 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
             best_node_str = cur_str
         end
 
-        local ignore_walls = is_custom_target or utils.distance(start_node, cur_node) < 1
-        local neighbours
-        neighbours, evaluated = get_neighbors(cur_node, goal_node, evaluated, ignore_walls, directions)
+        -- Wall buffer is now applied via cost penalty (see get_valid_neighbor) rather
+        -- than hard rejection, so we no longer need the is_custom_target bypass.  Still
+        -- skip the penalty within ~1u of start so a player wedged near a wall can escape.
+        local ignore_walls = utils.distance(start_node, cur_node) < 1
+        local neighbours, penalties
+        neighbours, evaluated, penalties = get_neighbors(cur_node, goal_node, evaluated, ignore_walls, directions)
 
-        for _, neighbor in ipairs(neighbours) do
+        for idx, neighbor in ipairs(neighbours) do
             local neigh_str = utils.vec_to_string(neighbor)
             if not closed_set[neigh_str] then
-                local t_g = g_score[cur_str] + utils.distance(cur_node, neighbor)
+                local t_g = g_score[cur_str] + utils.distance(cur_node, neighbor) + (penalties[idx] or 0)
                 if g_score[neigh_str] == nil or t_g < g_score[neigh_str] then
                     prev_nodes[neigh_str] = cur_str
                     g_score[neigh_str]    = t_g
@@ -255,13 +345,11 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     utils.log(1, 'no path (no openset) ' .. utils.vec_to_string(start) .. '>' .. utils.vec_to_string(goal))
     -- Return partial path to the closest node we reached
     if best_node_str ~= start_str then
-        local partial = reconstruct_path(closed_set, prev_nodes, best_node)
+        local partial = pull_bench(reconstruct_path(closed_set, prev_nodes, best_node), dist)
         utils.log(1, 'returning partial path #' .. #partial .. ' best_h=' .. string.format('%.1f', best_node_h))
-        tracker.bench_stop("find_path")
-        return partial, true
+        return pf_return(partial, true, "noopen_partial")
     end
-    tracker.bench_stop("find_path")
-    return {}, true
+    return pf_return({}, true, "noopen_empty")
 end
 
 -- Debug variant: no distance-scaled limits — runs until path found, open-set exhausted,
@@ -300,13 +388,13 @@ pathfinder.find_path_debug = function(start, goal)
     while not heap:empty() do
         if counter >= HARD_ITER_LIMIT then
             if best_node_str ~= start_str then
-                return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "iter_limit_partial"
+                return string_pull(reconstruct_path(closed_set, prev_nodes, best_node), dist), counter, os.clock() - t0, "iter_limit_partial"
             end
             return nil, counter, os.clock() - t0, "iter_limit"
         end
         if (os.clock() - t0) >= HARD_TIME_LIMIT then
             if best_node_str ~= start_str then
-                return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "time_limit_partial"
+                return string_pull(reconstruct_path(closed_set, prev_nodes, best_node), dist), counter, os.clock() - t0, "time_limit_partial"
             end
             return nil, counter, os.clock() - t0, "time_limit"
         end
@@ -318,7 +406,7 @@ pathfinder.find_path_debug = function(start, goal)
 
         counter = counter + 1
         if utils.distance(cur_node, goal_node) == 0 then
-            return reconstruct_path(closed_set, prev_nodes, cur_node), counter, os.clock() - t0, "found"
+            return string_pull(reconstruct_path(closed_set, prev_nodes, cur_node), dist), counter, os.clock() - t0, "found"
         end
         closed_set[cur_str] = cur_node
 
@@ -349,7 +437,7 @@ pathfinder.find_path_debug = function(start, goal)
     end
 
     if best_node_str ~= start_str then
-        return reconstruct_path(closed_set, prev_nodes, best_node), counter, os.clock() - t0, "no_path_partial"
+        return string_pull(reconstruct_path(closed_set, prev_nodes, best_node), dist), counter, os.clock() - t0, "no_path_partial"
     end
     return nil, counter, os.clock() - t0, "no_path"
 end

@@ -1,5 +1,6 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
+local tracker = require 'core.tracker'
 
 local explorer = {
     cur_pos = nil,
@@ -486,8 +487,13 @@ explorer.update = function (local_player)
     -- Throttle: only rescan grid when moved >= 1 unit from last scan position
     -- Cuts scan frequency ~2x; frontier_radius (13) easily tolerates 1-unit delay
     -- (was: rescan on any 0.5-unit movement, causing ~70+ scans per 5s)
-    if _last_scan_pos ~= nil and utils.distance(cur_pos, _last_scan_pos) < 1 then return end
+    if _last_scan_pos ~= nil and utils.distance(cur_pos, _last_scan_pos) < 1 then
+        tracker.bench_count("explorer_scan_throttled")
+        return
+    end
     _last_scan_pos = cur_pos
+    tracker.bench_start("explorer_scan")
+    local _scan_walkable_checks = 0
 
     local x = cur_pos:x()
     local y = cur_pos:y()
@@ -537,6 +543,7 @@ explorer.update = function (local_player)
                     local node = vec3:new(norm_x, norm_y, cur_z)
                     local valid = utility.set_height_of_valid_position(node)
                     local walkable = utility.is_point_walkeable(valid)
+                    _scan_walkable_checks = _scan_walkable_checks + 1
                     if walkable then
                         add_frontier(node_str, valid)
                     end
@@ -544,6 +551,9 @@ explorer.update = function (local_player)
             end
         end
     end
+    tracker.bench_set_meta("explorer_scan", string.format("walk_checks=%d frontiers=%d",
+        _scan_walkable_checks, explorer.frontier_count))
+    tracker.bench_stop("explorer_scan")
 
     -- Eviction pass: drop frontiers that just became interior. A frontier is
     -- a walkable cell adjacent to *unknown* (unscanned) territory. After a
@@ -553,10 +563,12 @@ explorer.update = function (local_player)
     -- Throttled to every other update; 1-scan staleness is harmless.
     _evict_counter = _evict_counter + 1
     if _evict_counter % 2 == 0 then
+        tracker.bench_start("explorer_evict")
         local evict_min_x = f_min_x - step
         local evict_max_x = f_max_x + step
         local evict_min_y = f_min_y - step
         local evict_max_y = f_max_y + step
+        local _evict_scanned = 0
         local to_evict = nil
         for node_str, fnode in pairs(explorer.frontier_node) do
             local fx = fnode:x()
@@ -568,12 +580,16 @@ explorer.update = function (local_player)
                 if to_evict == nil then to_evict = {} end
                 to_evict[#to_evict + 1] = node_str
             end
+            _evict_scanned = _evict_scanned + 1
         end
         if to_evict ~= nil then
             for _, ns in ipairs(to_evict) do
                 remove_frontier(ns)
             end
         end
+        tracker.bench_set_meta("explorer_evict", string.format("scanned=%d evicted=%d",
+            _evict_scanned, to_evict and #to_evict or 0))
+        tracker.bench_stop("explorer_evict")
     end
 end
 explorer.select_node = function (local_player, failed)
