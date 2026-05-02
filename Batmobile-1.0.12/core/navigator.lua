@@ -913,7 +913,7 @@ navigator.move = function ()
                 local nearby = get_nearby_travs(local_player)
                 local best = nil
                 local best_dist = math.huge
-                local now_for_bl = now
+                local now_for_bl = get_time_since_inject()
                 local CHAIN_MAX_DIST = 30
                 local CHAIN_Z_TOLERANCE = 3
                 for _, c in ipairs(nearby) do
