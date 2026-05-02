@@ -888,9 +888,77 @@ navigator.move = function ()
             navigator.last_pos        = cur_node
             navigator.unstuck_nodes   = {}
             navigator.unstuck_count   = 0
+
+            -- ──────────────────────────────────────────────────────────────
+            -- CHAIN ESCAPE
+            -- After a same-direction cross, scan for ANOTHER gizmo of the
+            -- same direction on the new floor.  If found nearby, route
+            -- directly to it — skip the explorer's frontier-pick/walk cycle
+            -- that often partial-paths back into the trap before the next
+            -- attempt_escape can fire.
+            --
+            -- Only engages if we're trapped or in post-escape grace, OR the
+            -- previous pathfind was partial (recent stuck signal).  Without
+            -- a stuck signal, normal exploration shouldn't auto-chain.
+            -- ──────────────────────────────────────────────────────────────
+            -- try_traversal_route only fires when stuck-detection triggered,
+            -- and attempt_escape only fires when trapped.  A successful cross
+            -- via either path means we WERE stuck — treat any directional
+            -- cross as a chain candidate.  (Walks crossed by exploration
+            -- proper would still chain, but exploration rarely chains
+            -- traversals back-to-back; chain_taken keeps the bot productive.)
+            local chain_taken = false
+            if crossing_dir ~= 0 then
+                local chain_dir = crossing_dir
+                local nearby = get_nearby_travs(local_player)
+                local best = nil
+                local best_dist = math.huge
+                local now_for_bl = now
+                local CHAIN_MAX_DIST = 30
+                local CHAIN_Z_TOLERANCE = 3
+                for _, c in ipairs(nearby) do
+                    local cpos = c:get_position()
+                    if math.abs(cpos:z() - player_pos:z()) <= CHAIN_Z_TOLERANCE then
+                        local cname = c:get_skin_name()
+                        local c_up   = cname:match('Up') ~= nil
+                        local c_down = cname:match('Down') ~= nil
+                        local c_dir = (c_up and not c_down) and 1
+                            or ((c_down and not c_up) and -1 or 0)
+                        if c_dir == chain_dir then
+                            local cstr = cname .. utils.vec_to_string(cpos)
+                            if not is_trav_blacklisted(cstr, now_for_bl) then
+                                local d = utils.distance(player_pos, cpos)
+                                if d <= CHAIN_MAX_DIST and d < best_dist then
+                                    best_dist = d
+                                    best = c
+                                end
+                            end
+                        end
+                    end
+                end
+                if best ~= nil then
+                    local bp = best:get_position()
+                    console.print(string.format(
+                        '[nav] CHAIN ESCAPE: another %s on this floor @(%.1f,%.1f,%.2f) dist=%.1f — routing directly (skipping post-trav escape + explorer)',
+                        best:get_skin_name(), bp:x(), bp:y(), bp:z(), best_dist))
+                    navigator.last_trav            = best
+                    navigator.target               = bp
+                    navigator.is_custom_target     = false
+                    navigator.path                 = {}
+                    navigator.trav_delay           = nil
+                    navigator.pre_trav_z           = nil  -- re-snapped at next interact
+                    -- Extend grace so further chain attempts can keep firing
+                    navigator.trap_post_escape_grace_until = now + TRAP_POST_ESCAPE_GRACE
+                    navigator.trap_escape_pos      = nil  -- skip post-trav escape walk
+                    navigator.post_trav_target     = nil
+                    navigator.trav_final_target    = nil
+                    chain_taken = true
+                end
+            end
+
             -- Brief escape to avoid re-triggering the landing-side gizmo,
             -- then re-plan toward the original destination from the new position.
-            if trav_pos_for_escape then
+            if (not chain_taken) and trav_pos_for_escape then
                 local escape_pt = compute_escape_target(trav_pos_for_escape, player_pos)
                 navigator.trav_escape_pos = trav_pos_for_escape
                 -- Preserve the original destination for restoration after brief escape
@@ -907,7 +975,7 @@ navigator.move = function ()
                 navigator.is_custom_target = false
                 navigator.pathfind_fail_count = 0
                 console.print('[nav] post-traversal escape target: ' .. utils.vec_to_string(escape_pt))
-            else
+            elseif not chain_taken then
                 if navigator.trav_final_target ~= nil then
                     console.print('[nav] traversal crossed, restoring custom target ' .. utils.vec_to_string(navigator.trav_final_target))
                     navigator.target = navigator.trav_final_target
