@@ -1611,18 +1611,31 @@ navigator.attempt_escape = function(local_player)
     navigator.is_partial_path             = false
 
     -- Step 2: determine preferred direction from recent traversal history.
-    -- Sum of recent crossing DIRECTIONS (from gizmo names, +1=Up / -1=Down);
-    -- if negative (we descended more than ascended), prefer ascending.
-    -- Uses name-based direction because measured dz is unreliable at
-    -- buff-detect time (engine fires buff during animation, not after).
-    local recent_dir_sum = 0
+    -- Most traps are pits — the bot fell or descended into them and needs
+    -- to climb out.  Default to prefer_up.  Suppress only when we've been
+    -- climbing repeatedly without escape (rare: the escape might actually
+    -- need to be downward).
+    --
+    -- Rule:
+    -- - If we've EVER descended in recent history → prefer_up (came down,
+    --   need to climb back out).  This handles both:
+    --     * fresh trap: 1 Down crossing entered, prefer Up to escape
+    --     * mid-escape: 1 Down + 1 Up so far, continue Up to next floor
+    -- - Only Up crossings in history → prefer_down (we've climbed multiple
+    --   times without escape, try going down — uncommon scenario)
+    -- - No crossings at all → prefer_up by default (most common case)
+    local up_count = 0
+    local down_count = 0
     for _, h in ipairs(navigator.trav_history) do
         if now - h.t < 120 then
-            recent_dir_sum = recent_dir_sum + (h.direction or 0)
+            local d = h.direction or 0
+            if d > 0 then up_count = up_count + 1
+            elseif d < 0 then down_count = down_count + 1
+            end
         end
     end
-    local prefer_up   = recent_dir_sum < 0  -- net descent → prefer up
-    local prefer_down = recent_dir_sum > 0  -- net ascent → prefer down (rare)
+    local prefer_up   = (down_count > 0) or (up_count == 0)
+    local prefer_down = not prefer_up and up_count > 0
 
     -- Step 3: find traversal gizmos near the trapped zone.
     -- Progressive blacklist relaxation — the more attempts that fail, the more
@@ -1757,30 +1770,35 @@ navigator.attempt_escape = function(local_player)
         end
         if approach ~= nil then
             -- Long-term blacklist all opposite-direction traversals in the
-            -- trap zone.  After the escape succeeds, the bot will be on the
-            -- other side and the explorer would otherwise pick a frontier
-            -- back in the trap area, routing via these now-blacklisted gizmos.
-            -- Names are duplicated across gizmos (multiple FreeClimb_Down etc.)
-            -- so we key by name+position; only the gizmos in THIS zone get
-            -- blocked, others elsewhere stay usable.
+            -- trap zone — but ONLY when our chosen gizmo matches our directional
+            -- preference.  If we picked something arbitrarily (no preference)
+            -- or AGAINST preference (e.g. closer Down beat the preferred Up),
+            -- long-blocking the opposite would cement the wrong choice and
+            -- lock out the right gizmo for 5 minutes.  See logzewx where
+            -- escape #3 picked a closer Down and long-blocked the F2→F3 Up
+            -- (cand[4] showed `trap_bl=true` on subsequent escapes).
             local best_dir_up = best_trav:get_skin_name():match('Up') ~= nil
+            local choice_matches_pref = (prefer_up and best_dir_up)
+                or (prefer_down and not best_dir_up)
             local opposite_blocked = 0
-            for _, trav2 in ipairs(traversals) do
-                if trav2 ~= best_trav then
-                    local tpos2 = trav2:get_position()
-                    if tpos2:x() >= min_x - 10 and tpos2:x() <= max_x + 10
-                        and tpos2:y() >= min_y - 10 and tpos2:y() <= max_y + 10
-                    then
-                        local n2 = trav2:get_skin_name()
-                        local n2_up = n2:match('Up') ~= nil
-                        local n2_down = n2:match('Down') ~= nil
-                        local is_opposite =
-                            (best_dir_up and n2_down and not n2_up)
-                            or (not best_dir_up and n2_up and not n2_down)
-                        if is_opposite then
-                            local key2 = n2 .. utils.vec_to_string(tpos2)
-                            navigator.trap_blacklisted_trav[key2] = now + TRAV_TRAP_BL_DURATION
-                            opposite_blocked = opposite_blocked + 1
+            if choice_matches_pref then
+                for _, trav2 in ipairs(traversals) do
+                    if trav2 ~= best_trav then
+                        local tpos2 = trav2:get_position()
+                        if tpos2:x() >= min_x - 10 and tpos2:x() <= max_x + 10
+                            and tpos2:y() >= min_y - 10 and tpos2:y() <= max_y + 10
+                        then
+                            local n2 = trav2:get_skin_name()
+                            local n2_up = n2:match('Up') ~= nil
+                            local n2_down = n2:match('Down') ~= nil
+                            local is_opposite =
+                                (best_dir_up and n2_down and not n2_up)
+                                or (not best_dir_up and n2_up and not n2_down)
+                            if is_opposite then
+                                local key2 = n2 .. utils.vec_to_string(tpos2)
+                                navigator.trap_blacklisted_trav[key2] = now + TRAV_TRAP_BL_DURATION
+                                opposite_blocked = opposite_blocked + 1
+                            end
                         end
                     end
                 end
