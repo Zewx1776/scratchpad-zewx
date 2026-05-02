@@ -77,6 +77,13 @@ local navigator = {
     -- into a trap zone after escaping it.  Checked alongside blacklisted_trav
     -- in every traversal-selection site.
     trap_blacklisted_trav     = {},   -- name+pos -> expiry timestamp
+
+    -- After attempt_escape routes the bot to a traversal, keep trap state
+    -- active for this many seconds even if the bbox grows (the climb
+    -- naturally widens the bbox).  Lets the next attempt_escape fire on the
+    -- NEW floor and find that floor's escape gizmo (e.g. F1 → F2 via climb,
+    -- then F2 → F3 via second climb without dropping out of trap mode).
+    trap_post_escape_grace_until = -1,
 }
 
 -- Tunables (kept as locals so they're visible in code but not part of the
@@ -90,6 +97,7 @@ local TRAP_ESCAPE_COOLDOWN  = 5     -- seconds between escape attempts
 local TRAP_GIVEUP_TIMEOUT   = 60    -- seconds in trapped state before giving_up=true
 local TRAV_HISTORY_MAX      = 5     -- recent traversals to consider for direction
 local TRAV_TRAP_BL_DURATION = 300   -- seconds to long-blacklist trap re-entry gizmos
+local TRAP_POST_ESCAPE_GRACE = 15   -- seconds to keep trap active after escape routes
 
 -- Combined check: returns true if a traversal is blacklisted by either the
 -- short-term (15s) post-crossing list OR the long-term trap-escape list.
@@ -737,6 +745,12 @@ navigator.move = function ()
         if trav ~= nil and utils.distance(player_pos, trav:get_position()) <= 3 and
             (navigator.trav_delay == nil or get_time_since_inject() > navigator.trav_delay)
         then
+            -- Snapshot pre-cross z RIGHT NOW (just before interact).  Earlier
+            -- snapshots (at last_trav assignment) capture the player's z from
+            -- when we PICKED the gizmo as a target — possibly seconds before
+            -- the actual interact, after walking some elevation change.
+            -- Snapshotting here gives an accurate dz reading on buff detect.
+            navigator.pre_trav_z = player_pos:z()
             interact_object(trav)
             local name = trav:get_skin_name()
             if not name:match('Jump') then
@@ -1474,7 +1488,14 @@ navigator.update_trap_state = function(local_player)
 
     local is_trapped = bbox_trapped or pingpong_trapped
 
-    if is_trapped then
+    -- Post-escape grace: keep trap active even if bbox grew, so the next
+    -- attempt_escape on the NEW floor (after a successful climb) can find
+    -- the next escape gizmo.  Without this, the bot escapes F1 → F2,
+    -- bbox immediately grows past threshold, trap clears, and the bot
+    -- starts normal exploration on F2 — never tries the F2 → F3 climb.
+    local in_grace = navigator.trapped and now < navigator.trap_post_escape_grace_until
+
+    if is_trapped or in_grace then
         if not navigator.trapped then
             navigator.trapped = true
             navigator.trapped_since = now
@@ -1745,9 +1766,15 @@ navigator.attempt_escape = function(local_player)
             navigator.is_custom_target = false
             navigator.path = {}
             navigator.last_trav = best_trav
-            -- Snapshot player z so the next crossing records its delta_z
+            -- Snapshot player z so the next crossing records its delta_z.
+            -- (Re-snapshotted at interact time below for accurate dz reading.)
             navigator.pre_trav_z = player_pos:z()
             navigator.trav_delay = nil  -- allow immediate interact when in range
+            -- Post-escape grace: keep trap state alive for a few seconds even
+            -- after the bbox grows (climbing naturally widens it).  Lets the
+            -- next attempt_escape fire on the new floor and find that floor's
+            -- escape gizmo (multi-floor traps need successive escapes).
+            navigator.trap_post_escape_grace_until = now + TRAP_POST_ESCAPE_GRACE
             return
         end
     end
@@ -1768,6 +1795,7 @@ navigator.clear_trap_state = function()
     navigator.giving_up            = false
     navigator.trap_pos_history     = {}  -- fresh start so we don't re-fire instantly
     navigator.trap_pos_sample_time = -1
+    navigator.trap_post_escape_grace_until = -1
     -- Long-term trap-traversal blacklist is per-zone; teleporting away
     -- invalidates it (those gizmos may not even exist in the new zone).
     navigator.trap_blacklisted_trav = {}
