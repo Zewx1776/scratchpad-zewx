@@ -84,6 +84,41 @@ local add_visited = function (node_str)
         explorer.visited_count = explorer.visited_count + 1
     end
 end
+
+-- Trap-recovery helper: marks every frontier within an axis-aligned box as
+-- visited so the explorer's selector stops cycling through them.  Returns the
+-- count cleared.  Uses the chunk index so the cost is proportional to the box
+-- size, not the total frontier count.
+explorer.clear_frontiers_in_box = function(min_x, max_x, min_y, max_y)
+    local cleared = 0
+    local cmin_x = math.floor(min_x / FRONTIER_CHUNK)
+    local cmax_x = math.floor(max_x / FRONTIER_CHUNK)
+    local cmin_y = math.floor(min_y / FRONTIER_CHUNK)
+    local cmax_y = math.floor(max_y / FRONTIER_CHUNK)
+    local to_clear = {}
+    for cx = cmin_x, cmax_x do
+        for cy = cmin_y, cmax_y do
+            local bucket = frontier_chunks[tostring(cx) .. ',' .. tostring(cy)]
+            if bucket ~= nil then
+                for node_str in pairs(bucket) do
+                    local fnode = explorer.frontier_node[node_str]
+                    if fnode ~= nil
+                        and fnode:x() >= min_x and fnode:x() <= max_x
+                        and fnode:y() >= min_y and fnode:y() <= max_y
+                    then
+                        to_clear[#to_clear + 1] = node_str
+                    end
+                end
+            end
+        end
+    end
+    for _, ns in ipairs(to_clear) do
+        remove_frontier(ns)
+        add_visited(ns)
+        cleared = cleared + 1
+    end
+    return cleared
+end
 local remove_visited = function (node_str)
     if explorer.visited[node_str] ~= nil then
         explorer.visited[node_str] = nil

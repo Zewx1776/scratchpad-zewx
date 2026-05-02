@@ -51,7 +51,36 @@ local navigator = {
     -- Throttle for the top-level partial-path stall escape check, so a failed
     -- traversal-route attempt doesn't re-fire every tick.
     last_trav_route_attempt_time = -1,
+
+    -- ────────────────────────────────────────────────────────────────────────
+    -- Trap detection / recovery
+    -- See update_trap_state() / attempt_escape() at the bottom of this file.
+    -- ────────────────────────────────────────────────────────────────────────
+    trap_pos_history          = {},   -- ring buffer of {pos, t} samples for bbox check
+    trap_pos_sample_time      = -1,
+    trapped                   = false,
+    trapped_since             = nil,
+    trapped_escape_count      = 0,
+    trapped_last_escape_time  = -1,
+    trapped_clear_time        = -1,   -- time when trap state was cleared (for HR cooldown)
+    giving_up                 = false, -- HR polls via BatmobilePlugin.is_giving_up()
+
+    -- Per-traversal-cross direction history for escape-direction preference.
+    -- Each entry: { t = timestamp, delta_z = z_after - z_before }.
+    trav_history              = {},
+    pre_trav_z                = nil,   -- player z when last_trav was first assigned
 }
+
+-- Tunables (kept as locals so they're visible in code but not part of the
+-- navigator table that external callers can stomp on).
+local TRAP_SAMPLE_INTERVAL  = 1.0   -- seconds between position samples
+local TRAP_HISTORY_MAX      = 35    -- ~35 samples ≈ 35s of history
+local TRAP_DETECT_WINDOW    = 30    -- seconds of bbox history to consider
+local TRAP_BBOX_THRESHOLD   = 25    -- trapped if both bbox dimensions < this
+local TRAP_MIN_SAMPLES      = 20    -- need this many samples before trap can fire
+local TRAP_ESCAPE_COOLDOWN  = 5     -- seconds between escape attempts
+local TRAP_GIVEUP_TIMEOUT   = 60    -- seconds in trapped state before giving_up=true
+local TRAV_HISTORY_MAX      = 5     -- recent traversals to consider for direction
 
 -- Compute a walkable escape waypoint away from trav_pos in the direction of player_pos.
 -- Tries decreasing distances so that narrow platforms (top of a ladder, small ledge)
@@ -223,6 +252,8 @@ local function try_traversal_route(local_player, player_pos)
     -- Preserve the original destination so we can restore it after crossing.
     navigator.trav_final_target = navigator.target
     navigator.last_trav = closest_trav
+    -- Snapshot player z so trap-escape can record the crossing's direction.
+    navigator.pre_trav_z = local_player:get_position():z()
     navigator.target = approach_node
     navigator.is_custom_target = false
     navigator.path = {}
@@ -341,6 +372,8 @@ select_target = function (prev_target)
                     return select_target(prev_target)
                 end
                 navigator.last_trav = closest_trav
+                -- Snapshot player z so trap-escape can record the crossing's direction.
+                navigator.pre_trav_z = player_pos:z()
                 utils.log(1, 'selecting traversal ' .. closest_trav:get_skin_name() .. ' (path was partial/failing, direction OK)')
                 return closest_node
             end
@@ -563,6 +596,13 @@ navigator.reset = function ()
     if path_finder.clear_wall_penalty_cache then
         path_finder.clear_wall_penalty_cache()
     end
+    -- Trap state is per-zone; never carry it across a full reset.  Use the
+    -- exposed clearer rather than touching internals.
+    if navigator.clear_trap_state then
+        navigator.clear_trap_state()
+    end
+    navigator.trav_history = {}
+    navigator.pre_trav_z   = nil
 end
 navigator.set_target = function (target, disable_spell)
     if target.get_position then
@@ -641,14 +681,21 @@ navigator.move = function ()
     -- Update nav state snapshot for perf report (cheap string, overwritten every allowed frame)
     if tracker.bench_enabled then
         tracker.bench_nav_state = string.format(
-            "paused=%s  custom=%s  trav_routing=%s  last_trav=%s  pfail=%d  unstuck=%d  path_len=%d",
+            "paused=%s  custom=%s  trav_routing=%s  last_trav=%s  pfail=%d  unstuck=%d  path_len=%d  trapped=%s",
             tostring(navigator.paused),
             tostring(navigator.is_custom_target),
             tostring(navigator.trav_final_target ~= nil),
             tostring(navigator.last_trav ~= nil),
             navigator.pathfind_fail_count,
             navigator.unstuck_count,
-            #navigator.path)
+            #navigator.path,
+            tostring(navigator.trapped))
+    end
+    -- Trap detection runs every move() tick; sampling and bbox check are
+    -- internally rate-limited.  attempt_escape only fires while trapped.
+    navigator.update_trap_state(local_player)
+    if navigator.trapped then
+        navigator.attempt_escape(local_player)
     end
     local traversals = get_nearby_travs(local_player)
     tracker.bench_start("nav_trav_block")
@@ -713,6 +760,20 @@ navigator.move = function ()
             navigator.path = {}
             navigator.disable_spell = nil
             local trav_pos_for_escape = navigator.last_trav and navigator.last_trav:get_position() or nil
+            -- Record the crossing's z-delta so trap-escape can prefer the
+            -- opposite direction next time.  pre_trav_z was set when last_trav
+            -- became non-nil in select_target / try_traversal_route.
+            if navigator.pre_trav_z ~= nil then
+                local dz = player_pos:z() - navigator.pre_trav_z
+                navigator.trav_history[#navigator.trav_history + 1] = {
+                    t = get_time_since_inject(),
+                    delta_z = dz,
+                }
+                if #navigator.trav_history > TRAV_HISTORY_MAX then
+                    table.remove(navigator.trav_history, 1)
+                end
+                navigator.pre_trav_z = nil
+            end
             if navigator.last_trav ~= nil then
                 local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
                 -- Only blacklist the exact crossed gizmo with a timestamp (15s cooldown)
@@ -1267,5 +1328,228 @@ navigator.get_closeby_node = get_closeby_node
 -- Expose for the cross_traversal task: lets a higher-priority task engage
 -- traversal routing when the portal task can't pathfind around a cliff.
 navigator.try_traversal_route = try_traversal_route
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- Trap detection / recovery
+--
+-- Problem: when the player descends through traversals into a small enclosed
+-- area, the explorer keeps picking unreachable frontiers across walls and the
+-- bot loops indefinitely on partial-path failures.
+--
+-- Detection: sample player position once per second; if the bbox of the last
+-- 30s of samples is < TRAP_BBOX_THRESHOLD on both axes, we're trapped.
+--
+-- Escape: every TRAP_ESCAPE_COOLDOWN seconds while trapped:
+--   1. Compute the trapped-zone bbox (sample bbox + 5u margin)
+--   2. Mark every frontier in that bbox as visited (kills the infinite loop)
+--   3. Find traversal gizmos in/near the bbox; pick one whose direction
+--      opposes the recent traversal-history average (came down → go up)
+--   4. Force the navigator to route to that traversal's approach node
+--
+-- Giveup: if still trapped after TRAP_GIVEUP_TIMEOUT seconds, set
+-- navigator.giving_up = true so the calling plugin (HelltideRevamped) can
+-- teleport away and pick a new zone.
+-- ────────────────────────────────────────────────────────────────────────────
+
+navigator.update_trap_state = function(local_player)
+    local now = get_time_since_inject()
+    local pos = local_player:get_position()
+
+    -- Sample position once per TRAP_SAMPLE_INTERVAL seconds
+    if now - navigator.trap_pos_sample_time >= TRAP_SAMPLE_INTERVAL then
+        navigator.trap_pos_sample_time = now
+        navigator.trap_pos_history[#navigator.trap_pos_history + 1] = { pos = pos, t = now }
+        if #navigator.trap_pos_history > TRAP_HISTORY_MAX then
+            table.remove(navigator.trap_pos_history, 1)
+        end
+    end
+
+    -- Need enough samples before deciding
+    if #navigator.trap_pos_history < TRAP_MIN_SAMPLES then return end
+
+    -- Compute bbox over the detect window
+    local cutoff = now - TRAP_DETECT_WINDOW
+    local min_x, max_x = math.huge, -math.huge
+    local min_y, max_y = math.huge, -math.huge
+    local n_in_window = 0
+    for _, sample in ipairs(navigator.trap_pos_history) do
+        if sample.t >= cutoff then
+            local sx, sy = sample.pos:x(), sample.pos:y()
+            if sx < min_x then min_x = sx end
+            if sx > max_x then max_x = sx end
+            if sy < min_y then min_y = sy end
+            if sy > max_y then max_y = sy end
+            n_in_window = n_in_window + 1
+        end
+    end
+    if n_in_window < TRAP_MIN_SAMPLES then return end
+
+    local bbox_w = max_x - min_x
+    local bbox_h = max_y - min_y
+    local is_trapped = bbox_w < TRAP_BBOX_THRESHOLD and bbox_h < TRAP_BBOX_THRESHOLD
+
+    if is_trapped then
+        if not navigator.trapped then
+            navigator.trapped = true
+            navigator.trapped_since = now
+            navigator.trapped_escape_count = 0
+            navigator.trapped_last_escape_time = -1
+            console.print(string.format(
+                '[TRAP] detected: bbox %.1fx%.1f at center (%.1f,%.1f) over %ds — escape engaged',
+                bbox_w, bbox_h, (min_x + max_x) / 2, (min_y + max_y) / 2, TRAP_DETECT_WINDOW))
+        end
+    else
+        if navigator.trapped then
+            console.print(string.format(
+                '[TRAP] cleared: bbox now %.1fx%.1f after %ds trapped, %d escape attempts',
+                bbox_w, bbox_h, math.floor(now - navigator.trapped_since),
+                navigator.trapped_escape_count))
+            navigator.trapped_clear_time = now
+        end
+        navigator.trapped = false
+        navigator.trapped_since = nil
+        navigator.giving_up = false
+        navigator.trapped_escape_count = 0
+    end
+end
+
+navigator.attempt_escape = function(local_player)
+    if not navigator.trapped then return end
+    local now = get_time_since_inject()
+
+    -- Giveup check (always run, even before first cooldown elapses, so HR
+    -- doesn't have to wait an extra TRAP_ESCAPE_COOLDOWN before noticing).
+    if now - navigator.trapped_since > TRAP_GIVEUP_TIMEOUT then
+        if not navigator.giving_up then
+            navigator.giving_up = true
+            console.print(string.format(
+                '[TRAP] GIVING UP after %ds trapped + %d escape attempts',
+                math.floor(now - navigator.trapped_since),
+                navigator.trapped_escape_count))
+        end
+        return
+    end
+
+    if now - navigator.trapped_last_escape_time < TRAP_ESCAPE_COOLDOWN then return end
+    navigator.trapped_last_escape_time = now
+    navigator.trapped_escape_count = navigator.trapped_escape_count + 1
+
+    -- Recompute trapped-zone bbox with a small margin
+    local cutoff = now - TRAP_DETECT_WINDOW
+    local min_x, max_x = math.huge, -math.huge
+    local min_y, max_y = math.huge, -math.huge
+    for _, sample in ipairs(navigator.trap_pos_history) do
+        if sample.t >= cutoff then
+            local sx, sy = sample.pos:x(), sample.pos:y()
+            if sx < min_x then min_x = sx end
+            if sx > max_x then max_x = sx end
+            if sy < min_y then min_y = sy end
+            if sy > max_y then max_y = sy end
+        end
+    end
+    min_x, max_x = min_x - 5, max_x + 5
+    min_y, max_y = min_y - 5, max_y + 5
+
+    -- Step 1: clear all frontiers in the trapped zone — kills the infinite
+    -- "pick unreachable frontier across the wall, fail, repeat" loop.
+    local cleared = explorer.clear_frontiers_in_box(min_x, max_x, min_y, max_y)
+
+    -- Reset failure trackers so the next pathfind isn't gated by stale state
+    navigator.failed_target               = nil
+    navigator.pathfind_fail_count         = 0
+    navigator.partial_target_ref          = nil
+    navigator.partial_target_best_dist    = math.huge
+    navigator.partial_target_last_progress_time = -1
+    navigator.is_partial_path             = false
+
+    -- Step 2: determine preferred direction from recent traversal history.
+    -- Sum of recent delta_z; if negative (we descended), prefer ascending.
+    local recent_dz = 0
+    for _, h in ipairs(navigator.trav_history) do
+        if now - h.t < 120 then recent_dz = recent_dz + h.delta_z end
+    end
+    local prefer_up = recent_dz < -1   -- net descent of >1u → prefer up
+    local prefer_down = recent_dz > 1  -- net ascent → prefer down (rare)
+
+    -- Step 3: find traversal gizmos near the trapped zone
+    local traversals = get_nearby_travs(local_player)
+    local player_pos = local_player:get_position()
+    local best_trav = nil
+    local best_score = -math.huge
+    local best_is_dir_match = false
+    for _, trav in ipairs(traversals) do
+        local tpos = trav:get_position()
+        -- Allow traversals slightly outside the bbox (within 10u) — gizmos at
+        -- the zone's edge might be just past the player's wandering bounds.
+        if tpos:x() >= min_x - 10 and tpos:x() <= max_x + 10
+            and tpos:y() >= min_y - 10 and tpos:y() <= max_y + 10
+        then
+            local trav_name = trav:get_skin_name()
+            -- Direction inference from skin name (Climb_Up / FreeClimb_Up_Down etc.).
+            -- Approximate; we don't know exact destination z without crossing.
+            local name_up   = trav_name:match('Up') ~= nil
+            local name_down = trav_name:match('Down') ~= nil
+            local dir_match = (prefer_up and name_up and not name_down)
+                or (prefer_down and name_down and not name_up)
+            -- Score: closer = better; direction match = +1000 (dominates distance)
+            local score = -utils.distance(player_pos, tpos)
+            if dir_match then score = score + 1000 end
+            -- Drop traversals we just crossed (within the giveup window) so
+            -- we don't immediately re-enter the trap from the other side.
+            local trav_str = trav_name .. utils.vec_to_string(tpos)
+            local bl_time = navigator.blacklisted_trav[trav_str]
+            local bl_age = bl_time and (now - bl_time) or math.huge
+            if bl_age >= 30 then  -- 30s cooldown is enough to consider re-using
+                if score > best_score then
+                    best_score = score
+                    best_trav = trav
+                    best_is_dir_match = dir_match
+                end
+            end
+        end
+    end
+
+    if best_trav ~= nil then
+        local approach = get_closeby_node(best_trav:get_position(), 3)
+        if approach == nil then
+            -- Try a wider radius before declaring the gizmo unusable
+            approach = get_closeby_node(best_trav:get_position(), 6)
+        end
+        if approach ~= nil then
+            console.print(string.format(
+                '[TRAP] escape #%d: routing to %s (dist=%.1f dir_match=%s prefer_up=%s) — cleared %d frontiers',
+                navigator.trapped_escape_count, best_trav:get_skin_name(),
+                utils.distance(player_pos, best_trav:get_position()),
+                tostring(best_is_dir_match), tostring(prefer_up), cleared))
+            -- Wipe the recent blacklist for this traversal so we can re-cross
+            local trav_str = best_trav:get_skin_name() .. utils.vec_to_string(best_trav:get_position())
+            navigator.blacklisted_trav[trav_str] = nil
+            navigator.target = approach
+            navigator.is_custom_target = false
+            navigator.path = {}
+            navigator.last_trav = best_trav
+            -- Snapshot player z so the next crossing records its delta_z
+            navigator.pre_trav_z = player_pos:z()
+            navigator.trav_delay = nil  -- allow immediate interact when in range
+            return
+        end
+    end
+
+    -- No usable traversal found — at least we cleared the frontiers.
+    -- Next escape attempt will retry with a fresh frontier scan.
+    console.print(string.format(
+        '[TRAP] escape #%d: no usable traversal in zone (cleared %d frontiers); will retry in %ds',
+        navigator.trapped_escape_count, cleared, TRAP_ESCAPE_COOLDOWN))
+end
+
+-- Called by external API when HR has handled giving_up (teleported away etc.).
+navigator.clear_trap_state = function()
+    navigator.trapped              = false
+    navigator.trapped_since        = nil
+    navigator.trapped_escape_count = 0
+    navigator.giving_up            = false
+    navigator.trap_pos_history     = {}  -- fresh start so we don't re-fire instantly
+    navigator.trap_pos_sample_time = -1
+end
 
 return navigator

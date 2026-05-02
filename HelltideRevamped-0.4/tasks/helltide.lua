@@ -112,6 +112,11 @@ local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as
 local experimental_armed       = false
 local was_in_helltide_for_arm  = false  -- tracks the previous-tick is_in_helltide() value
 
+-- Trap-recovery escalation: when Batmobile signals giving_up (60s of trapped
+-- state with no escape), abandon this zone and let search_helltide pick a new
+-- one.  Tracked so we don't fire the bail-out repeatedly on consecutive ticks.
+local force_zone_change = false  -- HR sets when Batmobile gives up; cleared on reset/zone-change
+
 
 local TRAVERSAL_RECOVERY_TIMEOUT  = 10 -- seconds in free-explore before clearing traversal blacklist (increased: Batmobile now handles traversals via partial paths + destination-aware selection)
 local TRAVERSAL_RECOVERY_COOLDOWN = 20 -- minimum seconds between recovery attempts
@@ -1145,8 +1150,48 @@ local helltide_task = {
                 console.print("[EXPLORER] (Re-)entered helltide zone — disarming experimental explorer; resuming waypoint patrol until first monster")
             end
             experimental_armed = false
+            -- Fresh zone: clear any leftover trap-recovery state from the prior zone
+            -- so detection starts with a clean sliding window.
+            if BatmobilePlugin and BatmobilePlugin.clear_giving_up then
+                BatmobilePlugin.clear_giving_up(plugin_label)
+            end
+            force_zone_change = false
         end
         was_in_helltide_for_arm = in_ht_now
+
+        -- Trap-recovery escalation: Batmobile's navigator declares giving_up
+        -- when it's been confined to a small bbox for 60s+ (e.g. descended
+        -- into a dead-end chamber, can't get back up).  Bail out of this zone
+        -- entirely: teleport to Cerrigar (drops the helltide buff) and tell
+        -- search_helltide to skip the cached zone — otherwise it would
+        -- immediately TP us back to the dead-end zone we just escaped.
+        if not force_zone_change
+            and BatmobilePlugin and BatmobilePlugin.is_giving_up
+            and BatmobilePlugin.is_giving_up()
+        then
+            console.print("[HELLTIDE] Batmobile gave up after 60s trapped — abandoning zone, teleporting to Cerrigar to find a different helltide")
+            force_zone_change = true
+            -- Wipe trap state on the Batmobile side so the next zone doesn't
+            -- inherit the giving_up flag (would cause an immediate re-bail).
+            if BatmobilePlugin.clear_giving_up then
+                BatmobilePlugin.clear_giving_up(plugin_label)
+            end
+            -- Reset everything for a clean start in the new zone
+            experimental_armed = false
+            if settings.experimental_explorer then
+                helltide_explorer.reset()
+            end
+            reset_navigate_state()
+            -- Tell search_helltide to skip the cached helltide zone (the one
+            -- we just gave up on) and cycle through the others.
+            tracker.skip_cached_zone = true
+            -- Cerrigar waypoint id (also used by search_helltide as the
+            -- between-helltides idle spot).  Drops the helltide buff so
+            -- search_helltide.shouldExecute starts firing.
+            teleport_to_waypoint(0x76D58)
+            self.current_state = helltide_state.BACK_TO_TOWN
+            return
+        end
 
         -- Detect leaving the zone mid-session (buff lost but hour still active → walk back, don't teleport)
         if not utils.is_in_helltide() and utils.helltide_active()
@@ -2207,6 +2252,7 @@ local helltide_task = {
         last_in_zone_pos      = nil
         experimental_armed    = false
         was_in_helltide_for_arm = false
+        force_zone_change     = false
         farm_chest_entry    = nil
         tracker.clear_key("farm_chest_gone")
         farm_roam_points    = {}

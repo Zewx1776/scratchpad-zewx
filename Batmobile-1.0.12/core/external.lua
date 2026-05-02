@@ -224,4 +224,32 @@ external.clear_traversal_blacklist = function(caller)
     navigator.failed_target_radius  = 15
 end
 
+-- Trap-recovery query.  Returns true once the navigator has been stuck in a
+-- small bbox for TRAP_GIVEUP_TIMEOUT (60s) without escaping.  Calling plugin
+-- (HelltideRevamped) should teleport the player away and call clear_giving_up
+-- to reset the state for the new zone.
+external.is_giving_up = function()
+    return navigator.giving_up
+end
+
+-- Returns true while the navigator is actively running its escape routine
+-- (cleared in-zone frontiers, routing to a traversal).  HR can use this to
+-- avoid issuing competing set_target calls during recovery.
+external.is_trapped = function()
+    return navigator.trapped
+end
+
+-- Resets all trap-detection state (sample history, escape counter, giving_up
+-- flag).  Call this after teleporting / leaving the trapped area so the next
+-- zone starts with a fresh sliding window.
+external.clear_giving_up = function(caller)
+    if caller == nil then
+        utils.log(2, 'clear_giving_up called with no caller')
+        return
+    end
+    tracker.external_caller = caller
+    utils.log(2, 'clear_giving_up called by ' .. tostring(caller))
+    navigator.clear_trap_state()
+end
+
 return external

@@ -94,23 +94,36 @@ local search_helltide_task = {
             end
             return
         elseif utils.is_in_helltide() then
-            -- Confirm and cache the zone if not already known
-            if not confirmed_helltide_tp then
-                confirmed_helltide_tp = detect_helltide_zone()
-                if confirmed_helltide_tp then
-                    console.print("[HelltideRevamped] Confirmed helltide zone: " .. confirmed_helltide_tp.file)
-                end
+            -- Confirm and cache the zone (replacing any stale cached zone if
+            -- the trap-recovery flag was set, since we're now in a *different*
+            -- zone than the one we abandoned).
+            local detected = detect_helltide_zone()
+            if detected and (not confirmed_helltide_tp
+                or tracker.skip_cached_zone
+                or confirmed_helltide_tp.id ~= detected.id)
+            then
+                confirmed_helltide_tp = detected
+                console.print("[HelltideRevamped] Confirmed helltide zone: " .. confirmed_helltide_tp.file)
             end
+            -- Player landed in a working helltide; clear the skip flag so
+            -- future returns to this same zone are fast.
+            tracker.skip_cached_zone = false
             console.print("Found helltide")
             self.current_state = search_helltide_state.FOUND_HELLTIDE
-        elseif confirmed_helltide_tp then
+        elseif confirmed_helltide_tp and not tracker.skip_cached_zone then
             -- We know where this hour's helltide is — go back directly
             console.print("[HelltideRevamped] Returning to known helltide zone: " .. confirmed_helltide_tp.file)
             current_city_index = index_of_tp(confirmed_helltide_tp)
             tracker.wait_in_town = nil  -- reset arrival timer so we don't use a stale one
             self.current_state = search_helltide_state.WAITING_FOR_TELEPORT
         else
-            console.print("Not in helltide, teleport to next town to check")
+            -- Either no cached zone yet, OR trap-recovery told us to skip the
+            -- cached one and try a different helltide region.  Cycle through.
+            if tracker.skip_cached_zone then
+                console.print("[HelltideRevamped] skip_cached_zone set — cycling through TPs to find a different helltide")
+            else
+                console.print("Not in helltide, teleport to next town to check")
+            end
             self.current_state = search_helltide_state.TELEPORTING
         end
     end,
@@ -120,6 +133,16 @@ local search_helltide_task = {
             if current_city_index > #enums.helltide_tps then
                 current_city_index = 1
             else
+                current_city_index = (current_city_index % #enums.helltide_tps) + 1
+            end
+            -- Skip the cached zone when trap-recovery told us to find a
+            -- different helltide.  Advance one more step if the cycle landed
+            -- on the abandoned zone.  (One iteration is enough: zones are
+            -- distinct entries in helltide_tps.)
+            if tracker.skip_cached_zone and confirmed_helltide_tp
+                and enums.helltide_tps[current_city_index].id == confirmed_helltide_tp.id
+            then
+                console.print("[HelltideRevamped] skipping abandoned zone " .. confirmed_helltide_tp.file)
                 current_city_index = (current_city_index % #enums.helltide_tps) + 1
             end
             console.print("Teleporting to: " .. tostring(enums.helltide_tps[current_city_index].file))
