@@ -745,12 +745,16 @@ navigator.move = function ()
         if trav ~= nil and utils.distance(player_pos, trav:get_position()) <= 3 and
             (navigator.trav_delay == nil or get_time_since_inject() > navigator.trav_delay)
         then
-            -- Snapshot pre-cross z RIGHT NOW (just before interact).  Earlier
-            -- snapshots (at last_trav assignment) capture the player's z from
-            -- when we PICKED the gizmo as a target — possibly seconds before
-            -- the actual interact, after walking some elevation change.
-            -- Snapshotting here gives an accurate dz reading on buff detect.
-            navigator.pre_trav_z = player_pos:z()
+            -- Snapshot pre-cross z RIGHT NOW (just before interact) — but
+            -- ONLY if it's not already set this crossing.  pre_trav_z is
+            -- cleared after buff detection, so nil = first interact for THIS
+            -- crossing.  If the buff hasn't fired yet and we're firing a
+            -- retry interact (after the 2s cooldown), we want to KEEP the
+            -- original z so dz on eventual buff-detect reflects the FULL
+            -- climb height — not just the tiny mid-climb position delta.
+            if navigator.pre_trav_z == nil then
+                navigator.pre_trav_z = player_pos:z()
+            end
             interact_object(trav)
             local name = trav:get_skin_name()
             if not name:match('Jump') then
@@ -1468,23 +1472,33 @@ navigator.update_trap_state = function(local_player)
     -- the player goes down a traversal, walks to a dead-end frontier 30u away,
     -- comes back up the same traversal pair, repeats.  X-span looks healthy
     -- (~50u) but no real exploration progress.
+    --
     -- Detection: count direction reversals in trav_history (down→up or up→down)
-    -- within the past 2× detect window (60s by default).  2+ reversals means
-    -- we've gone up→down→up or similar — definitionally a loop.
+    -- within the past trav_window seconds.  Threshold: 1 reversal is enough —
+    -- a single down-then-up (or up-then-down) within 60s is almost always a
+    -- wasted trip.  Real exploration usually has long gaps between opposite-
+    -- direction crossings.  Threshold of 2 missed scenarios where the player
+    -- only oscillated once before bbox detection caught up 30s later.
+    --
+    -- Tolerance is .25u (was .5) since the engine sometimes reports tiny
+    -- player-z deltas during cross detection — see the dz=+0.04 / dz=+0.00
+    -- entries from logzewx.  Real climbs span 4-5u, so even noisy readings
+    -- exceed .25u when the cross genuinely changed elevation.
     local reversals = 0
     local trav_window = TRAP_DETECT_WINDOW * 2
+    local DZ_THRESHOLD = 0.25
     for i = 2, #navigator.trav_history do
         local prev = navigator.trav_history[i - 1]
         local cur  = navigator.trav_history[i]
         if (now - cur.t) <= trav_window then
-            if (prev.delta_z > 0.5 and cur.delta_z < -0.5)
-                or (prev.delta_z < -0.5 and cur.delta_z > 0.5)
+            if (prev.delta_z > DZ_THRESHOLD and cur.delta_z < -DZ_THRESHOLD)
+                or (prev.delta_z < -DZ_THRESHOLD and cur.delta_z > DZ_THRESHOLD)
             then
                 reversals = reversals + 1
             end
         end
     end
-    local pingpong_trapped = reversals >= 2
+    local pingpong_trapped = reversals >= 1
 
     local is_trapped = bbox_trapped or pingpong_trapped
 
