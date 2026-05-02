@@ -750,7 +750,11 @@ navigator.move = function ()
                 navigator.path = {}
                 navigator.target = nil
                 navigator.is_custom_target = false
-                console.print('[nav] non-jump traversal interacted: ' .. name .. ', waiting for buff (2s cooldown)')
+                local trav_pos_log = trav:get_position()
+                console.print(string.format(
+                    '[nav] non-jump traversal interacted: %s @(%.1f,%.1f,%.2f) | player @(%.1f,%.1f,%.2f) | waiting for buff (2s cooldown)',
+                    name, trav_pos_log:x(), trav_pos_log:y(), trav_pos_log:z(),
+                    player_pos:x(), player_pos:y(), player_pos:z()))
             end
             if name:match('Jump') then
                 -- jump doesnt have traversal buff for some reason
@@ -796,11 +800,12 @@ navigator.move = function ()
             -- Record the crossing's z-delta so trap-escape can prefer the
             -- opposite direction next time.  pre_trav_z was set when last_trav
             -- became non-nil in select_target / try_traversal_route.
+            local crossing_dz = nil
             if navigator.pre_trav_z ~= nil then
-                local dz = player_pos:z() - navigator.pre_trav_z
+                crossing_dz = player_pos:z() - navigator.pre_trav_z
                 navigator.trav_history[#navigator.trav_history + 1] = {
                     t = get_time_since_inject(),
-                    delta_z = dz,
+                    delta_z = crossing_dz,
                 }
                 if #navigator.trav_history > TRAV_HISTORY_MAX then
                     table.remove(navigator.trav_history, 1)
@@ -811,7 +816,13 @@ navigator.move = function ()
                 local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
                 -- Only blacklist the exact crossed gizmo with a timestamp (15s cooldown)
                 navigator.blacklisted_trav[crossed_str] = get_time_since_inject()
-                console.print('[nav] blacklisting crossed traversal ' .. navigator.last_trav:get_skin_name())
+                local trav_pos_log = navigator.last_trav:get_position()
+                console.print(string.format(
+                    '[nav] blacklisting crossed traversal %s @(%.1f,%.1f,%.2f) | player @(%.1f,%.1f,%.2f) | dz=%s',
+                    navigator.last_trav:get_skin_name(),
+                    trav_pos_log:x(), trav_pos_log:y(), trav_pos_log:z(),
+                    player_pos:x(), player_pos:y(), player_pos:z(),
+                    crossing_dz and string.format('%+.2f', crossing_dz) or 'nil'))
             end
             navigator.last_trav = nil
             navigator.failed_target = nil
@@ -866,8 +877,14 @@ navigator.move = function ()
     then
         local missed_trav = navigator.last_trav
         local missed_pos  = missed_trav:get_position()
-        console.print('[nav] buff-missed crossing: ' .. missed_trav:get_skin_name() ..
-            ' (dist=' .. string.format('%.1f', utils.distance(player_pos, missed_pos)) .. ')')
+        local missed_dz = navigator.pre_trav_z and (player_pos:z() - navigator.pre_trav_z) or nil
+        console.print(string.format(
+            '[nav] buff-missed crossing: %s @(%.1f,%.1f,%.2f) | player @(%.1f,%.1f,%.2f) dist=%.1f dz=%s',
+            missed_trav:get_skin_name(),
+            missed_pos:x(), missed_pos:y(), missed_pos:z(),
+            player_pos:x(), player_pos:y(), player_pos:z(),
+            utils.distance(player_pos, missed_pos),
+            missed_dz and string.format('%+.2f', missed_dz) or 'nil'))
         local crossed_str = missed_trav:get_skin_name() .. utils.vec_to_string(missed_pos)
         -- Only blacklist the exact crossed gizmo with a timestamp (15s cooldown)
         navigator.blacklisted_trav[crossed_str] = get_time_since_inject()
@@ -1467,8 +1484,9 @@ navigator.update_trap_state = function(local_player)
                 and string.format('bbox %.1fx%.1f over %ds', bbox_w, bbox_h, TRAP_DETECT_WINDOW)
                 or string.format('traversal ping-pong: %d reversals in %ds', reversals, trav_window)
             console.print(string.format(
-                '[TRAP] detected: %s at (%.1f,%.1f) — escape engaged',
-                reason, (min_x + max_x) / 2, (min_y + max_y) / 2))
+                '[TRAP] detected: %s | bbox center (%.1f,%.1f) | player @ (%.1f,%.1f,%.2f) — escape engaged',
+                reason, (min_x + max_x) / 2, (min_y + max_y) / 2,
+                pos:x(), pos:y(), pos:z()))
         end
     else
         if navigator.trapped then
@@ -1584,6 +1602,10 @@ navigator.attempt_escape = function(local_player)
     local n_in_zone = 0
     local n_skipped_bl = 0
     local n_skipped_z = 0
+    -- Per-candidate diagnostic: build a short summary of every in-zone gizmo
+    -- and why it was kept/rejected.  Printed below so we can see at a glance
+    -- which gizmo got chosen vs which got filtered.
+    local cand_summaries = {}
     for _, trav in ipairs(traversals) do
         local tpos = trav:get_position()
         -- Allow traversals slightly outside the bbox (within 10u) — gizmos at
@@ -1592,15 +1614,20 @@ navigator.attempt_escape = function(local_player)
             and tpos:y() >= min_y - 10 and tpos:y() <= max_y + 10
         then
             n_in_zone = n_in_zone + 1
+            local trav_name = trav:get_skin_name()
+            local dz = tpos:z() - player_z
+            local dist = utils.distance(player_pos, tpos)
             -- Z-plane check: skip gizmos that aren't on the player's current
             -- floor.  Without this, "escape via FreeClimb_Up" might pick the
             -- Up-gizmo on the floor BELOW us (the entrance to the platform
             -- we're standing on), which we can't actually interact with.
-            if math.abs(tpos:z() - player_z) > TRAV_Z_TOLERANCE then
+            if math.abs(dz) > TRAV_Z_TOLERANCE then
                 n_skipped_z = n_skipped_z + 1
+                cand_summaries[#cand_summaries + 1] = string.format(
+                    '%s @(%.1f,%.1f,%.2f dz=%+.2f dist=%.1f) Z-SKIP',
+                    trav_name, tpos:x(), tpos:y(), tpos:z(), dz, dist)
                 goto continue
             end
-            local trav_name = trav:get_skin_name()
             -- Direction inference from skin name (Climb_Up / FreeClimb_Up_Down etc.).
             -- Approximate; we don't know exact destination z without crossing.
             local name_up   = trav_name:match('Up') ~= nil
@@ -1608,7 +1635,7 @@ navigator.attempt_escape = function(local_player)
             local dir_match = (prefer_up and name_up and not name_down)
                 or (prefer_down and name_down and not name_up)
             -- Score: closer = better; direction match = +1000 (dominates distance)
-            local score = -utils.distance(player_pos, tpos)
+            local score = -dist
             if dir_match then score = score + 1000 end
             local trav_str = trav_name .. utils.vec_to_string(tpos)
             -- Long-term trap blacklist always wins regardless of attempt count
@@ -1623,18 +1650,53 @@ navigator.attempt_escape = function(local_player)
                     best_trav = trav
                     best_is_dir_match = dir_match
                 end
+                cand_summaries[#cand_summaries + 1] = string.format(
+                    '%s @(%.1f,%.1f,%.2f dz=%+.2f dist=%.1f dir=%s bl=%s) OK',
+                    trav_name, tpos:x(), tpos:y(), tpos:z(), dz, dist,
+                    tostring(dir_match),
+                    bl_age == math.huge and 'never' or string.format('%.1fs', bl_age))
             else
                 n_skipped_bl = n_skipped_bl + 1
+                local reason = trap_blocked and 'TRAP_BL' or 'BL'
+                cand_summaries[#cand_summaries + 1] = string.format(
+                    '%s @(%.1f,%.1f,%.2f dz=%+.2f dist=%.1f bl_age=%.1fs trap_bl=%s) %s-SKIP',
+                    trav_name, tpos:x(), tpos:y(), tpos:z(), dz, dist,
+                    bl_age == math.huge and -1 or bl_age,
+                    tostring(trap_blocked), reason)
             end
             ::continue::
         end
     end
+    -- Emit per-candidate diagnostic so we can see why each in-zone gizmo
+    -- was kept or rejected.
+    if #cand_summaries > 0 then
+        for i, s in ipairs(cand_summaries) do
+            console.print(string.format('[TRAP] cand[%d/%d] %s', i, #cand_summaries, s))
+        end
+    end
 
     if best_trav ~= nil then
-        local approach = get_closeby_node(best_trav:get_position(), 3)
+        local best_tpos = best_trav:get_position()
+        local approach = get_closeby_node(best_tpos, 3)
+        local approach_source = 'closeby_3'
         if approach == nil then
-            -- Try a wider radius before declaring the gizmo unusable
-            approach = get_closeby_node(best_trav:get_position(), 6)
+            -- Try a wider radius before falling back to the gizmo position
+            approach = get_closeby_node(best_tpos, 6)
+            approach_source = 'closeby_6'
+        end
+        -- Fallback: even if get_closeby_node can't find a walkable approach
+        -- node within 6u (which can happen on tight ledges where A* runs out
+        -- of time on the 8-attempt feasibility check), use the gizmo's own
+        -- position.  navigator.move's interact-on-proximity fires when the
+        -- player is within 3u of last_trav, so as long as the player walks
+        -- close enough the gizmo will trigger.  Better than giving up the
+        -- whole escape when we KNOW which gizmo to use.
+        if approach == nil then
+            approach = best_tpos
+            approach_source = 'gizmo_pos_fallback'
+            console.print(string.format(
+                '[TRAP] approach lookup exhausted for %s @(%.1f,%.1f,%.2f) — using gizmo position directly',
+                best_trav:get_skin_name(), best_tpos:x(), best_tpos:y(), best_tpos:z()))
         end
         if approach ~= nil then
             -- Long-term blacklist all opposite-direction traversals in the
@@ -1668,10 +1730,11 @@ navigator.attempt_escape = function(local_player)
             end
 
             console.print(string.format(
-                '[TRAP] escape #%d: routing to %s @z=%.1f (player_z=%.1f dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds) — cleared %d frontiers, %d in zone, %d z-skipped, %d bl-skipped, %d opposite-traversals long-blocked %ds',
+                '[TRAP] escape #%d: routing to %s @(%.1f,%.1f,%.2f) [approach=%s] | player @(%.1f,%.1f,%.2f) dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds | cleared %d frontiers | %d in zone, %d z-skipped, %d bl-skipped | %d opposite-traversals long-blocked %ds',
                 navigator.trapped_escape_count, best_trav:get_skin_name(),
-                best_trav:get_position():z(), player_z,
-                utils.distance(player_pos, best_trav:get_position()),
+                best_tpos:x(), best_tpos:y(), best_tpos:z(), approach_source,
+                player_pos:x(), player_pos:y(), player_pos:z(),
+                utils.distance(player_pos, best_tpos),
                 tostring(best_is_dir_match), tostring(prefer_up), bl_age_required,
                 cleared, n_in_zone, n_skipped_z, n_skipped_bl,
                 opposite_blocked, TRAV_TRAP_BL_DURATION))
@@ -1692,9 +1755,9 @@ navigator.attempt_escape = function(local_player)
     -- No usable traversal found — at least we cleared the frontiers.
     -- Next escape attempt will retry with a fresh frontier scan.
     console.print(string.format(
-        '[TRAP] escape #%d: no usable traversal in zone (cleared %d frontiers, %d in zone, %d z-skipped (player_z=%.1f), %d bl-skipped at thresh=%ds); will retry in %ds',
-        navigator.trapped_escape_count, cleared, n_in_zone, n_skipped_z, player_z,
-        n_skipped_bl, bl_age_required, TRAP_ESCAPE_COOLDOWN))
+        '[TRAP] escape #%d: no usable traversal in zone | player @(%.1f,%.1f,%.2f) | cleared %d frontiers | %d in zone, %d z-skipped, %d bl-skipped at thresh=%ds | will retry in %ds',
+        navigator.trapped_escape_count, player_pos:x(), player_pos:y(), player_pos:z(),
+        cleared, n_in_zone, n_skipped_z, n_skipped_bl, bl_age_required, TRAP_ESCAPE_COOLDOWN))
 end
 
 -- Called by external API when HR has handled giving_up (teleported away etc.).
