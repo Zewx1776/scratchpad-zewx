@@ -255,10 +255,19 @@ end
 -- (caller can use trav for blacklist-radius decisions), or (false, nil) if
 -- no usable traversal exists nearby.
 local function try_traversal_route(local_player, player_pos)
+    -- Don't engage during trap escape: attempt_escape is the sole authority
+    -- for traversal selection while trapped (or in post-escape grace).  Without
+    -- this guard, the "stuck → nearest traversal" heuristic here would happily
+    -- pick the Down gizmo right back into the trap we just escaped from
+    -- (logzewx showed bot crossing F1→F2 then immediately F2→F1 via this path).
+    local now = get_time_since_inject()
+    if navigator.trapped or now < navigator.trap_post_escape_grace_until then
+        return false, nil
+    end
     local nearby_travs = get_nearby_travs(local_player)
     local closest_trav = nil
     local closest_trav_dist = math.huge
-    local now_for_bl = get_time_since_inject()
+    local now_for_bl = now
     for _, trav in ipairs(nearby_travs) do
         local d = utils.distance(player_pos, trav:get_position())
         local trav_str = trav:get_skin_name() .. utils.vec_to_string(trav:get_position())
@@ -354,7 +363,13 @@ select_target = function (prev_target)
     -- pathfind was partial (couldn't reach goal) AND the traversal is roughly in
     -- the direction of the destination. This prevents unintentional climbing when
     -- just walking past a traversal on a successful path.
-    local should_try_trav = navigator.is_partial_path or navigator.pathfind_fail_count > 0
+    -- Also: skip during trap escape — attempt_escape owns traversal selection
+    -- while trapped or in post-escape grace.
+    local now_for_trap = get_time_since_inject()
+    local in_trap_or_grace = navigator.trapped
+        or now_for_trap < navigator.trap_post_escape_grace_until
+    local should_try_trav = (navigator.is_partial_path or navigator.pathfind_fail_count > 0)
+        and not in_trap_or_grace
     if #traversals > 0 and should_try_trav then
         local closest_trav = nil
         local closest_dist = nil
@@ -1461,29 +1476,34 @@ navigator.update_trap_state = function(local_player)
         end
     end
 
-    -- Need enough samples before deciding
-    if #navigator.trap_pos_history < TRAP_MIN_SAMPLES then return end
-
-    -- Compute bbox over the detect window
-    local cutoff = now - TRAP_DETECT_WINDOW
+    -- Compute bbox if we have enough samples (gates bbox_trapped only).
+    -- Ping-pong detection runs regardless: it depends on trav_history, not
+    -- position samples, and we want it to fire as soon as a 2nd opposite
+    -- crossing happens — even at session start before 20s of position data
+    -- has accumulated.
+    local bbox_trapped = false
+    local bbox_w, bbox_h = 0, 0
     local min_x, max_x = math.huge, -math.huge
     local min_y, max_y = math.huge, -math.huge
-    local n_in_window = 0
-    for _, sample in ipairs(navigator.trap_pos_history) do
-        if sample.t >= cutoff then
-            local sx, sy = sample.pos:x(), sample.pos:y()
-            if sx < min_x then min_x = sx end
-            if sx > max_x then max_x = sx end
-            if sy < min_y then min_y = sy end
-            if sy > max_y then max_y = sy end
-            n_in_window = n_in_window + 1
+    if #navigator.trap_pos_history >= TRAP_MIN_SAMPLES then
+        local cutoff = now - TRAP_DETECT_WINDOW
+        local n_in_window = 0
+        for _, sample in ipairs(navigator.trap_pos_history) do
+            if sample.t >= cutoff then
+                local sx, sy = sample.pos:x(), sample.pos:y()
+                if sx < min_x then min_x = sx end
+                if sx > max_x then max_x = sx end
+                if sy < min_y then min_y = sy end
+                if sy > max_y then max_y = sy end
+                n_in_window = n_in_window + 1
+            end
+        end
+        if n_in_window >= TRAP_MIN_SAMPLES then
+            bbox_w = max_x - min_x
+            bbox_h = max_y - min_y
+            bbox_trapped = bbox_w < TRAP_BBOX_THRESHOLD and bbox_h < TRAP_BBOX_THRESHOLD
         end
     end
-    if n_in_window < TRAP_MIN_SAMPLES then return end
-
-    local bbox_w = max_x - min_x
-    local bbox_h = max_y - min_y
-    local bbox_trapped = bbox_w < TRAP_BBOX_THRESHOLD and bbox_h < TRAP_BBOX_THRESHOLD
 
     -- Secondary signal: traversal ping-pong.  Bbox alone misses scenarios where
     -- the player goes down a traversal, walks to a dead-end frontier 30u away,
@@ -1535,10 +1555,13 @@ navigator.update_trap_state = function(local_player)
             local reason = bbox_trapped
                 and string.format('bbox %.1fx%.1f over %ds', bbox_w, bbox_h, TRAP_DETECT_WINDOW)
                 or string.format('traversal ping-pong: %d reversals in %ds', reversals, trav_window)
+            -- bbox center may be undefined if bbox check didn't run; use
+            -- player position as fallback so the log line stays readable.
+            local cx = (min_x ~= math.huge) and (min_x + max_x) / 2 or pos:x()
+            local cy = (min_y ~= math.huge) and (min_y + max_y) / 2 or pos:y()
             console.print(string.format(
                 '[TRAP] detected: %s | bbox center (%.1f,%.1f) | player @ (%.1f,%.1f,%.2f) — escape engaged',
-                reason, (min_x + max_x) / 2, (min_y + max_y) / 2,
-                pos:x(), pos:y(), pos:z()))
+                reason, cx, cy, pos:x(), pos:y(), pos:z()))
         end
     else
         if navigator.trapped then
