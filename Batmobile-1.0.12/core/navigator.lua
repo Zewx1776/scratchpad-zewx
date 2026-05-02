@@ -878,6 +878,16 @@ navigator.move = function ()
             navigator.failed_target = nil
             navigator.failed_target_radius = 15
             navigator.is_partial_path = false
+            -- Reset stuck detection state: a successful cross teleports the
+            -- player but doesn't always change x/y enough to trip the normal
+            -- last_pos update.  Without this, STUCK fires immediately after
+            -- the cross and unstuck() can pull the player back AWAY from the
+            -- post-trav escape target — sometimes mid-walk to a follow-up
+            -- traversal that trap-escape just routed to.
+            navigator.last_update     = get_time_since_inject()
+            navigator.last_pos        = cur_node
+            navigator.unstuck_nodes   = {}
+            navigator.unstuck_count   = 0
             -- Brief escape to avoid re-triggering the landing-side gizmo,
             -- then re-plan toward the original destination from the new position.
             if trav_pos_for_escape then
@@ -943,6 +953,13 @@ navigator.move = function ()
         navigator.failed_target  = nil
         navigator.failed_target_radius = 15
         navigator.is_partial_path = false
+        -- Reset stuck-detection so STUCK doesn't fire immediately after the
+        -- missed-buff cross (player teleported but x/y may not have moved
+        -- enough to trip the normal last_pos update).
+        navigator.last_update    = get_time_since_inject()
+        navigator.last_pos       = cur_node
+        navigator.unstuck_nodes  = {}
+        navigator.unstuck_count  = 0
         local escape_pt = compute_escape_target(missed_pos, player_pos)
         navigator.trav_escape_pos = missed_pos
         -- Preserve the original destination for restoration after brief escape
@@ -1059,11 +1076,27 @@ navigator.move = function ()
         not utils.is_cced(local_player)
     then
         local dist_to_target = utils.distance(cur_node, navigator.target)
-        console.print('[nav] STUCK target=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' path=#' .. #navigator.path .. ' unstuck_count=' .. navigator.unstuck_count)
-        tracker.bench_start("unstuck")
-        unstuck(local_player)
-        tracker.bench_stop("unstuck")
-        navigator.last_update = navigator.last_update + 0.25
+        -- If we're close to a target traversal, suppress unstuck — we're
+        -- positioning to interact, not stuck on terrain.  unstuck() can
+        -- cast an evade or inject a perpendicular path node, both of which
+        -- can pull the player away from the gizmo just as the proximity
+        -- interact (within 3u) is about to fire on the next tick.
+        if navigator.last_trav ~= nil
+            and utils.distance(player_pos, navigator.last_trav:get_position()) <= 5
+        then
+            console.print(string.format(
+                '[nav] STUCK suppressed: positioning for traversal %s (dist=%.1f) — giving interact a chance',
+                navigator.last_trav:get_skin_name(),
+                utils.distance(player_pos, navigator.last_trav:get_position())))
+            -- Push last_update forward so we don't re-trip every tick
+            navigator.last_update = get_time_since_inject() + 0.5
+        else
+            console.print('[nav] STUCK target=' .. utils.vec_to_string(navigator.target) .. ' dist=' .. string.format('%.1f', dist_to_target) .. ' path=#' .. #navigator.path .. ' unstuck_count=' .. navigator.unstuck_count)
+            tracker.bench_start("unstuck")
+            unstuck(local_player)
+            tracker.bench_stop("unstuck")
+            navigator.last_update = navigator.last_update + 0.25
+        end
     end
     if navigator.last_pos == nil or
         utils.distance(cur_node, navigator.last_pos) >= 0.5 or
@@ -1847,6 +1880,14 @@ navigator.attempt_escape = function(local_player)
             -- (Re-snapshotted at interact time below for accurate dz reading.)
             navigator.pre_trav_z = player_pos:z()
             navigator.trav_delay = nil  -- allow immediate interact when in range
+            -- Reset stuck detection so the new escape target gets a fresh
+            -- 1-second window to be reached before STUCK fires.  Without this,
+            -- a stale last_update from F1 wandering can trigger STUCK
+            -- immediately after we route, and unstuck() can pull the player
+            -- away from the gizmo it's about to interact with.
+            navigator.last_update    = now
+            navigator.unstuck_nodes  = {}
+            navigator.unstuck_count  = 0
             -- Post-escape grace: keep trap state alive for a few seconds even
             -- after the bbox grows (climbing naturally widens it).  Lets the
             -- next attempt_escape fire on the new floor and find that floor's
