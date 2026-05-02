@@ -176,17 +176,15 @@ local get_closeby_node = function (trav_node, max_dist)
             cur_node, node, navigator.is_custom_target, shared_eval, CLOSEBY_TIME_CAP)
         attempts = attempts + 1
         if #result > 0 and not is_partial then
-            tracker.bench_set_meta("get_closeby_node", string.format(
+            tracker.bench_stop("get_closeby_node", string.format(
                 "max_dist=%d candidates=%d attempts=%d ok",
                 max_dist, #nodes, attempts))
-            tracker.bench_stop("get_closeby_node")
             return node
         end
     end
-    tracker.bench_set_meta("get_closeby_node", string.format(
+    tracker.bench_stop("get_closeby_node", string.format(
         "max_dist=%d candidates=%d attempts=%d EXHAUSTED",
         max_dist, #nodes, attempts))
-    tracker.bench_stop("get_closeby_node")
     return nil
 end
 -- Try routing through a nearby traversal to reach navigator.target. Returns
@@ -1027,10 +1025,10 @@ navigator.move = function ()
             elseif dist_to_target < navigator.partial_target_best_dist - 1 then
                 navigator.partial_target_best_dist = dist_to_target
                 navigator.partial_target_last_progress_time = now
-            elseif now - navigator.partial_target_last_progress_time > 6
+            elseif now - navigator.partial_target_last_progress_time > 4
                 and navigator.last_trav == nil
             then
-                console.print('[nav] partial-path no progress for 6s (best=' ..
+                console.print('[nav] partial-path no progress for 4s (best=' ..
                     string.format('%.1f', navigator.partial_target_best_dist) ..
                     ' cur=' .. string.format('%.1f', dist_to_target) ..
                     ') — abandoning unreachable target ' .. utils.vec_to_string(navigator.target))
@@ -1214,7 +1212,15 @@ navigator.move = function ()
             navigator.path = result
             -- Gate the next replan: brief player deviations (looting, dodge) won't re-trigger A*.
             -- Custom targets (kill_monsters) get a shorter window since enemy movement matters more.
-            navigator.pathfind_replan_cooldown = get_time_since_inject() + (navigator.is_custom_target and 0.3 or 0.5)
+            -- Far targets (>30u) get a longer window — at player speed ~7m/s the path stays
+            -- valid for >1s and find_path is expensive at long distances (~50ms+ per call).
+            local replan_cooldown
+            if dist_to_target > 30 then
+                replan_cooldown = navigator.is_custom_target and 0.8 or 1.0
+            else
+                replan_cooldown = navigator.is_custom_target and 0.3 or 0.5
+            end
+            navigator.pathfind_replan_cooldown = get_time_since_inject() + replan_cooldown
         end
     end
 

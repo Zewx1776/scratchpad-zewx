@@ -220,12 +220,11 @@ end
 pathfinder.string_pull = string_pull
 
 -- Bench wrapper: lets find_path see how much A* time is post-process smoothing,
--- and reports input/output node counts at peak.
+-- and reports input/output node counts at peak (meta only stamps on new max).
 local function pull_bench(path, step)
     tracker.bench_start("string_pull")
     local out = string_pull(path, step)
-    tracker.bench_set_meta("string_pull", string.format("in=%d out=%d", #path, #out))
-    tracker.bench_stop("string_pull")
+    tracker.bench_stop("string_pull", string.format("in=%d out=%d", #path, #out))
     return out
 end
 
@@ -270,11 +269,32 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     -- can plumb a per-call override.
     local goal_dist   = heuristic(start_node, goal_node)
     local iter_limit  = math.max(3000, math.min(10000, math.floor(goal_dist * 300)))
-    local time_cap    = time_cap_override or 0.150
+    -- Tiered time caps: failed (limit_partial) searches dominate spike cost
+    -- when the target is unreachable.  Hard-limit the worst case based on
+    -- distance — a 70u target that's actually unreachable used to hit the
+    -- 150ms ceiling 5+ times per stall (750ms/5s wall time of pure waste).
+    -- - <20u  : 100ms (close paths almost always succeed in <50ms)
+    -- - 20-50u: 100ms (still affordable; most legit paths fit)
+    -- - >50u  : 70ms  (failure is likely; cap the damage per attempt)
+    local default_time_cap
+    if goal_dist > 50 then
+        default_time_cap = 0.070
+    else
+        default_time_cap = 0.100
+    end
+    local time_cap = time_cap_override or default_time_cap
     -- For tight per-call overrides (e.g. get_closeby_node feasibility checks),
-    -- skip the 0.100 lower bound so 8 attempts can stay under ~300ms total.
-    local time_lb     = time_cap_override and 0 or 0.100
-    local time_limit  = math.max(time_lb, math.min(time_cap, goal_dist * 0.024))
+    -- skip the 0.080 lower bound so 8 attempts can stay under ~250ms total.
+    local time_lb  = time_cap_override and 0 or 0.080
+    local time_limit = math.max(time_lb, math.min(time_cap, goal_dist * 0.024))
+
+    -- Skip the wall-ring penalty for far goals (>25u).  Cold cells beyond the
+    -- explorer's f_radius=20 warm zone make the per-iter ring evaluation cost
+    -- ~0.2ms instead of <0.05ms; on a 700-iter long pathfind this hits the
+    -- time cap and returns limit_partial.  The ring penalty is a smoothness
+    -- aid for short tactical movement (corner clearance); for long pursuits the
+    -- player's own movement smoothing handles minor wall hugging.
+    local skip_wall_ring = goal_dist > 25
 
     -- Pre-compute directions once per find_path call
     local dist = settings.step
@@ -293,15 +313,17 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
     heap:push(start_h, start_str, start_node)
     in_open[start_str] = 0
 
-    -- Common return point: stamps bench meta with iter count + result classification,
-    -- bumps result/bucket counters, and stops the find_path timer.
+    -- Common return point: passes meta to bench_stop so it's recorded ONLY when
+    -- this call sets a new max (was: bench_set_meta unconditionally, which
+    -- overwrote the peak meta with the last call's meta — the report's peak{}
+    -- annotation was therefore unrelated to the max-time call).
     local function pf_return(path, is_partial, status)
-        tracker.bench_set_meta("find_path", string.format(
+        local meta = string.format(
             "iters=%d dist=%.0f custom=%s status=%s plen=%d",
-            counter, goal_dist, tostring(is_custom_target), status, #path))
+            counter, goal_dist, tostring(is_custom_target), status, #path)
         tracker.bench_count("pf_" .. pf_bucket(counter))
         tracker.bench_count("pf_status_" .. status)
-        tracker.bench_stop("find_path")
+        tracker.bench_stop("find_path", meta)
         return path, is_partial
     end
 
@@ -340,10 +362,12 @@ pathfinder.find_path = function (start, goal, is_custom_target, shared_evaluated
             best_node_str = cur_str
         end
 
-        -- Wall buffer is now applied via cost penalty (see get_valid_neighbor) rather
-        -- than hard rejection, so we no longer need the is_custom_target bypass.  Still
-        -- skip the penalty within ~1u of start so a player wedged near a wall can escape.
-        local ignore_walls = utils.distance(start_node, cur_node) < 1
+        -- Wall buffer is applied via cost penalty (see get_valid_neighbor) rather
+        -- than hard rejection.  Skip when:
+        -- - goal is >25u away (skip_wall_ring; far paths can't afford ring evals
+        --   on cold cells without hitting the time cap)
+        -- - within ~1u of start (lets a player wedged near a wall escape)
+        local ignore_walls = skip_wall_ring or utils.distance(start_node, cur_node) < 1
         local neighbours, penalties
         neighbours, evaluated, penalties = get_neighbors(cur_node, goal_node, evaluated, ignore_walls, directions)
 
@@ -377,7 +401,11 @@ end
 -- Debug variant: no distance-scaled limits — runs until path found, open-set exhausted,
 -- or safety caps hit. Returns (path_or_nil, iterations, elapsed_seconds, status_string).
 -- status: "found" | "no_path" | "iter_limit" | "time_limit"
-pathfinder.find_path_debug = function(start, goal)
+--
+-- Optional opts: { iter_cap = N, time_cap = seconds } to tighten the safety
+-- ceiling for runtime callers (long_path.navigate_to in production, etc.).
+-- Without opts the original 100k / 15s ceiling applies (debug button use).
+pathfinder.find_path_debug = function(start, goal, opts)
     local start_node = utils.normalize_node(start)
     local goal_node  = utils.normalize_node(goal)
     local start_str  = utils.vec_to_string(start_node)
@@ -394,9 +422,10 @@ pathfinder.find_path_debug = function(start, goal)
     local best_node_h   = heuristic(start_node, goal_node)
     local best_node_str = start_str
 
-    -- Safety ceiling — prevents total game freeze; still far above normal 5000/0.3s limits
-    local HARD_ITER_LIMIT = 100000
-    local HARD_TIME_LIMIT = 15.0
+    -- Safety ceiling — prevents total game freeze; still far above normal 5000/0.3s limits.
+    -- Caller can tighten via opts to bound runtime (debug button leaves them at the max).
+    local HARD_ITER_LIMIT = (opts and opts.iter_cap) or 100000
+    local HARD_TIME_LIMIT = (opts and opts.time_cap) or 15.0
 
     local dist = settings.step
     local directions = {

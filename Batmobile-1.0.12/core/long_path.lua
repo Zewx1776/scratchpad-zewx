@@ -12,6 +12,14 @@ local long_path = {
     navigating    = false, -- true while moving to target
 }
 
+-- Runtime caps for navigate_to / find_long_path — keeps a single failed pursuit
+-- from freezing the game for 1-2 seconds when the target is across a cliff or
+-- otherwise unreachable.  300ms is well above the regular find_path 150ms cap
+-- (long_path IS supposed to do more work) but well under user-perceptible jank.
+-- 10k iters is generous for a 70u path (~3500 cells with normal detour ratio).
+-- The debug button (long_path.test_path) still uses the original 100k/15s ceiling.
+local NAVIGATE_TO_CAPS = { iter_cap = 10000, time_cap = 0.300 }
+
 function long_path.set_target()
     local player = get_local_player()
     if not player then
@@ -128,7 +136,9 @@ end
 function long_path.find_long_path(start, goal)
     if goal.get_position then goal = goal:get_position() end
     local dist = utils.distance(start, goal)
-    local path, iters, elapsed, status = pathfinder.find_path_debug(start, goal)
+    -- Same runtime caps as navigate_to so external callers (e.g. remembered_chest
+    -- pathfind in HelltideRevamped) can't trigger multi-second freezes.
+    local path, iters, elapsed, status = pathfinder.find_path_debug(start, goal, NAVIGATE_TO_CAPS)
     local ms = elapsed * 1000
     console.print(string.format("[LONG PATH] find_long_path: dist=%.1f  status=%s  %s  iters=%d  time=%.1fms",
         dist, status,
@@ -149,8 +159,9 @@ function long_path.navigate_to(goal)
     end
     local start = player:get_position()
     local dist  = utils.distance(start, goal)
-    console.print(string.format("[LONG PATH] navigate_to: finding uncapped path (dist=%.1f) ...", dist))
-    local path, iters, elapsed, status = pathfinder.find_path_debug(start, goal)
+    console.print(string.format("[LONG PATH] navigate_to: finding capped path (dist=%.1f) cap=%dms ...",
+        dist, NAVIGATE_TO_CAPS.time_cap * 1000))
+    local path, iters, elapsed, status = pathfinder.find_path_debug(start, goal, NAVIGATE_TO_CAPS)
     local ms = elapsed * 1000
     local is_partial = status == "no_path_partial" or status == "iter_limit_partial" or status == "time_limit_partial"
     if status == "found" or (is_partial and path ~= nil and #path > 0) then

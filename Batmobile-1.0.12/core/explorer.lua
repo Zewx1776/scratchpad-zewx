@@ -593,9 +593,8 @@ explorer.update = function (local_player)
             end
         end
     end
-    tracker.bench_set_meta("explorer_scan", string.format("walk_checks=%d frontiers=%d",
+    tracker.bench_stop("explorer_scan", string.format("walk_checks=%d frontiers=%d",
         _scan_walkable_checks, explorer.frontier_count))
-    tracker.bench_stop("explorer_scan")
 
     -- Eviction pass: drop frontiers that just became interior. A frontier is
     -- a walkable cell adjacent to *unknown* (unscanned) territory. After a
@@ -646,9 +645,8 @@ explorer.update = function (local_player)
                 remove_frontier(ns)
             end
         end
-        tracker.bench_set_meta("explorer_evict", string.format("scanned=%d evicted=%d total_frontiers=%d",
+        tracker.bench_stop("explorer_evict", string.format("scanned=%d evicted=%d total_frontiers=%d",
             _evict_scanned, to_evict and #to_evict or 0, explorer.frontier_count))
-        tracker.bench_stop("explorer_evict")
     end
 end
 explorer.select_node = function (local_player, failed)

@@ -1,200 +1,200 @@
-14854.73 :    km_bm_pulse                            88   17.4    2.080   25.000    183.00  peak{dist=5.9} 
-14854.73 :    bm_pulse                               34    6.7    5.382   25.000    183.00  peak{force=false} 
-14854.73 :    get_kill_target                         5    1.0    0.200    1.000      1.00 
-14854.73 :    km_set_target                          88   17.4    0.011    1.000      1.00  peak{dist=8.0} 
-14854.73 :    get_all_actors                          3    0.6    0.000    0.000      0.00 
-14854.73 :    [EVENTS]  actor_cache_miss=3(0.6/s)   bm_pulse_normal=34(6.7/s)   bm_pulse_throttled=54(10.7/s)   km_cache_hit=83(16.4/s)   km_cache_miss=5(1.0/s)   km_target_far=88(17.4/s)   state_KILL_MONSTERS=106(21.0/s) 
-14855.22 :  [nav] pathfinding to=-620,-536 dist=8.2 custom=true 
-14855.22 :  [nav] pathfind OK, path=#3 
-14857.03 :  [nav] pathfinding to=-622.5,-533 dist=4.9 custom=true 
-14857.03 :  [nav] pathfind OK, path=#2 
-14857.65 :  [nav] pathfinding to=-634,-536.5 dist=13.4 custom=true 
-14857.65 :  [nav] pathfind OK, path=#3 
-14857.65 :  [BATMOBILE PERF] === 5.2s window === 
-14857.65 :    [NAV STATE] paused=true  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=0 
-14857.65 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-14857.65 :    total_update               37( 7.1/s)  avg   4.405ms  max  24.000ms  total   163.0ms 
-14857.65 :    nav_explorer_update        37( 7.1/s)  avg   4.135ms  max  24.000ms  total   153.0ms 
-14857.65 :    explorer_scan              14( 2.7/s)  avg   7.429ms  max  13.000ms  total   104.0ms  peak{walk_checks=1870 frontiers=7047} 
-14857.65 :    total_move                 37( 7.1/s)  avg   1.784ms  max  18.000ms  total    66.0ms 
-14857.65 :    explorer_evict              7( 1.3/s)  avg   7.000ms  max  20.000ms  total    49.0ms  peak{scanned=1790 evicted=1569 total_frontiers=5602} 
-14857.65 :    find_path                   8( 1.5/s)  avg   4.750ms  max  17.000ms  total    38.0ms  peak{iters=56 dist=13 custom=true status=found plen=3} 
-14857.65 :    get_nearby_travs           37( 7.1/s)  avg   0.676ms  max   2.000ms  total    25.0ms 
-14857.65 :    string_pull                 8( 1.5/s)  avg   0.500ms  max   1.000ms  total     4.0ms  peak{in=25 out=3} 
-14857.65 :    nav_move_spell             37( 7.1/s)  avg   0.054ms  max   1.000ms  total     2.0ms 
-14857.65 :    nav_consume_path           33( 6.3/s)  avg   0.030ms  max   1.000ms  total     1.0ms 
-14857.65 :    nav_trav_block             37( 7.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14857.65 :    [EVENTS]  explorer_scan_throttled=23(4.4/s)   move_ran=37(7.1/s)   move_spell_cast=1(0.2/s)   pf_iters_lt100=8(1.5/s)   pf_status_found=8(1.5/s)   set_target_call=92(17.6/s)   set_target_drift_noise=85(16.2/s)   set_target_replan=7(1.3/s)   update_ran=37(7.1/s) 
-14857.93 :  [nav] pathfinding to=-634,-536.5 dist=13.6 custom=true 
-14857.93 :  [nav] pathfind OK, path=#3 
-14858.05 :  [nav] pathfinding to=-623,-528 dist=3.2 custom=true 
-14858.05 :  [nav] pathfind OK, path=#2 
-14858.90 :  [nav] pathfinding to=-645,-523 dist=24.1 custom=true 
-14858.90 :  [BM SPIKE] find_path 147.0ms 
-14858.90 :  [nav] pathfind OK, path=#8 
-14858.90 :  [BM SPIKE] total_move 148.0ms 
-14858.90 :  [HR SPIKE] bm_pulse 177.0ms force=false 
-14858.90 :  [HR SPIKE] km_bm_pulse 177.0ms dist=23.1 
-14858.90 :  [HR SPIKE] kill_monsters 177.0ms 
-14858.90 :  [HR SPIKE] hr_tick 177.0ms state=KILL_MONSTERS 
-14859.01 :  [nav] pathfinding to=-624.5,-537 dist=10.1 custom=true 
-14859.01 :  [nav] pathfind OK, path=#4 
-14859.74 :  [HR PERF] ============ 5.0s window ============ 
-14859.74 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-14859.74 :    hr_tick                                85   16.9    4.376  177.000    372.00  peak{state=KILL_MONSTERS} 
-14859.74 :    kill_monsters                          85   16.9    4.259  177.000    362.00 
-14859.74 :    km_bm_pulse                            73   14.6    4.904  177.000    358.00  peak{dist=23.1} 
-14859.74 :    bm_pulse                               30    6.0   11.933  177.000    358.00  peak{force=false} 
-14859.74 :    get_all_actors                          2    0.4    0.000    0.000      0.00 
-14859.74 :    get_kill_target                         5    1.0    0.000    0.000      0.00 
-14859.74 :    km_set_target                          73   14.6    0.000    0.000      0.00 
-14859.74 :    [EVENTS]  actor_cache_miss=2(0.4/s)   bm_pulse_normal=30(6.0/s)   bm_pulse_throttled=43(8.6/s)   km_cache_hit=80(16.0/s)   km_cache_miss=5(1.0/s)   km_target_close=12(2.4/s)   km_target_far=73(14.6/s)   state_KILL_MONSTERS=91(18.1/s) 
-14861.00 :  [nav] STUCK target=-631.5,-537 dist=7.6 path=#0 unstuck_count=0 
-14861.00 :  [nav] has path (#1) but no move, remaining=#1 target=-631.5,-537 
-14861.14 :  [nav] has path (#1) but no move, remaining=#1 target=-631.5,-537 
-14861.54 :  [nav] pathfinding to=-631.5,-537 dist=5.2 custom=true 
-14861.54 :  [nav] pathfind OK, path=#2 
-14862.09 :  [nav] pathfinding to=-629.5,-540 dist=6.2 custom=true 
-14862.09 :  [nav] pathfind OK, path=#2 
-14862.69 :  [BATMOBILE PERF] === 5.0s window === 
-14862.69 :    [NAV STATE] paused=true  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=1 
-14862.69 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-14862.69 :    total_move                 23( 4.6/s)  avg   8.652ms  max 148.000ms  total   199.0ms 
-14862.69 :    find_path                   6( 1.2/s)  avg  28.667ms  max 147.000ms  total   172.0ms  peak{iters=24 dist=6 custom=true status=found plen=2} 
-14862.69 :    total_update               23( 4.6/s)  avg   4.870ms  max  29.000ms  total   112.0ms 
-14862.69 :    nav_explorer_update        23( 4.6/s)  avg   4.696ms  max  29.000ms  total   108.0ms 
-14862.69 :    explorer_scan              10( 2.0/s)  avg   8.800ms  max  22.000ms  total    88.0ms  peak{walk_checks=654 frontiers=6868} 
-14862.69 :    get_nearby_travs           23( 4.6/s)  avg   1.000ms  max  15.000ms  total    23.0ms 
-14862.69 :    explorer_evict              5( 1.0/s)  avg   3.800ms  max   7.000ms  total    19.0ms  peak{scanned=794 evicted=653 total_frontiers=6252} 
-14862.69 :    string_pull                 6( 1.2/s)  avg   0.833ms  max   3.000ms  total     5.0ms  peak{in=13 out=2} 
-14862.69 :    nav_consume_path           22( 4.4/s)  avg   0.091ms  max   1.000ms  total     2.0ms 
-14862.69 :    unstuck                     1( 0.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14862.69 :    nav_trav_block             23( 4.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14862.69 :    nav_move_spell             23( 4.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14862.69 :    [EVENTS]  explorer_scan_throttled=13(2.6/s)   move_ran=23(4.6/s)   move_spell_cast=1(0.2/s)   pf_iters_ge2000=1(0.2/s)   pf_iters_lt100=4(0.8/s)   pf_iters_lt500=1(0.2/s)   pf_status_found=6(1.2/s)   set_target_call=43(8.5/s)   set_target_drift_noise=37(7.3/s)   set_target_replan=6(1.2/s)   update_ran=23(4.6/s) 
-14863.04 :  [KILL MONSTERS] No targets, resuming patrol 
-14863.10 :  [CHECK_EVENTS] No action | cinders=127 | kill=true | trav=false | events=false | remembered=0 
-14863.10 :  [EXPLORER STATS] visited=7 unvisited=18 unreachable=0 cooling=1 total=26 
-14863.10 :  [NAV] mode=CUSTOM_TARGET stuck=0.0s moved=0.0 paused=false done=false 
-14863.10 :  [nav] pathfinding to=-611,-519.5 dist=26.9 custom=true 
-14863.10 :  [BM SPIKE] find_path 89.0ms 
-14863.10 :  [nav] pathfind OK, path=#5 
-14863.10 :  [BM SPIKE] total_move 89.0ms 
-14863.10 :  [HR SPIKE] bm_pulse 95.0ms force=true 
-14863.10 :  [HR SPIKE] navigate_to 95.0ms 
-14863.10 :  [HR SPIKE] hr_tick 98.0ms state=EXPLORE_HELLTIDE 
-14863.49 :  [nav] pathfinding to=-611,-519.5 dist=29.6 custom=true 
-14863.49 :  [BM SPIKE] find_path 54.0ms 
-14863.49 :  [nav] pathfind OK, path=#5 
-14863.49 :  [BM SPIKE] total_move 54.0ms 
-14863.49 :  [HR SPIKE] bm_pulse 54.0ms force=false 
-14863.49 :  [HR SPIKE] navigate_to 54.0ms 
-14863.49 :  [HR SPIKE] hr_tick 54.0ms state=EXPLORE_HELLTIDE 
-14863.89 :  [nav] pathfinding to=-611,-519.5 dist=33.0 custom=true 
-14863.89 :  [nav] pathfind OK, path=#5 
-14863.89 :  [HR SPIKE] bm_pulse 49.0ms force=false 
-14863.89 :  [HR SPIKE] navigate_to 49.0ms 
-14863.89 :  [HR SPIKE] hr_tick 49.0ms state=EXPLORE_HELLTIDE 
-14864.14 :  [NAV] mode=CUSTOM_TARGET stuck=0.3s moved=2.3 paused=false done=false 
-14864.29 :  [nav] pathfinding to=-611,-519.5 dist=36.4 custom=true 
-14864.29 :  [nav] pathfind OK, path=#5 
-14864.29 :  [BM SPIKE] total_move 51.0ms 
-14864.29 :  [HR SPIKE] bm_pulse 64.0ms force=false 
-14864.29 :  [HR SPIKE] navigate_to 64.0ms 
-14864.29 :  [HR SPIKE] hr_tick 65.0ms state=EXPLORE_HELLTIDE 
-14864.60 :  [nav] pathfinding to=-611,-519.5 dist=37.9 custom=true 
-14864.60 :  [BM SPIKE] find_path 65.0ms 
-14864.60 :  [nav] pathfind OK, path=#5 
-14864.60 :  [BM SPIKE] total_move 66.0ms 
-14864.60 :  [HR SPIKE] bm_pulse 75.0ms force=false 
-14864.60 :  [HR SPIKE] navigate_to 75.0ms 
-14864.60 :  [HR SPIKE] hr_tick 75.0ms state=EXPLORE_HELLTIDE 
-14864.78 :  [HR PERF] ============ 5.0s window ============ 
-14864.78 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-14864.78 :    hr_tick                                52   10.3    8.981   98.000    467.00  peak{state=EXPLORE_HELLTIDE} 
-14864.78 :    bm_pulse                               29    5.8   15.345   95.000    445.00  peak{force=true} 
-14864.78 :    navigate_to                            20    4.0   19.250   95.000    385.00 
-14864.78 :    kill_monsters                          32    6.4    1.906   15.000     61.00 
-14864.78 :    km_bm_pulse                            31    6.2    1.935   15.000     60.00  peak{dist=7.6} 
-14864.78 :    check_events                            4    0.8    2.250    3.000      9.00 
-14864.78 :    scan_remember_chests                    1    0.2    2.000    2.000      2.00 
-14864.78 :    get_all_actors                          5    1.0    0.200    1.000      1.00 
-14864.78 :    get_kill_target                         4    0.8    0.250    1.000      1.00 
-14864.78 :    km_set_target                          31    6.2    0.000    0.000      0.00 
-14864.78 :    [EVENTS]  actor_cache_hit=34(6.8/s)   actor_cache_miss=5(1.0/s)   bm_pulse_forced=1(0.2/s)   bm_pulse_normal=28(5.6/s)   bm_pulse_throttled=22(4.4/s)   chest_scan_skip=3(0.6/s)   find_closest_target=36(7.2/s)   km_cache_hit=32(6.4/s)   km_cache_miss=4(0.8/s)   km_target_far=31(6.2/s)   state_EXPLORE_HELLTIDE=20(4.0/s)   state_KILL_MONSTERS=48(9.5/s) 
-14865.00 :  [nav] pathfinding to=-611,-519.5 dist=35.1 custom=true 
-14865.00 :  [BM SPIKE] find_path 87.0ms 
-14865.00 :  [nav] pathfind OK, path=#5 
-14865.00 :  [BM SPIKE] total_move 88.0ms 
-14865.00 :  [HR SPIKE] bm_pulse 93.0ms force=false 
-14865.00 :  [HR SPIKE] navigate_to 93.0ms 
-14865.00 :  [HR SPIKE] hr_tick 93.0ms state=EXPLORE_HELLTIDE 
-14865.10 :  [NAV] mode=CUSTOM_TARGET stuck=1.3s moved=2.9 paused=false done=false 
-14865.44 :  [nav] pathfinding to=-611,-519.5 dist=32.2 custom=true 
-14865.44 :  [BM SPIKE] find_path 55.0ms 
-14865.44 :  [nav] pathfind OK, path=#5 
-14865.44 :  [BM SPIKE] total_move 56.0ms 
-14865.44 :  [HR SPIKE] bm_pulse 62.0ms force=false 
-14865.44 :  [HR SPIKE] navigate_to 63.0ms 
-14865.44 :  [HR SPIKE] hr_tick 63.0ms state=EXPLORE_HELLTIDE 
-14865.84 :  [nav] pathfinding to=-611,-519.5 dist=30.8 custom=true 
-14865.84 :  [nav] pathfind OK, path=#5 
-14865.84 :  [HR SPIKE] bm_pulse 32.0ms force=false 
-14865.84 :  [HR SPIKE] navigate_to 32.0ms 
-14865.84 :  [HR SPIKE] hr_tick 32.0ms state=EXPLORE_HELLTIDE 
-14866.21 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=1.0 paused=false done=false 
-14866.21 :  [nav] pathfinding to=-611,-519.5 dist=28.5 custom=true 
-14866.21 :  [BM SPIKE] find_path 70.0ms 
-14866.21 :  [nav] pathfind OK, path=#5 
-14866.21 :  [BM SPIKE] total_move 70.0ms 
-14866.21 :  [HR SPIKE] bm_pulse 75.0ms force=false 
-14866.21 :  [HR SPIKE] navigate_to 75.0ms 
-14866.21 :  [HR SPIKE] hr_tick 76.0ms state=EXPLORE_HELLTIDE 
-14866.55 :  [nav] pathfinding to=-611,-519.5 dist=25.7 custom=true 
-14866.55 :  [nav] pathfind OK, path=#4 
-14866.95 :  [nav] pathfinding to=-611,-519.5 dist=22.8 custom=true 
-14866.95 :  [nav] pathfind OK, path=#4 
-14867.24 :  [EXPLORER] Arrived node 5 (dist=19.9) visit#1 | unvisited remaining: 18 
-14867.30 :  [EXPLORER] -> Node 9 at (-571,-519) dist=51m last=never visits=0 | unvisited=18/26 
-14867.30 :  [EXPLORER] Top picks: #9(s=999999949 d=51) #1(s=999999935 d=65) #12(s=999999910 d=90) 
-14867.30 :  [EXPLORER] Intermediate: (-582,-523) -> node 9 (-571,-519) try_dist=40 walk=true 
-14867.30 :  [NAV] mode=CUSTOM_TARGET stuck=0.6s moved=4.2 paused=false done=false 
-14867.30 :  [NAV] reassert fail #1/4 dist=40.0 (was 27.2, need -8m progress) 
-14867.30 :  [nav] pathfinding to=-581.5,-523 dist=43.6 custom=true 
-14867.30 :  [nav] pathfind OK, path=#4 
-14867.60 :  [nav] pathfinding to=-581.5,-523 dist=41.2 custom=true 
-14867.60 :  [nav] pathfind OK, path=#4 
-14867.72 :  [BATMOBILE PERF] === 5.0s window === 
-14867.72 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=3 
-14867.72 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
-14867.72 :    total_move                 38( 7.6/s)  avg  16.526ms  max  89.000ms  total   628.0ms 
-14867.72 :    find_path                  13( 2.6/s)  avg  47.154ms  max  89.000ms  total   613.0ms  peak{iters=231 dist=41 custom=true status=found plen=4} 
-14867.72 :    total_update               38( 7.6/s)  avg   4.237ms  max  20.000ms  total   161.0ms 
-14867.72 :    nav_explorer_update        38( 7.6/s)  avg   4.184ms  max  20.000ms  total   159.0ms 
-14867.72 :    explorer_scan              24( 4.8/s)  avg   5.250ms  max  15.000ms  total   126.0ms  peak{walk_checks=761 frontiers=6766} 
-14867.72 :    string_pull                13( 2.6/s)  avg   3.923ms  max  11.000ms  total    51.0ms  peak{in=73 out=4} 
-14867.72 :    explorer_evict             12( 2.4/s)  avg   2.583ms  max   5.000ms  total    31.0ms  peak{scanned=901 evicted=748 total_frontiers=6011} 
-14867.72 :    get_nearby_travs           38( 7.6/s)  avg   0.316ms  max   2.000ms  total    12.0ms 
-14867.72 :    nav_consume_path           15( 3.0/s)  avg   0.067ms  max   1.000ms  total     1.0ms 
-14867.72 :    nav_trav_block             38( 7.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14867.72 :    nav_move_spell             38( 7.6/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
-14867.72 :    [EVENTS]  explorer_scan_throttled=14(2.8/s)   move_ran=38(7.6/s)   move_spell_cast=1(0.2/s)   pf_iters_lt2000=10(2.0/s)   pf_iters_lt500=3(0.6/s)   pf_status_found=13(2.6/s)   set_target_call=6(1.2/s)   set_target_drift_noise=4(0.8/s)   set_target_replan=2(0.4/s)   update_ran=38(7.6/s)   update_skipped_throttle=1(0.2/s) 
-14868.00 :  [nav] pathfinding to=-581.5,-523 dist=37.8 custom=true 
-14868.00 :  [nav] pathfind OK, path=#4 
-14868.00 :  [HR SPIKE] bm_pulse 55.0ms force=false 
-14868.00 :  [HR SPIKE] navigate_to 55.0ms 
-14868.00 :  [HR SPIKE] hr_tick 55.0ms state=EXPLORE_HELLTIDE 
-14868.31 :  [NAV] mode=CUSTOM_TARGET stuck=0.1s moved=1.1 paused=false done=false 
-14868.38 :  [nav] pathfinding to=-581.5,-523 dist=34.8 custom=true 
-14868.38 :  [nav] pathfind OK, path=#4 
-14868.46 :  [CHECK_EVENTS] No action | cinders=127 | kill=true | trav=false | events=false | remembered=0 
-14869.81 :  [HR PERF] ============ 5.0s window ============ 
-14869.81 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
-14869.81 :    hr_tick                                57   11.3    9.035   93.000    515.00  peak{state=EXPLORE_HELLTIDE} 
-14869.81 :    navigate_to                            56   11.1    8.875   93.000    497.00 
-14869.81 :    bm_pulse                               29    5.8   17.069   93.000    495.00  peak{force=false} 
-14869.81 :    check_events                            7    1.4    1.571    2.000     11.00 
-14869.81 :    scan_remember_chests                    2    0.4    1.000    1.000      2.00 
-14869.81 :    get_all_actors                          7    1.4    0.143    1.000      1.00 
-14869.81 :    get_kill_target                         4    0.8    0.000    0.000      0.00 
-14869.81 :    [EVENTS]  actor_cache_hit=61(12.1/s)   actor_cache_miss=7(1.4/s)   bm_pulse_forced=1(0.2/s)   bm_pulse_normal=28(5.6/s)   bm_pulse_throttled=28(5.6/s)   chest_scan_skip=5(1.0/s)   find_closest_target=63(12.5/s)   km_cache_hit=3(0.6/s)   km_cache_miss=4(0.8/s)   state_EXPLORE_HELLTIDE=71(14.1/s) 
+16120.51 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+16120.51 :    find_path                   8( 1.6/s)  avg  77.750ms  max 151.000ms  total   622.0ms  peak{iters=1575 dist=26 custom=false status=limit_partial plen=3} 
+16120.51 :    nav_explorer_update        81(16.0/s)  avg   4.074ms  max  26.000ms  total   330.0ms 
+16120.51 :    explorer_scan              28( 5.5/s)  avg   8.321ms  max  24.000ms  total   233.0ms  peak{walk_checks=1123 frontiers=10074} 
+16120.51 :    explorer_evict             14( 2.8/s)  avg   4.571ms  max  22.000ms  total    64.0ms  peak{scanned=1182 evicted=1111 total_frontiers=8973} 
+16120.51 :    get_nearby_travs           81(16.0/s)  avg   0.568ms  max   3.000ms  total    46.0ms 
+16120.51 :    explorer_warm_wp           28( 5.5/s)  avg   1.179ms  max   9.000ms  total    33.0ms  peak{new=833 seeded=775} 
+16120.51 :    string_pull                 8( 1.6/s)  avg   2.625ms  max   6.000ms  total    21.0ms  peak{in=82 out=5} 
+16120.51 :    nav_trav_block             81(16.0/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16120.51 :    total_update               43( 8.5/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16120.51 :    nav_consume_path           20( 4.0/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16120.51 :    nav_move_spell             81(16.0/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16120.51 :    total_move                 43( 8.5/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16120.51 :    [EVENTS]  explorer_scan_throttled=53(10.5/s)   move_ran=81(16.0/s)   move_skipped_throttle=193(38.2/s)   pf_iters_lt2000=8(1.6/s)   pf_status_found=7(1.4/s)   pf_status_limit_partial=1(0.2/s)   update_ran=81(16.0/s)   update_skipped_throttle=193(38.2/s) 
+16121.13 :  [nav] pathfinding to=-665.5,-664.5 dist=16.7 custom=false 
+16121.13 :  [nav] pathfind OK, path=#3 
+16121.59 :  [CHECK_EVENTS] No action | cinders=364 | kill=false | trav=false | events=false | remembered=0 
+16121.64 :  [nav] pathfinding to=-665.5,-664.5 dist=16.2 custom=false 
+16121.64 :  [nav] pathfind OK, path=#3 
+16121.79 :  [BM SPIKE] explorer_scan 58.0ms walk_checks=1499 frontiers=10363 
+16121.79 :  [BM SPIKE] nav_explorer_update 64.0ms 
+16123.20 :  [nav] pathfinding to=-665.5,-664.5 dist=10.6 custom=false 
+16123.20 :  [nav] pathfind OK, path=#2 
+16123.70 :  [nav] pathfinding to=-665.5,-664.5 dist=8.3 custom=false 
+16123.70 :  [nav] pathfind OK, path=#2 
+16124.20 :  [nav] pathfinding to=-665.5,-664.5 dist=8.3 custom=false 
+16124.20 :  [nav] pathfind OK, path=#2 
+16124.39 :  [LONG PATH] Navigation complete 
+16124.65 :  [EXPLORER] navigate_long_path -> (-611,-639,38) 
+16124.65 :  [LONG PATH] navigate_to: finding uncapped path (dist=73.3) ... 
+16124.65 :  [LONG PATH] navigate_to: found  nodes=55  iters=32379  time=1349.0ms 
+16124.65 :  [LONG PATH] Navigation started | nodes=55 | target=(-611.0, -639.5) 
+16124.65 :  [nav] STUCK target=-611,-639.5 dist=73.5 path=#55 unstuck_count=0 
+16124.65 :  [BATMOBILE PERF] === 5.5s window === 
+16124.65 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=55 
+16124.65 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+16124.65 :    nav_explorer_update        65(11.8/s)  avg   3.277ms  max  64.000ms  total   213.0ms 
+16124.65 :    explorer_scan              14( 2.5/s)  avg  10.786ms  max  58.000ms  total   151.0ms  peak{walk_checks=1499 frontiers=10363} 
+16124.65 :    explorer_evict              7( 1.3/s)  avg   5.714ms  max  11.000ms  total    40.0ms  peak{scanned=1420 evicted=1266 total_frontiers=8935} 
+16124.65 :    find_path                   5( 0.9/s)  avg   5.800ms  max  12.000ms  total    29.0ms  peak{iters=31 dist=11 custom=false status=found plen=2} 
+16124.65 :    get_nearby_travs           65(11.8/s)  avg   0.446ms  max   2.000ms  total    29.0ms 
+16124.65 :    explorer_warm_wp           13( 2.4/s)  avg   1.692ms  max   6.000ms  total    22.0ms  peak{new=1438 seeded=1332} 
+16124.65 :    total_update               36( 6.5/s)  avg   0.278ms  max  10.000ms  total    10.0ms 
+16124.65 :    string_pull                 5( 0.9/s)  avg   1.000ms  max   3.000ms  total     5.0ms  peak{in=17 out=2} 
+16124.65 :    total_move                 36( 6.5/s)  avg   0.056ms  max   2.000ms  total     2.0ms 
+16124.65 :    nav_move_spell             65(11.8/s)  avg   0.015ms  max   1.000ms  total     1.0ms 
+16124.65 :    nav_consume_path           39( 7.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16124.65 :    unstuck                     1( 0.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16124.65 :    nav_trav_block             65(11.8/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16124.65 :    [EVENTS]  explorer_scan_throttled=51(9.3/s)   move_ran=65(11.8/s)   move_skipped_throttle=184(33.4/s)   pf_iters_lt100=5(0.9/s)   pf_status_found=5(0.9/s)   update_ran=65(11.8/s)   update_skipped_throttle=184(33.4/s) 
+16124.65 :  [HR SPIKE] hr_tick 1366.0ms state=EXPLORE_HELLTIDE 
+16124.66 :  [nav] STUCK target=-611,-639.5 dist=73.0 path=#54 unstuck_count=0 
+16124.66 :  [nav] pathfinding to=-611,-639.5 dist=73.0 custom=true 
+16124.66 :  [BM SPIKE] find_path 154.0ms iters=3826 dist=73 custom=true status=limit_partial plen=3 
+16124.66 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=73.0) 
+16124.66 :  [HR PERF] ============ 5.9s window ============ 
+16124.66 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+16124.66 :    hr_tick                               226   38.2    6.372  1366.000   1440.00  peak{state=EXPLORE_HELLTIDE} 
+16124.66 :    check_events                            9    1.5    4.889   13.000     44.00 
+16124.66 :    bm_pulse                               39    6.6    0.359   13.000     14.00  peak{force=false} 
+16124.66 :    scan_remember_chests                    2    0.3    2.500    3.000      5.00 
+16124.66 :    get_all_actors                          9    1.5    0.333    1.000      3.00 
+16124.66 :    [EVENTS]  actor_cache_hit=104(17.6/s)   actor_cache_miss=9(1.5/s)   bm_pulse_normal=39(6.6/s)   bm_pulse_throttled=187(31.6/s)   chest_scan_skip=7(1.2/s)   find_closest_target=108(18.2/s)   state_EXPLORE_HELLTIDE=242(40.9/s) 
+16124.66 :  [EXPLORER STATS] visited=6 unvisited=15 unreachable=0 cooling=1 total=22 
+16125.00 :  [nav] pathfinding to=-611,-639.5 dist=70.4 custom=true 
+16125.00 :  [BM SPIKE] find_path 153.0ms iters=2885 dist=70 custom=true status=limit_partial plen=3 
+16125.00 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=70.4) 
+16125.30 :  [nav] pathfinding to=-611,-639.5 dist=70.3 custom=true 
+16125.30 :  [BM SPIKE] find_path 151.0ms iters=3454 dist=70 custom=true status=limit_partial plen=3 
+16125.30 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=70.3) 
+16125.63 :  [nav] pathfinding to=-611,-639.5 dist=70.5 custom=true 
+16125.63 :  [BM SPIKE] find_path 151.0ms iters=2337 dist=70 custom=true status=limit_partial plen=3 
+16125.63 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=70.5) 
+16125.73 :  [CHECK_EVENTS] No action | cinders=366 | kill=false | trav=false | events=false | remembered=0 
+16125.97 :  [nav] pathfinding to=-611,-639.5 dist=70.5 custom=true 
+16125.97 :  [BM SPIKE] find_path 154.0ms iters=2820 dist=70 custom=true status=limit_partial plen=3 
+16125.97 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=70.5) 
+16126.20 :  [LONG PATH] Navigation complete 
+16127.30 :  [EXPLORER] navigate_long_path -> (-611,-639,38) 
+16127.30 :  [LONG PATH] navigate_to: finding uncapped path (dist=72.2) ... 
+16127.30 :  [LONG PATH] navigate_to: found  nodes=55  iters=32821  time=1283.0ms 
+16127.30 :  [LONG PATH] Navigation started | nodes=55 | target=(-611.0, -639.5) 
+16127.30 :  [nav] STUCK target=-611,-639.5 dist=72.1 path=#55 unstuck_count=0 
+16127.30 :  [nav] pathfinding to=-611,-639.5 dist=72.1 custom=true 
+16127.30 :  [BM SPIKE] find_path 151.0ms iters=2732 dist=72 custom=true status=limit_partial plen=3 
+16127.30 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=72.1) 
+16127.30 :  [BM SPIKE] total_move 152.0ms 
+16127.30 :  [HR SPIKE] bm_pulse 183.0ms force=false 
+16127.30 :  [HR SPIKE] hr_tick 1471.0ms state=EXPLORE_HELLTIDE 
+16127.32 :  [nav] STUCK target=-611,-639.5 dist=72.8 path=#2 unstuck_count=0 
+16128.19 :  [BATMOBILE PERF] === 5.0s window === 
+16128.19 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=3 
+16128.19 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+16128.19 :    find_path                   6( 1.2/s)  avg 152.333ms  max 154.000ms  total   914.0ms  peak{iters=3826 dist=73 custom=true status=limit_partial plen=3} 
+16128.19 :    nav_explorer_update        32( 6.4/s)  avg   4.813ms  max  46.000ms  total   154.0ms 
+16128.19 :    total_move                 20( 4.0/s)  avg   7.600ms  max 152.000ms  total   152.0ms 
+16128.19 :    explorer_scan               8( 1.6/s)  avg  11.500ms  max  22.000ms  total    92.0ms  peak{walk_checks=855 frontiers=10376} 
+16128.19 :    explorer_evict              4( 0.8/s)  avg  11.250ms  max  19.000ms  total    45.0ms  peak{scanned=1595 evicted=1346 total_frontiers=9030} 
+16128.19 :    total_update               20( 4.0/s)  avg   1.550ms  max  31.000ms  total    31.0ms 
+16128.19 :    explorer_warm_wp            8( 1.6/s)  avg   2.125ms  max   5.000ms  total    17.0ms  peak{new=505 seeded=405} 
+16128.19 :    get_nearby_travs           32( 6.4/s)  avg   0.531ms  max   2.000ms  total    17.0ms 
+16128.19 :    string_pull                 6( 1.2/s)  avg   2.000ms  max   3.000ms  total    12.0ms  peak{in=40 out=3} 
+16128.19 :    nav_move_spell             32( 6.4/s)  avg   0.062ms  max   1.000ms  total     2.0ms 
+16128.19 :    unstuck                     3( 0.6/s)  avg   0.333ms  max   1.000ms  total     1.0ms 
+16128.19 :    nav_consume_path           21( 4.2/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16128.19 :    nav_trav_block             32( 6.4/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16128.19 :    [EVENTS]  explorer_scan_throttled=24(4.8/s)   move_ran=32(6.4/s)   move_skipped_throttle=71(14.1/s)   pf_iters_ge2000=6(1.2/s)   pf_status_limit_partial=6(1.2/s)   update_ran=32(6.4/s)   update_skipped_throttle=71(14.1/s) 
+16128.34 :  [HR PERF] ============ 5.0s window ============ 
+16128.34 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+16128.34 :    hr_tick                                91   18.2   16.582  1471.000   1509.00  peak{state=EXPLORE_HELLTIDE} 
+16128.34 :    bm_pulse                               21    4.2    8.714  183.000    183.00  peak{force=false} 
+16128.34 :    check_events                            7    1.4    4.857    8.000     34.00 
+16128.34 :    scan_remember_chests                    3    0.6    1.333    2.000      4.00 
+16128.34 :    get_all_actors                          7    1.4    0.143    1.000      1.00 
+16128.34 :    [EVENTS]  actor_cache_hit=83(16.6/s)   actor_cache_miss=7(1.4/s)   bm_pulse_normal=21(4.2/s)   bm_pulse_throttled=70(14.0/s)   chest_scan_skip=4(0.8/s)   find_closest_target=84(16.8/s)   state_EXPLORE_HELLTIDE=158(31.6/s) 
+16129.82 :  [CHECK_EVENTS] No action | cinders=376 | kill=false | trav=false | events=false | remembered=0 
+16129.90 :  [nav] pathfinding to=-611,-639.5 dist=74.0 custom=true 
+16129.90 :  [BM SPIKE] find_path 171.0ms iters=1135 dist=74 custom=true status=limit_partial plen=3 
+16129.90 :  [nav] PARTIAL PATH #3 toward -611,-639.5 (dist=74.0) 
+16130.90 :  [nav] pathfinding to=-611,-639.5 dist=65.3 custom=true 
+16130.90 :  [BM SPIKE] find_path 151.0ms iters=3250 dist=65 custom=true status=limit_partial plen=2 
+16130.90 :  [nav] PARTIAL PATH #2 toward -611,-639.5 (dist=65.3) 
+16131.21 :  [nav] pathfinding to=-611,-639.5 dist=63.3 custom=true 
+16131.21 :  [BM SPIKE] find_path 152.0ms iters=3317 dist=63 custom=true status=limit_partial plen=2 
+16131.21 :  [nav] PARTIAL PATH #2 toward -611,-639.5 (dist=63.3) 
+16131.59 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.63 :  [EXPLORER] Intermediate: (-632,-659) -> node 4 (-611,-639) try_dist=30 walk=true 
+16131.66 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.70 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.75 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.82 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.88 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.95 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16131.99 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.05 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.10 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.15 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.20 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.25 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.30 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.36 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.41 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.48 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.53 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.58 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.63 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.68 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.75 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.80 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.85 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.90 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16132.97 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.03 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.08 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.13 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.18 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.23 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.30 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.30 :  [BATMOBILE PERF] === 5.1s window === 
+16133.30 :    [NAV STATE] paused=false  custom=true  trav_routing=false  last_trav=false  pfail=0  unstuck=0  path_len=1 
+16133.30 :    [TIMING]  name                   calls    avg(ms)   max(ms)  total(ms) 
+16133.30 :    find_path                   3( 0.6/s)  avg 158.000ms  max 171.000ms  total   474.0ms  peak{iters=1135 dist=74 custom=true status=limit_partial plen=3} 
+16133.30 :    nav_explorer_update        82(16.1/s)  avg   3.610ms  max  32.000ms  total   296.0ms 
+16133.30 :    explorer_scan              19( 3.7/s)  avg   9.737ms  max  30.000ms  total   185.0ms  peak{walk_checks=1282 frontiers=10219} 
+16133.30 :    explorer_evict             10( 2.0/s)  avg   6.200ms  max  12.000ms  total    62.0ms  peak{scanned=1366 evicted=1180 total_frontiers=9093} 
+16133.30 :    get_nearby_travs           82(16.1/s)  avg   0.720ms  max   3.000ms  total    59.0ms 
+16133.30 :    explorer_warm_wp           19( 3.7/s)  avg   2.474ms  max  17.000ms  total    47.0ms  peak{new=1442 seeded=1341} 
+16133.30 :    string_pull                 3( 0.6/s)  avg   7.667ms  max  20.000ms  total    23.0ms  peak{in=35 out=3} 
+16133.30 :    nav_move_spell             82(16.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16133.30 :    total_update               43( 8.4/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16133.30 :    nav_consume_path           66(12.9/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16133.30 :    nav_trav_block             82(16.1/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16133.30 :    total_move                 43( 8.4/s)  avg   0.000ms  max   0.000ms  total     0.0ms 
+16133.30 :    [EVENTS]  explorer_scan_throttled=63(12.3/s)   move_ran=82(16.1/s)   move_skipped_throttle=207(40.5/s)   pf_iters_ge2000=2(0.4/s)   pf_iters_lt2000=1(0.2/s)   pf_status_limit_partial=3(0.6/s)   update_ran=82(16.1/s)   update_skipped_throttle=207(40.5/s) 
+16133.35 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.35 :  [HR PERF] ============ 5.0s window ============ 
+16133.35 :    [TIMING]  name                             calls    /s    avg(ms)  max(ms) total(ms) 
+16133.35 :    hr_tick                               240   47.9    0.392   18.000     94.00  peak{state=EXPLORE_HELLTIDE} 
+16133.35 :    check_events                            9    1.8    6.556   17.000     59.00 
+16133.35 :    scan_remember_chests                    2    0.4    1.500    2.000      3.00 
+16133.35 :    get_all_actors                          9    1.8    0.222    1.000      2.00 
+16133.35 :    bm_pulse                               42    8.4    0.000    0.000      0.00 
+16133.35 :    [EVENTS]  actor_cache_hit=103(20.6/s)   actor_cache_miss=9(1.8/s)   bm_pulse_normal=42(8.4/s)   bm_pulse_throttled=198(39.5/s)   chest_scan_skip=7(1.4/s)   find_closest_target=108(21.6/s)   state_EXPLORE_HELLTIDE=240(47.9/s) 
+16133.40 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.45 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.50 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.55 :  [nav] STUCK target=-611,-639.5 dist=57.4 path=#1 unstuck_count=0 
+16133.55 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.61 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.68 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.75 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.81 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16133.88 :  [nav] has path (#1) but no move, remaining=#1 target=-611,-639.5 
+16134.68 :  [nav] pathfinding to=-611,-639.5 dist=62.5 custom=true 
+16134.68 :  [BM SPIKE] find_path 158.0ms iters=1362 dist=63 custom=true status=limit_partial plen=2 
+16134.68 :  [nav] PARTIAL PATH #2 toward -611,-639.5 (dist=62.5) 
+16134.95 :  [CHECK_EVENTS] No action | cinders=376 | kill=false | trav=false | events=false | remembered=0 
+16135.70 :  [nav] pathfinding to=-611,-639.5 dist=67.0 custom=true 
+16135.70 :  [BM SPIKE] find_path 151.0ms iters=4033 dist=67 custom=true status=limit_partial plen=2 
+16135.70 :  [nav] PARTIAL PATH #2 toward -611,-639.5 (dist=67.0) 

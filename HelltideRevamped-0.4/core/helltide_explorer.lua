@@ -348,6 +348,16 @@ function helltide_explorer.report_intermediate_fail()
     cached_intermediate = nil
 end
 
+-- Returns the active node's raw position (vec3) without recomputing intermediates.
+-- Used by long-path nav to feed the actual node target to Batmobile's uncapped
+-- A* instead of the distance-capped intermediate that get_target() returns.
+function helltide_explorer.get_active_node_pos()
+    if active_idx and nodes and nodes[active_idx] then
+        return nodes[active_idx].pos
+    end
+    return nil
+end
+
 -- Mark the currently active node as permanently unreachable for this session.
 -- Called when the player walks out of the helltide zone boundary — the node
 -- that was being navigated toward led outside, so it should never be picked again.

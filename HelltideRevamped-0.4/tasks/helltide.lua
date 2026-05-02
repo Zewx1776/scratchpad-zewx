@@ -112,6 +112,7 @@ local last_in_zone_pos      = nil    -- last confirmed in-zone position (used as
 local experimental_armed       = false
 local was_in_helltide_for_arm  = false  -- tracks the previous-tick is_in_helltide() value
 
+
 local TRAVERSAL_RECOVERY_TIMEOUT  = 10 -- seconds in free-explore before clearing traversal blacklist (increased: Batmobile now handles traversals via partial paths + destination-aware selection)
 local TRAVERSAL_RECOVERY_COOLDOWN = 20 -- minimum seconds between recovery attempts
 local traversal_recovery_time = nil    -- wall-clock of last triggered recovery
@@ -1364,6 +1365,12 @@ local helltide_task = {
         -- Gated on `experimental_armed` so we don't hand control to the grid explorer
         -- until the player has reached populated terrain (first kill_monsters target).
         -- Until armed, fall through to the waypoint patrol below.
+        --
+        -- NOTE: navigate_long_path was tried here but conflicted with navigator.move's
+        -- own replan logic — bm_pulse drove navigator.move which kept firing find_path
+        -- on the same target, hitting the time cap repeatedly.  The long_path module
+        -- assumes it's the sole driver of navigator state (main.lua's debug handler);
+        -- co-driving from HR breaks that contract.  Reverted to navigate_to.
         if settings.experimental_explorer and experimental_armed then
             local player_pos = get_player_position()
             helltide_explorer.init()
