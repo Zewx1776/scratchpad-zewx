@@ -1567,12 +1567,23 @@ navigator.attempt_escape = function(local_player)
         bl_age_required = 0  -- desperate: any traversal will do
     end
 
+    -- Z-plane filter: only consider traversals whose entry point is on the
+    -- same elevation as the player.  A gizmo whose interaction node is on the
+    -- floor below us is a "Down from above" — useless for escape because we
+    -- can't reach its interactable point without falling.  Likewise, a gizmo
+    -- whose entry is on the floor above us is something we'd need to climb
+    -- TO, not climb FROM.  ~3u tolerance accommodates platform thickness and
+    -- the tiny vertical offsets engine-side.
+    local TRAV_Z_TOLERANCE = 3
+    local player_z = player_pos:z()
+
     local traversals = get_nearby_travs(local_player)
     local best_trav = nil
     local best_score = -math.huge
     local best_is_dir_match = false
     local n_in_zone = 0
     local n_skipped_bl = 0
+    local n_skipped_z = 0
     for _, trav in ipairs(traversals) do
         local tpos = trav:get_position()
         -- Allow traversals slightly outside the bbox (within 10u) — gizmos at
@@ -1581,6 +1592,14 @@ navigator.attempt_escape = function(local_player)
             and tpos:y() >= min_y - 10 and tpos:y() <= max_y + 10
         then
             n_in_zone = n_in_zone + 1
+            -- Z-plane check: skip gizmos that aren't on the player's current
+            -- floor.  Without this, "escape via FreeClimb_Up" might pick the
+            -- Up-gizmo on the floor BELOW us (the entrance to the platform
+            -- we're standing on), which we can't actually interact with.
+            if math.abs(tpos:z() - player_z) > TRAV_Z_TOLERANCE then
+                n_skipped_z = n_skipped_z + 1
+                goto continue
+            end
             local trav_name = trav:get_skin_name()
             -- Direction inference from skin name (Climb_Up / FreeClimb_Up_Down etc.).
             -- Approximate; we don't know exact destination z without crossing.
@@ -1607,6 +1626,7 @@ navigator.attempt_escape = function(local_player)
             else
                 n_skipped_bl = n_skipped_bl + 1
             end
+            ::continue::
         end
     end
 
@@ -1648,11 +1668,13 @@ navigator.attempt_escape = function(local_player)
             end
 
             console.print(string.format(
-                '[TRAP] escape #%d: routing to %s (dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds) — cleared %d frontiers, %d in zone, %d bl-skipped, %d opposite-traversals long-blocked %ds',
+                '[TRAP] escape #%d: routing to %s @z=%.1f (player_z=%.1f dist=%.1f dir_match=%s prefer_up=%s bl_thresh=%ds) — cleared %d frontiers, %d in zone, %d z-skipped, %d bl-skipped, %d opposite-traversals long-blocked %ds',
                 navigator.trapped_escape_count, best_trav:get_skin_name(),
+                best_trav:get_position():z(), player_z,
                 utils.distance(player_pos, best_trav:get_position()),
                 tostring(best_is_dir_match), tostring(prefer_up), bl_age_required,
-                cleared, n_in_zone, n_skipped_bl, opposite_blocked, TRAV_TRAP_BL_DURATION))
+                cleared, n_in_zone, n_skipped_z, n_skipped_bl,
+                opposite_blocked, TRAV_TRAP_BL_DURATION))
             -- Wipe the recent blacklist for this traversal so we can re-cross
             local trav_str = best_trav:get_skin_name() .. utils.vec_to_string(best_trav:get_position())
             navigator.blacklisted_trav[trav_str] = nil
@@ -1670,9 +1692,9 @@ navigator.attempt_escape = function(local_player)
     -- No usable traversal found — at least we cleared the frontiers.
     -- Next escape attempt will retry with a fresh frontier scan.
     console.print(string.format(
-        '[TRAP] escape #%d: no usable traversal in zone (cleared %d frontiers, %d in zone, %d bl-skipped at thresh=%ds); will retry in %ds',
-        navigator.trapped_escape_count, cleared, n_in_zone, n_skipped_bl,
-        bl_age_required, TRAP_ESCAPE_COOLDOWN))
+        '[TRAP] escape #%d: no usable traversal in zone (cleared %d frontiers, %d in zone, %d z-skipped (player_z=%.1f), %d bl-skipped at thresh=%ds); will retry in %ds',
+        navigator.trapped_escape_count, cleared, n_in_zone, n_skipped_z, player_z,
+        n_skipped_bl, bl_age_required, TRAP_ESCAPE_COOLDOWN))
 end
 
 -- Called by external API when HR has handled giving_up (teleported away etc.).
