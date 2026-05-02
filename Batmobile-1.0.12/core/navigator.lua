@@ -815,20 +815,36 @@ navigator.move = function ()
             navigator.path = {}
             navigator.disable_spell = nil
             local trav_pos_for_escape = navigator.last_trav and navigator.last_trav:get_position() or nil
-            -- Record the crossing's z-delta so trap-escape can prefer the
-            -- opposite direction next time.  pre_trav_z was set when last_trav
-            -- became non-nil in select_target / try_traversal_route.
+            -- Record the crossing's direction (from gizmo NAME) so trap-escape
+            -- can detect ping-pong and prefer the opposite direction.
+            -- We can't trust measured dz at buff-detect time: the buff fires
+            -- at the START of the climb animation, before the player's z
+            -- reaches the destination floor.  Logzewx showed real F1->F2
+            -- climbs reading dz=+0.06.  Names ('Up'/'Down' substrings) are
+            -- unambiguous and known the moment the gizmo is selected.
             local crossing_dz = nil
+            local crossing_dir = 0
+            if navigator.last_trav ~= nil then
+                local n = navigator.last_trav:get_skin_name()
+                local has_up   = n:match('Up') ~= nil
+                local has_down = n:match('Down') ~= nil
+                if has_up and not has_down then crossing_dir =  1
+                elseif has_down and not has_up then crossing_dir = -1
+                end
+            end
             if navigator.pre_trav_z ~= nil then
                 crossing_dz = player_pos:z() - navigator.pre_trav_z
-                navigator.trav_history[#navigator.trav_history + 1] = {
-                    t = get_time_since_inject(),
-                    delta_z = crossing_dz,
-                }
-                if #navigator.trav_history > TRAV_HISTORY_MAX then
-                    table.remove(navigator.trav_history, 1)
-                end
                 navigator.pre_trav_z = nil
+            end
+            -- Always append, even if pre_trav_z was nil — direction-from-name
+            -- is the load-bearing field for ping-pong detection.
+            navigator.trav_history[#navigator.trav_history + 1] = {
+                t        = get_time_since_inject(),
+                delta_z  = crossing_dz,    -- informational only; may be ~0
+                direction = crossing_dir,  -- +1 up, -1 down, 0 unknown/jump
+            }
+            if #navigator.trav_history > TRAV_HISTORY_MAX then
+                table.remove(navigator.trav_history, 1)
             end
             if navigator.last_trav ~= nil then
                 local crossed_str = navigator.last_trav:get_skin_name() .. utils.vec_to_string(navigator.last_trav:get_position())
@@ -836,11 +852,12 @@ navigator.move = function ()
                 navigator.blacklisted_trav[crossed_str] = get_time_since_inject()
                 local trav_pos_log = navigator.last_trav:get_position()
                 console.print(string.format(
-                    '[nav] blacklisting crossed traversal %s @(%.1f,%.1f,%.2f) | player @(%.1f,%.1f,%.2f) | dz=%s',
+                    '[nav] blacklisting crossed traversal %s @(%.1f,%.1f,%.2f) | player @(%.1f,%.1f,%.2f) | dz=%s dir=%+d',
                     navigator.last_trav:get_skin_name(),
                     trav_pos_log:x(), trav_pos_log:y(), trav_pos_log:z(),
                     player_pos:x(), player_pos:y(), player_pos:z(),
-                    crossing_dz and string.format('%+.2f', crossing_dz) or 'nil'))
+                    crossing_dz and string.format('%+.2f', crossing_dz) or 'nil',
+                    crossing_dir))
             end
             navigator.last_trav = nil
             navigator.failed_target = nil
@@ -1473,26 +1490,26 @@ navigator.update_trap_state = function(local_player)
     -- comes back up the same traversal pair, repeats.  X-span looks healthy
     -- (~50u) but no real exploration progress.
     --
-    -- Detection: count direction reversals in trav_history (down→up or up→down)
-    -- within the past trav_window seconds.  Threshold: 1 reversal is enough —
-    -- a single down-then-up (or up-then-down) within 60s is almost always a
-    -- wasted trip.  Real exploration usually has long gaps between opposite-
-    -- direction crossings.  Threshold of 2 missed scenarios where the player
-    -- only oscillated once before bbox detection caught up 30s later.
+    -- Detection: count direction reversals in trav_history within trav_window
+    -- seconds.  Uses the DIRECTION INFERRED FROM GIZMO NAME, not the measured
+    -- dz — the engine fires the traversal buff at the START of the climb
+    -- animation, before player z reaches the destination, so dz reads ~0
+    -- even on real ~5u climbs (logzewx showed dz=+0.06 for a confirmed F1->F2
+    -- climb).  Names ('Up'/'Down') are known unambiguously the moment the
+    -- gizmo is selected and don't suffer from animation timing.
     --
-    -- Tolerance is .25u (was .5) since the engine sometimes reports tiny
-    -- player-z deltas during cross detection — see the dz=+0.04 / dz=+0.00
-    -- entries from logzewx.  Real climbs span 4-5u, so even noisy readings
-    -- exceed .25u when the cross genuinely changed elevation.
+    -- Threshold: 1 reversal — a single down-then-up (or up-then-down) within
+    -- 60s is almost always a wasted trip.
     local reversals = 0
     local trav_window = TRAP_DETECT_WINDOW * 2
-    local DZ_THRESHOLD = 0.25
     for i = 2, #navigator.trav_history do
         local prev = navigator.trav_history[i - 1]
         local cur  = navigator.trav_history[i]
         if (now - cur.t) <= trav_window then
-            if (prev.delta_z > DZ_THRESHOLD and cur.delta_z < -DZ_THRESHOLD)
-                or (prev.delta_z < -DZ_THRESHOLD and cur.delta_z > DZ_THRESHOLD)
+            local prev_dir = prev.direction or 0
+            local cur_dir  = cur.direction  or 0
+            if (prev_dir > 0 and cur_dir < 0)
+                or (prev_dir < 0 and cur_dir > 0)
             then
                 reversals = reversals + 1
             end
@@ -1594,13 +1611,18 @@ navigator.attempt_escape = function(local_player)
     navigator.is_partial_path             = false
 
     -- Step 2: determine preferred direction from recent traversal history.
-    -- Sum of recent delta_z; if negative (we descended), prefer ascending.
-    local recent_dz = 0
+    -- Sum of recent crossing DIRECTIONS (from gizmo names, +1=Up / -1=Down);
+    -- if negative (we descended more than ascended), prefer ascending.
+    -- Uses name-based direction because measured dz is unreliable at
+    -- buff-detect time (engine fires buff during animation, not after).
+    local recent_dir_sum = 0
     for _, h in ipairs(navigator.trav_history) do
-        if now - h.t < 120 then recent_dz = recent_dz + h.delta_z end
+        if now - h.t < 120 then
+            recent_dir_sum = recent_dir_sum + (h.direction or 0)
+        end
     end
-    local prefer_up = recent_dz < -1   -- net descent of >1u → prefer up
-    local prefer_down = recent_dz > 1  -- net ascent → prefer down (rare)
+    local prefer_up   = recent_dir_sum < 0  -- net descent → prefer up
+    local prefer_down = recent_dir_sum > 0  -- net ascent → prefer down (rare)
 
     -- Step 3: find traversal gizmos near the trapped zone.
     -- Progressive blacklist relaxation — the more attempts that fail, the more
